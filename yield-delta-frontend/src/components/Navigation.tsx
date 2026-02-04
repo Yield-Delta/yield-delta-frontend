@@ -11,8 +11,9 @@ import { useAccount } from 'wagmi';
 import { isTestnetChain } from '@/lib/chainUtils';
 import GooeyNav  from './GooeyNavigation';
 
-const WalletConnectButton = dynamic(
-  () => import('./WalletConnectButton').then(mod => ({ default: mod.WalletConnectButton })),
+// Multi-chain wallet button for Solana + SEI support
+const MultiChainWalletButton = dynamic(
+  () => import('./MultiChainWalletButton').then(mod => ({ default: mod.MultiChainWalletButton })),
   {
     ssr: false,
     loading: () => (
@@ -646,10 +647,10 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
             </Link>
           )}
 
-          {/* Wallet Connect - Always visible */}
+          {/* Multi-Chain Wallet Connect - Always visible */}
           {showWallet && (
             <div className="wallet-container">
-              <WalletConnectButton />
+              <MultiChainWalletButton />
             </div>
           )}
 
