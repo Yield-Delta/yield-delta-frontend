@@ -6,6 +6,7 @@
 import { renderHook, act } from '@testing-library/react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
 import { ChainId, ChainType, WalletStatus } from '@/types/chain'
+import { formatBalance, getTransactionUrl, getAddressUrl } from '@/lib/chainUtils'
 
 describe('Multi-Chain Store', () => {
   beforeEach(() => {
@@ -304,8 +305,6 @@ describe('Multi-Chain Store', () => {
 
 describe('Chain Utilities', () => {
   it('should format balance correctly', () => {
-    const { formatBalance } = require('@/lib/chainUtils')
-
     // Test EVM (18 decimals)
     const evmBalance = formatBalance('1000000000000000000', ChainId.SEI_TESTNET, 4)
     expect(evmBalance).toBe('1.0000')
@@ -316,8 +315,6 @@ describe('Chain Utilities', () => {
   })
 
   it('should get transaction URL correctly', () => {
-    const { getTransactionUrl } = require('@/lib/chainUtils')
-
     const evmUrl = getTransactionUrl(ChainId.SEI_TESTNET, '0xabc123')
     expect(evmUrl).toContain('/tx/0xabc123')
 
@@ -326,8 +323,6 @@ describe('Chain Utilities', () => {
   })
 
   it('should get address URL correctly', () => {
-    const { getAddressUrl } = require('@/lib/chainUtils')
-
     const evmUrl = getAddressUrl(ChainId.SEI_TESTNET, '0x1234')
     expect(evmUrl).toContain('/address/0x1234')
 

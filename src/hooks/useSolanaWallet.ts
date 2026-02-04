@@ -11,14 +11,25 @@ import { useMultiChainStore } from '@/stores/multiChainStore'
 import { ChainId, WalletStatus } from '@/types/chain'
 import { getSolanaBalance, type SolanaCluster } from '@/lib/solana/connection'
 
+// Window with Solana wallet extensions
+declare global {
+  interface Window {
+    phantom?: {
+      solana?: SolanaWallet
+    }
+    solflare?: SolanaWallet
+    backpack?: SolanaWallet
+  }
+}
+
 // Solana wallet interface (browser extension)
 interface SolanaWallet {
   publicKey?: { toString(): string }
   isConnected: boolean
   connect(): Promise<{ publicKey: { toString(): string } }>
   disconnect(): Promise<void>
-  on(event: string, callback: (...args: any[]) => void): void
-  off(event: string, callback: (...args: any[]) => void): void
+  on(event: string, callback: (publicKey: { toString(): string } | null) => void): void
+  off(event: string, callback: (publicKey: { toString(): string } | null) => void): void
 }
 
 // Available Solana wallets
@@ -80,13 +91,13 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
     const detected: SolanaWalletType[] = []
     
     if (typeof window !== 'undefined') {
-      if ((window as any).phantom?.solana) {
+      if (window.phantom?.solana) {
         detected.push(SolanaWalletType.PHANTOM)
       }
-      if ((window as any).solflare) {
+      if (window.solflare) {
         detected.push(SolanaWalletType.SOLFLARE)
       }
-      if ((window as any).backpack) {
+      if (window.backpack) {
         detected.push(SolanaWalletType.BACKPACK)
       }
     }
@@ -100,11 +111,11 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
 
     switch (walletType) {
       case SolanaWalletType.PHANTOM:
-        return (window as any).phantom?.solana || null
+        return window.phantom?.solana ?? null
       case SolanaWalletType.SOLFLARE:
-        return (window as any).solflare || null
+        return window.solflare ?? null
       case SolanaWalletType.BACKPACK:
-        return (window as any).backpack || null
+        return window.backpack ?? null
       default:
         return null
     }
@@ -141,7 +152,7 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
       }
 
       // Setup event listeners
-      wallet.on('accountChanged', (publicKey: any) => {
+      wallet.on('accountChanged', (publicKey: { toString(): string } | null) => {
         if (publicKey) {
           connectSolanaWallet(publicKey.toString(), chainId)
         } else {
@@ -154,9 +165,10 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
       })
 
       console.log('[useSolanaWallet] Connected:', { address, chainId, walletType })
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[useSolanaWallet] Connection error:', err)
-      setError(err.message || 'Failed to connect wallet')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to connect wallet'
+      setError(errorMessage)
       setSolanaStatus(WalletStatus.ERROR)
       throw err
     } finally {
@@ -177,9 +189,10 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
 
       disconnectSolanaWallet()
       console.log('[useSolanaWallet] Disconnected')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[useSolanaWallet] Disconnect error:', err)
-      setError(err.message || 'Failed to disconnect wallet')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to disconnect wallet'
+      setError(errorMessage)
     }
   }, [availableWallets, getWalletProvider, disconnectSolanaWallet])
 

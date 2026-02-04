@@ -4,7 +4,7 @@
  */
 
 import { ChainId, ChainType } from '@/types/chain'
-import { CHAIN_METADATA, getChainMetadata, getDefaultChain } from './chainConfig'
+import { getChainMetadata } from './chainConfig'
 
 // Legacy SEI EVM Chain IDs (for backwards compatibility)
 export const SEI_MAINNET_ID = 1329;

@@ -7,7 +7,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { ChevronDown, Check, AlertCircle, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,9 +20,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { useMultiChainStore } from '@/stores/multiChainStore'
-import { ChainId, ChainType, WalletStatus } from '@/types/chain'
-import { getChainMetadata, CHAIN_METADATA } from '@/lib/chainConfig'
-import { formatBalance, getChainIcon } from '@/lib/chainUtils'
+import { ChainId, ChainType, WalletState, WalletStatus } from '@/types/chain'
+import { CHAIN_METADATA, getChainMetadata } from '@/lib/chainConfig'
+import { formatBalance } from '@/lib/chainUtils'
 
 interface ChainSelectorProps {
   onChainSelect?: (chainId: ChainId) => void
@@ -215,7 +215,7 @@ interface ChainMenuItemProps {
   chain: ReturnType<typeof getChainMetadata>
   isActive: boolean
   isConnected: boolean
-  walletState: any
+  walletState: WalletState | null
   onSelect: () => void
   showBalance: boolean
   disabled?: boolean

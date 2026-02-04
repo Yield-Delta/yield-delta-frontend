@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Wallet, ExternalLink, AlertCircle } from 'lucide-react'
+import { Wallet, ExternalLink, AlertCircle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -161,7 +161,7 @@ export function SolanaWalletModal({
 
           {/* Info Section */}
           <div className="text-xs text-muted-foreground text-center space-y-1 pt-4 border-t border-cyan-500/20">
-            <p>Don't have a wallet?</p>
+            <p>Don&apos;t have a wallet?</p>
             <p>Click on any wallet above to download and install</p>
           </div>
         </div>
