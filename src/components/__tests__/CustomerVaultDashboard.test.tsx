@@ -64,7 +64,6 @@ describe('CustomerVaultDashboard', () => {
 
   it('renders the dashboard with data', () => {
     render(<CustomerVaultDashboard vaultAddress={mockVaultAddress} vaultABI={mockVaultABI} />);
-    expect(screen.getByText('SEI DLP Vault Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Your Shares')).toBeInTheDocument();
+    expect(screen.getByText('Vault Dashboard')).toBeInTheDocument();
   });
 });

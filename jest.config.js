@@ -16,7 +16,7 @@ const customJestConfig = {
     '^@/components/(.*)$': '<rootDir>/components/$1',
   },
   transformIgnorePatterns: [
-    "node_modules/(?!node-fetch)"
+    '/node_modules/(?!(wagmi|@wagmi|viem|@viem|@tanstack|@rainbow-me|@solana)/)'
   ],
 }
 

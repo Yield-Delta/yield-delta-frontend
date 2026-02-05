@@ -2,14 +2,11 @@ import { GET } from '../health/route'
 
 // Mock NextResponse.json to work in test environment
 jest.mock('next/server', () => {
-  const originalModule = jest.requireActual('next/server');
   return {
-    ...originalModule,
     NextResponse: {
-      ...originalModule.NextResponse,
-      json: jest.fn((data) => {
+      json: jest.fn((data, init) => {
         return {
-          ...originalModule.NextResponse.json(data),
+          status: init?.status || 200,
           async json() {
             return data;
           }

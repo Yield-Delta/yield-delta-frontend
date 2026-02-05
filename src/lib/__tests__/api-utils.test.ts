@@ -44,11 +44,11 @@ describe('API Utilities', () => {
 
   describe('validateChainId', () => {
     it('should validate SEI chain ID', () => {
-      expect(validateChainId(713715)).toBe(true)
+      expect(validateChainId(1328)).toBe(true)
     })
 
     it('should reject other chain IDs', () => {
-      const invalidChainIds = [1, 137, 56, 43114, 250, 713714, 713716]
+      const invalidChainIds = [1, 137, 56, 43114, 250, 713714, 713715, 713716]
       
       invalidChainIds.forEach(chainId => {
         expect(validateChainId(chainId)).toBe(false)
