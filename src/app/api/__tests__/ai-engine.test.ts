@@ -4,7 +4,9 @@ describe('Python AI Engine Integration', () => {
   let aiEngineUrl: string;
 
   beforeAll(() => {
-    aiEngineUrl = process.env.AI_ENGINE_URL || 'http://localhost:8000';
+    // Use production AI engine URL
+    aiEngineUrl = process.env.AI_ENGINE_URL || 'https://yield-delta-protocol-production.up.railway.app';
+    console.log(`Testing AI Engine at: ${aiEngineUrl}`);
   });
 
   test('AI engine health endpoint responds correctly', async () => {
@@ -15,7 +17,14 @@ describe('Python AI Engine Integration', () => {
     }
     
     try {
-      const response = await fetch(`${aiEngineUrl}/health`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(`${aiEngineUrl}/health`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
       
       expect(response.status).toBe(200);
@@ -23,7 +32,7 @@ describe('Python AI Engine Integration', () => {
       expect(data.service).toBe('SEI DLP AI Engine Bridge');
       expect(data.version).toBe('1.0.0');
     } catch (error) {
-      console.log('AI Engine not available, skipping test');
+      console.log('AI Engine not available, skipping test:', error instanceof Error ? error.message : 'Unknown error');
       // Skip test if AI engine is not running
       return;
     }
@@ -47,11 +56,16 @@ describe('Python AI Engine Integration', () => {
         chain_id: 1328
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${aiEngineUrl}/predict/optimal-range`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       
@@ -62,7 +76,7 @@ describe('Python AI Engine Integration', () => {
       expect(data.expected_apr).toBeGreaterThan(0);
       expect(data.lower_tick).toBeLessThan(data.upper_tick);
     } catch (error) {
-      console.log('AI Engine not available, skipping test');
+      console.log('AI Engine not available, skipping test:', error instanceof Error ? error.message : 'Unknown error');
       return;
     }
   });
@@ -85,11 +99,16 @@ describe('Python AI Engine Integration', () => {
         confidence_threshold: 0.7
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${aiEngineUrl}/predict/market`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       
@@ -100,7 +119,7 @@ describe('Python AI Engine Integration', () => {
       expect(Array.isArray(data.support_levels)).toBe(true);
       expect(Array.isArray(data.resistance_levels)).toBe(true);
     } catch (error) {
-      console.log('AI Engine not available, skipping test');
+      console.log('AI Engine not available, skipping test:', error instanceof Error ? error.message : 'Unknown error');
       return;
     }
   });

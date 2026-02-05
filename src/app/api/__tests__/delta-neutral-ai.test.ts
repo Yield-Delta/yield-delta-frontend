@@ -4,7 +4,9 @@ describe('Delta Neutral AI Optimization', () => {
   let aiEngineUrl: string;
 
   beforeAll(() => {
-    aiEngineUrl = process.env.AI_ENGINE_URL || 'http://localhost:8000';
+    // Use production AI engine URL
+    aiEngineUrl = process.env.AI_ENGINE_URL || 'https://yield-delta-protocol-production.up.railway.app';
+    console.log(`Testing Delta Neutral AI at: ${aiEngineUrl}`);
   });
 
   test('delta neutral optimization endpoint works', async () => {
@@ -26,11 +28,16 @@ describe('Delta Neutral AI Optimization', () => {
         }
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${aiEngineUrl}/predict/delta-neutral-optimization`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       
@@ -44,7 +51,7 @@ describe('Delta Neutral AI Optimization', () => {
       expect(data.revenue_breakdown).toHaveProperty('funding_rates');
       expect(data.revenue_breakdown).toHaveProperty('volatility_capture');
     } catch (error) {
-      console.log('AI Engine not available, skipping test');
+      console.log('AI Engine not available, skipping test:', error instanceof Error ? error.message : 'Unknown error');
       return;
     }
   });
@@ -64,16 +71,21 @@ describe('Delta Neutral AI Optimization', () => {
         volatility: 2.0
       };
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(`${aiEngineUrl}/predict/delta-neutral-optimization`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       // Should handle gracefully with defaults or validation errors
       expect([200, 400, 422]).toContain(response.status);
     } catch (error) {
-      console.log('AI Engine not available, skipping test');
+      console.log('AI Engine not available, skipping test:', error instanceof Error ? error.message : 'Unknown error');
       return;
     }
   });

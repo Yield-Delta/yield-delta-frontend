@@ -5,7 +5,20 @@ import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
-import fetch, { Headers, Request, Response } from 'node-fetch';
+
+// Node.js 18+ has native fetch support, but we need to ensure it's available in the test environment
+// Only polyfill if fetch is not already defined
+if (!global.fetch) {
+  // Dynamic import for node-fetch as a fallback
+  import('node-fetch').then((nodeFetch) => {
+    global.fetch = nodeFetch.default as any;
+    global.Headers = nodeFetch.Headers as any;
+    global.Request = nodeFetch.Request as any;
+    global.Response = nodeFetch.Response as any;
+  }).catch(() => {
+    console.warn('node-fetch not available, using mock fetch');
+  });
+}
 
 // Mock wagmi modules to avoid ESM issues
 jest.mock('wagmi', () => ({
