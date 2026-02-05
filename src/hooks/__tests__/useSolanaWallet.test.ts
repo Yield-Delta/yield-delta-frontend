@@ -3,7 +3,6 @@
  * Tests for useSolanaWallet and useSolanaBalance hooks
  */
 
-import React from 'react'
 import { renderHook, act, waitFor } from '@testing-library/react'
 import { useSolanaWallet, useSolanaBalance, SolanaWalletType } from '@/hooks/useSolanaWallet'
 import { useMultiChainStore } from '@/stores/multiChainStore'
@@ -25,7 +24,7 @@ describe('useSolanaWallet', () => {
   const mockUpdateSolanaBalance = jest.fn()
   const mockSetSolanaStatus = jest.fn()
 
-  const createMockStore = (overrides = {}) => ({
+  const createMockStore = (overrides: Record<string, unknown> = {}) => ({
     solana: {
       address: null,
       balance: null,
@@ -41,17 +40,17 @@ describe('useSolanaWallet', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    ;(useMultiChainStore as jest.Mock).mockReturnValue(createMockStore())
+    ;(useMultiChainStore as unknown as jest.Mock).mockReturnValue(createMockStore())
 
     // Reset window object
-    delete (window as any).phantom
-    delete (window as any).solflare
-    delete (window as any).backpack
+    delete (window as unknown as Record<string, unknown>).phantom
+    delete (window as unknown as Record<string, unknown>).solflare
+    delete (window as unknown as Record<string, unknown>).backpack
   })
 
   describe('wallet detection', () => {
     it('should detect Phantom wallet', () => {
-      ;(window as any).phantom = { solana: { isConnected: false } }
+      ;(window as unknown as Record<string, unknown>).phantom = { solana: { isConnected: false } }
 
       const { result } = renderHook(() => useSolanaWallet())
 
@@ -62,7 +61,7 @@ describe('useSolanaWallet', () => {
     })
 
     it('should detect Solflare wallet', () => {
-      ;(window as any).solflare = { isConnected: false }
+      ;(window as unknown as Record<string, unknown>).solflare = { isConnected: false }
 
       const { result } = renderHook(() => useSolanaWallet())
 
@@ -73,7 +72,7 @@ describe('useSolanaWallet', () => {
     })
 
     it('should detect Backpack wallet', () => {
-      ;(window as any).backpack = { isConnected: false }
+      ;(window as unknown as Record<string, unknown>).backpack = { isConnected: false }
 
       const { result } = renderHook(() => useSolanaWallet())
 
@@ -84,9 +83,9 @@ describe('useSolanaWallet', () => {
     })
 
     it('should detect multiple wallets', () => {
-      ;(window as any).phantom = { solana: { isConnected: false } }
-      ;(window as any).solflare = { isConnected: false }
-      ;(window as any).backpack = { isConnected: false }
+      ;(window as unknown as Record<string, unknown>).phantom = { solana: { isConnected: false } }
+      ;(window as unknown as Record<string, unknown>).solflare = { isConnected: false }
+      ;(window as unknown as Record<string, unknown>).backpack = { isConnected: false }
 
       const { result } = renderHook(() => useSolanaWallet())
 
@@ -111,13 +110,12 @@ describe('useSolanaWallet', () => {
       const mockConnect = jest.fn().mockResolvedValue({
         publicKey: { toString: () => 'PhantomAddress123' },
       })
-      const mockOn = jest.fn()
 
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: false,
           connect: mockConnect,
-          on: mockOn,
+          on: jest.fn(),
           off: jest.fn(),
         },
       }
@@ -153,7 +151,7 @@ describe('useSolanaWallet', () => {
     it('should handle connection error', async () => {
       const mockConnect = jest.fn().mockRejectedValue(new Error('User rejected'))
 
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: false,
           connect: mockConnect,
@@ -175,12 +173,12 @@ describe('useSolanaWallet', () => {
     })
 
     it('should set connecting state during connection', async () => {
-      let resolveConnect: (value: any) => void
+      let resolveConnect: (value: unknown) => void = () => {}
       const connectPromise = new Promise((resolve) => {
         resolveConnect = resolve
       })
 
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: false,
           connect: jest.fn().mockReturnValue(connectPromise),
@@ -198,7 +196,7 @@ describe('useSolanaWallet', () => {
       expect(result.current.isConnecting).toBe(true)
 
       await act(async () => {
-        resolveConnect!({ publicKey: { toString: () => 'Address123' } })
+        resolveConnect({ publicKey: { toString: () => 'Address123' } })
         await connectPromise
       })
 
@@ -210,14 +208,14 @@ describe('useSolanaWallet', () => {
     it('should disconnect wallet successfully', async () => {
       const mockDisconnect = jest.fn().mockResolvedValue(undefined)
 
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: true,
           disconnect: mockDisconnect,
         },
       }
 
-      ;(useMultiChainStore as jest.Mock).mockReturnValue(
+      ;(useMultiChainStore as unknown as jest.Mock).mockReturnValue(
         createMockStore({
           availableWallets: [SolanaWalletType.PHANTOM],
         })
@@ -236,14 +234,14 @@ describe('useSolanaWallet', () => {
     it('should handle disconnect error', async () => {
       const mockDisconnect = jest.fn().mockRejectedValue(new Error('Disconnect failed'))
 
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: true,
           disconnect: mockDisconnect,
         },
       }
 
-      ;(useMultiChainStore as jest.Mock).mockReturnValue(
+      ;(useMultiChainStore as unknown as jest.Mock).mockReturnValue(
         createMockStore({
           availableWallets: [SolanaWalletType.PHANTOM],
         })
@@ -261,7 +259,7 @@ describe('useSolanaWallet', () => {
 
   describe('connection state', () => {
     it('should reflect connected state', () => {
-      ;(useMultiChainStore as jest.Mock).mockReturnValue(
+      ;(useMultiChainStore as unknown as jest.Mock).mockReturnValue(
         createMockStore({
           address: 'ConnectedAddress123',
           balance: '10.5',
@@ -287,7 +285,7 @@ describe('useSolanaWallet', () => {
 
   describe('clearError', () => {
     it('should clear error state', async () => {
-      ;(window as any).phantom = {
+      ;(window as unknown as Record<string, unknown>).phantom = {
         solana: {
           isConnected: false,
           connect: jest.fn().mockRejectedValue(new Error('Test error')),
@@ -301,7 +299,9 @@ describe('useSolanaWallet', () => {
       await act(async () => {
         try {
           await result.current.connect(SolanaWalletType.PHANTOM, ChainId.SOLANA_DEVNET)
-        } catch {}
+        } catch {
+          // Expected error
+        }
       })
 
       expect(result.current.error).toBe('Test error')
@@ -321,7 +321,7 @@ describe('useSolanaBalance', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    ;(useMultiChainStore as jest.Mock).mockReturnValue({
+    ;(useMultiChainStore as unknown as jest.Mock).mockReturnValue({
       updateSolanaBalance: mockUpdateSolanaBalance,
     })
   })
@@ -333,7 +333,7 @@ describe('useSolanaBalance', () => {
   it('should fetch balance on mount', async () => {
     ;(getSolanaBalance as jest.Mock).mockResolvedValue('7.5')
 
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useSolanaBalance('TestAddress123', ChainId.SOLANA_DEVNET)
     )
 
@@ -387,7 +387,7 @@ describe('useSolanaBalance', () => {
   it('should handle fetch error gracefully', async () => {
     ;(getSolanaBalance as jest.Mock).mockRejectedValue(new Error('RPC error'))
 
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useSolanaBalance('TestAddress123', ChainId.SOLANA_DEVNET)
     )
 

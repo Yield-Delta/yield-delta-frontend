@@ -13,7 +13,6 @@ import {
   clearConnectionPool,
   getAccountInfo,
   getRecentBlockhash,
-  type SolanaCluster,
 } from '@/lib/solana/connection'
 
 // Mock @solana/web3.js
