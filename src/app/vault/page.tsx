@@ -424,7 +424,7 @@ function VaultDetailPageContent({ vaultAddress, activeTab, action, searchParams 
 
   return (
     <div 
-      className="min-h-screen bg-background relative vault-page" 
+      className="min-h-screen bg-background yd-vault-page" 
       style={{
         background: 'radial-gradient(ellipse at top, rgba(155, 93, 229, 0.1) 0%, rgba(0, 245, 212, 0.05) 50%, transparent 100%)',
         width: '100vw',
@@ -432,6 +432,10 @@ function VaultDetailPageContent({ vaultAddress, activeTab, action, searchParams 
         position: 'relative'
       }}
     >
+      <style>{`
+        .yd-vault-page { padding-top: 0 !important; }
+        .yd-vault-page .vault-layout-container { max-width: 1400px !important; }
+      `}</style>
       {/* Background overlay for better content contrast */}
       <div className="fixed inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background/80 pointer-events-none" />
       
@@ -1437,7 +1441,7 @@ function VaultDetailPageContent({ vaultAddress, activeTab, action, searchParams 
               </div>
             </TabsContent>
           </Tabs>
-        </div> {/* Close unified vault-layout-container */}
+        </div>
       </div>
 
       {/* Deposit Modal */}
