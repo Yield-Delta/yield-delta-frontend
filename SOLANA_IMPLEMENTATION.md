@@ -181,10 +181,10 @@ function VaultCard({ vault }) {
 ## Next Steps
 
 ### Phase 1: Backend Integration (Next 2 weeks)
-- [ ] Implement Solana RPC balance fetching
-- [ ] Add Solana transaction signing
-- [ ] Create Solana vault interaction endpoints
-- [ ] Build Solana keeper service
+- [x] Implement Solana RPC balance fetching
+- [x] Add Solana transaction signing
+- [x] Create Solana vault interaction endpoints
+- [x] Build Solana keeper service
 
 ### Phase 2: Vault Integration (Weeks 3-4)
 - [ ] Port vault UI components for Solana

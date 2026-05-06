@@ -208,7 +208,7 @@ export default function SolanaWithdrawModal({
             >
               <TrendingDown className="w-12 h-12 mx-auto mb-3 text-yellow-400" />
               <p className="text-white font-medium mb-2">No Shares to Withdraw</p>
-              <p className="text-white/60 text-sm">You don't have any shares in this vault</p>
+              <p className="text-white/60 text-sm">You don&apos;t have any shares in this vault</p>
             </div>
           ) : (
             <>
