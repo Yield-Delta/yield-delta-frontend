@@ -123,7 +123,7 @@ export function SolanaWalletModal({
             paddingRight: '1rem',
           }}
         >
-          {/* Backdrop */}
+          {/* Backdrop — no zIndex needed; DOM order places it below the modal panel */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -136,7 +136,6 @@ export function SolanaWalletModal({
               background: 'rgba(0, 0, 0, 0.78)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
-              zIndex: -1,
             }}
           />
 
@@ -148,6 +147,7 @@ export function SolanaWalletModal({
             transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
             style={{
               position: 'relative',
+              zIndex: 1,
               width: '100%',
               maxWidth: '420px',
               maxHeight: 'calc(100dvh - 7.5rem)',
