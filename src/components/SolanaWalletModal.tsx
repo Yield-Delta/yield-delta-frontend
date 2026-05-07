@@ -96,12 +96,21 @@ export function SolanaWalletModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-background/95 backdrop-blur-xl border-cyan-500/30">
+      <DialogContent
+        className="sm:max-w-md border-0"
+        style={{
+          background: 'linear-gradient(145deg, #06030f 0%, #0c0520 50%, #07031a 100%)',
+          border: '1px solid rgba(153, 69, 255, 0.3)',
+          boxShadow: '0 0 80px rgba(153, 69, 255, 0.12), 0 32px 64px rgba(0,0,0,0.9), inset 0 1px 0 rgba(153, 69, 255, 0.12)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+        }}
+      >
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <DialogTitle className="text-2xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #9945FF 0%, #14F195 100%)' }}>
             Connect Solana Wallet
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.85rem' }}>
             Choose your preferred wallet to connect to {chainMetadata.displayName}
           </DialogDescription>
         </DialogHeader>
@@ -124,7 +133,7 @@ export function SolanaWalletModal({
           </AnimatePresence>
 
           {/* Chain Info */}
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30">
+          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.25)' }}>
             {chainMetadata.iconUrl && (
               <img
                 src={chainMetadata.iconUrl}
@@ -160,7 +169,7 @@ export function SolanaWalletModal({
           </div>
 
           {/* Info Section */}
-          <div className="text-xs text-muted-foreground text-center space-y-1 pt-4 border-t border-cyan-500/20">
+          <div className="text-xs text-center space-y-1 pt-4" style={{ color: 'rgba(255,255,255,0.3)', borderTop: '1px solid rgba(153,69,255,0.15)', paddingTop: '1rem' }}>
             <p>Don&apos;t have a wallet?</p>
             <p>Click on any wallet above to download and install</p>
           </div>
@@ -194,16 +203,20 @@ function WalletOption({
       <Button
         variant="outline"
         className={`
-          w-full h-auto p-4 relative overflow-hidden
-          border-cyan-500/30 hover:border-cyan-500/50
-          ${isAvailable ? 'cursor-pointer' : 'opacity-60 cursor-not-allowed'}
+          w-full h-auto p-4 relative overflow-hidden transition-all duration-300
+          ${isAvailable ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
           ${isLoading ? 'animate-pulse' : ''}
         `}
+        style={{
+          background: isAvailable ? 'rgba(153,69,255,0.06)' : 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(153,69,255,0.2)',
+          borderRadius: '14px',
+        }}
         onClick={() => isAvailable && !isLoading && onConnect(walletType)}
         disabled={!isAvailable || isLoading}
       >
-        {/* Gradient Background */}
-        <div className={`absolute inset-0 bg-gradient-to-r ${info.color} opacity-0 hover:opacity-10 transition-opacity`} />
+        {/* Hover gradient */}
+        <div className={`absolute inset-0 bg-gradient-to-r ${info.color} opacity-0 hover:opacity-10 transition-opacity rounded-[13px]`} />
 
         <div className="relative flex items-center justify-between w-full">
           {/* Left: Icon + Info */}

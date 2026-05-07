@@ -139,14 +139,21 @@ export function ChainSelector({
 
       <DropdownMenuContent
         align="end"
-        className="w-80 bg-background/95 backdrop-blur-lg border-cyan-500/30"
+        className="w-80 border-0 p-1"
+        style={{
+          background: 'linear-gradient(145deg, #07080f 0%, #0b0d1c 100%)',
+          border: '1px solid rgba(0, 245, 212, 0.18)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,245,212,0.06) inset, 0 0 50px rgba(0,245,212,0.05)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+        }}
       >
-        <DropdownMenuLabel className="text-cyan-400">Select Blockchain</DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-cyan-500/20" />
+        <DropdownMenuLabel className="text-xs font-bold tracking-widest uppercase px-3 py-2" style={{ color: 'rgba(0,245,212,0.7)', letterSpacing: '0.12em' }}>Select Blockchain</DropdownMenuLabel>
+        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.2), transparent)', height: '1px', border: 'none', margin: '0 8px' }} />
 
         {/* EVM Chains (SEI) */}
         <div className="py-1">
-          <div className="px-2 py-1 text-xs text-muted-foreground font-semibold">
+          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
             EVM Chains
           </div>
           {evmChains.map((chain) => (
@@ -162,11 +169,11 @@ export function ChainSelector({
           ))}
         </div>
 
-        <DropdownMenuSeparator className="bg-cyan-500/20" />
+        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.15), transparent)', height: '1px', border: 'none', margin: '4px 8px' }} />
 
         {/* Solana Chains */}
         <div className="py-1">
-          <div className="px-2 py-1 text-xs text-muted-foreground font-semibold">
+          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
             Solana
           </div>
           {solanaChains.map((chain) => (
@@ -182,11 +189,11 @@ export function ChainSelector({
           ))}
         </div>
 
-        <DropdownMenuSeparator className="bg-cyan-500/20" />
+        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.15), transparent)', height: '1px', border: 'none', margin: '4px 8px' }} />
 
         {/* Sui Chains (Coming Soon) */}
         <div className="py-1 opacity-50">
-          <div className="px-2 py-1 text-xs text-muted-foreground font-semibold flex items-center gap-2">
+          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
             Sui
             <Badge variant="outline" className="text-xs">
               Coming Soon
@@ -233,10 +240,14 @@ function ChainMenuItem({
   return (
     <DropdownMenuItem
       className={`
-        relative cursor-pointer transition-all duration-200
-        ${isActive ? 'bg-cyan-500/20 border-l-2 border-cyan-500' : 'hover:bg-cyan-500/10'}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        relative cursor-pointer transition-all duration-200 rounded-lg mx-1 mb-0.5
+        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
       `}
+      style={{
+        background: isActive ? 'rgba(0, 245, 212, 0.1)' : 'transparent',
+        borderLeft: isActive ? '2px solid rgba(0, 245, 212, 0.7)' : '2px solid transparent',
+        paddingLeft: '10px',
+      }}
       onClick={disabled ? undefined : onSelect}
       disabled={disabled}
     >
