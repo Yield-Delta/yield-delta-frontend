@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, ExternalLink, AlertCircle, X, Zap } from 'lucide-react'
 import { useSolanaWallet, SolanaWalletType } from '@/hooks/useSolanaWallet'
@@ -103,11 +104,9 @@ export function SolanaWalletModal({
     onClose()
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        // Portal-style fixed overlay — always above nav (z-index higher than nav's 99999)
-        // paddingTop accounts for testnet banner (2rem) + nav bar (3.5rem) + breathing room
         <div
           style={{
             position: 'fixed',
@@ -319,6 +318,9 @@ export function SolanaWalletModal({
       )}
     </AnimatePresence>
   )
+
+  if (typeof document === 'undefined') return null
+  return createPortal(modalContent, document.body)
 }
 
 // Individual wallet option card
