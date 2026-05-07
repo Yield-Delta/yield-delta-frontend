@@ -3,6 +3,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   YIELD DELTA DESIGN SYSTEM v2
+   ======================================== */
+:root {
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+  --font-display: 'Syne', system-ui, sans-serif;
+
+  /* Elevation tokens */
+  --yd-surface: rgba(255, 255, 255, 0.04);
+  --yd-card: rgba(255, 255, 255, 0.07);
+  --yd-card-elevated: rgba(255, 255, 255, 0.11);
+  --yd-border-subtle: rgba(255, 255, 255, 0.07);
+  --yd-border: rgba(255, 255, 255, 0.12);
+  --yd-border-strong: rgba(255, 255, 255, 0.24);
+
+  /* Text tokens */
+  --yd-text-1: rgba(255, 255, 255, 0.92);
+  --yd-text-2: rgba(255, 255, 255, 0.55);
+  --yd-text-3: rgba(255, 255, 255, 0.28);
+
+  /* Brand colors */
+  --yd-cyan: #00f5d4;
+  --yd-purple: #9b5de5;
+  --yd-pink: #ff206e;
+  --yd-emerald: #10b981;
+}
+
+/* New keyframes */
+@keyframes ydLivePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes ydCtaPulse {
+  0%, 100% { box-shadow: 0 0 20px var(--yd-glow, rgba(0, 245, 212, 0.25)); }
+  50% { box-shadow: 0 0 45px var(--yd-glow, rgba(0, 245, 212, 0.45)); }
+}
+
+@keyframes ydCardGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@property --yd-border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ydBorderSpin {
+  to { --yd-border-angle: 360deg; }
+}
+
+@keyframes ydFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* 2. Import modular CSS files */
 @import '../styles/theme.css';
 @import '../styles/base.css';
@@ -64,10 +122,8 @@
 
 /* Vault Page Spacing Controls */
 .vault-page-spacing {
-.vault-page-spacing {
   padding-top: 1.5rem;
   min-height: calc(100vh - 1.5rem);
-}
 }
 
 @media (max-width: 768px) {
@@ -124,131 +180,6 @@
   box-shadow: none !important;
 }
 
-/* ========================================
-   NUCLEAR FIXES - VAULT PAGE LAYOUT
-   Maximum specificity overrides for stubborn spacing issues
-   ======================================== */
-
-/* NUCLEAR FIX 1: Force max-w-5xl to be exactly 64rem */
-.vault-page .max-w-5xl {
-  max-width: 64rem !important;
-}
-
-/* NUCLEAR FIX 2: Back Button Spacing */
-.vault-page .mb-4,
-.vault-page .mb-4:not([style*="margin-bottom"]),
-.vault-page button.mb-4,
-.vault-page .Button.mb-4,
-html body div.vault-page button.mb-4 {
-  margin-bottom: 1rem !important;
-}
-
-/* NUCLEAR FIX 3: Header Card to Tabs Connection */
-.vault-page .vault-detail-header-card-optimized,
-html body div.vault-page .vault-detail-header-card-optimized {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-  border-bottom-left-radius: 8px !important;
-  border-bottom-right-radius: 8px !important;
-  max-width: 64rem !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* NUCLEAR FIX 4: Tabs Container Zero Top Margin */
-.vault-page .tabs-container-compact,
-.vault-page [data-slot="tabs-list"],
-.vault-page [data-slot="tabs"],
-html body div.vault-page .tabs-container-compact,
-html body div.vault-page [data-slot="tabs-list"] {
-  margin-top: -2px !important;
-  margin-bottom: 0.5rem !important;
-  padding-top: 0 !important;
-  border-top-left-radius: 8px !important;
-  border-top-right-radius: 8px !important;
-  max-width: 64rem !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-  gap: 0 !important;
-}
-
-/* NUCLEAR FIX 5: Tabs Content Width Alignment */
-.vault-page [data-slot="tabs-content"],
-.vault-page [data-slot="tabs-content"] .grid,
-html body div.vault-page [data-slot="tabs-content"] {
-  max-width: 64rem !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* NUCLEAR FIX 6: Container Width Enforcement */
-html body div.vault-page .container.mx-auto,
-html body div.vault-page-container-isolated .container.mx-auto {
-  max-width: 64rem !important;
-  width: 100% !important;
-  margin-left: auto !important;
-  margin-right: auto !important;
-}
-
-/* NUCLEAR FIX 7: Override Inline Styles */
-.vault-page [style*="maxWidth"],
-.vault-page [style*="max-width"] {
-  max-width: 64rem !important;
-}
-
-/* NUCLEAR FIX 8: TabsList Width Override */
-.vault-page [data-slot="tabs-list"] {
-  width: min(100%, 60rem) !important;
-  max-width: 60rem !important;
-  display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) !important;
-}
-
-/* NUCLEAR FIX 9: Remove Radix UI Component Gaps */
-html body div.vault-page [data-slot="tabs"] {
-  gap: 0 !important;
-  row-gap: 0 !important;
-  column-gap: 0 !important;
-}
-
-/* NUCLEAR FIX 10: Visual Connection Pseudo-elements */
-html body div.vault-page .vault-detail-header-card-optimized::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-}
-
-html body div.vault-page .tabs-container-compact::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 1000;
-}
-
-/* NUCLEAR FIX 11: CSS Custom Properties for Fallback */
-html body div.vault-page {
-  --tabs-container-max-width: 64rem !important;
-  --tabs-content-max-width: 64rem !important;
-  --header-tabs-gap: 0px !important;
-}
-
-/* NUCLEAR FIX 12: Force Tab Trigger Clean Layout */
-.vault-page .tab-trigger-clean {
-  flex: 1 1 0 !important;
-  box-sizing: border-box !important;
-}
 
 /* ========================================
    WALLET MODAL OVERRIDE STYLES

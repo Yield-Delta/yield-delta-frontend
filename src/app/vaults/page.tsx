@@ -1,898 +1,635 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import StatsCardGraphic from '@/components/StatsCardGraphic';
 import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
-import { MessageCircle, X, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Loader2, TrendingUp, Shield, Zap } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSeiMarketData } from '@/hooks/useMarketData';
 import { useVaultStore, VaultData } from '@/stores/vaultStore';
 import { useVaultTVL } from '@/hooks/useVaultTVL';
 import { useTotalTVLInUSD } from '@/hooks/useTotalTVLInUSD';
-import '@/components/StatsCarousel.css';
-// import styles from './page.module.css'; // Commented out as not used
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Utility functions
+// ─── Utility functions ─────────────────────────────────────────────────────────
+
 const formatAmount = (amount: number, token: string = 'SEI') => {
-  if (amount >= 1000000) {
-    return `${(amount / 1000000).toFixed(1)}M ${token}`
-  }
-  if (amount >= 1000) {
-    return `${(amount / 1000).toFixed(1)}K ${token}`
-  }
-  if (amount >= 1) {
-    return `${amount.toFixed(2)} ${token}`
-  }
+  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M ${token}`
+  if (amount >= 1000) return `${(amount / 1000).toFixed(1)}K ${token}`
+  if (amount >= 1) return `${amount.toFixed(2)} ${token}`
   return `${amount.toFixed(4)} ${token}`
 }
 
-// Helper to get the primary token for a vault
-const getVaultToken = (vault: VaultData) => {
-  // For stable_max strategy or USDC vaults, use USDC
-  if (vault.strategy === 'stable_max' || vault.tokenA === 'USDC') {
-    return 'USDC'
-  }
-  return 'SEI'
-}
-
-// Legacy function for backwards compatibility (currently unused)
-// const formatSEI = (amount: number) => formatAmount(amount, 'SEI')
+const getVaultToken = (vault: VaultData) =>
+  vault.strategy === 'stable_max' || vault.tokenA === 'USDC' ? 'USDC' : 'SEI'
 
 const getRiskLevel = (apy: number, strategy?: string): 'Low' | 'Medium' | 'High' => {
-  const apyPercentage = apy * 100; // Convert decimal to percentage
-  
-  // Strategy-based risk adjustments
-  const strategyRiskModifier = {
-    'stable_max': -5,          // Stablecoin strategies are less risky
-    'concentrated_liquidity': 5, // Concentrated liquidity has impermanent loss risk
-    'arbitrage': 3,            // Arbitrage has execution risk
-    'yield_farming': 2,        // Standard farming risk
-    'hedge': 0,                // Hedge strategies are balanced
-    'sei_hypergrowth': 8,      // High growth = high risk
-    'blue_chip': -2,           // Blue chip assets are safer
-    'delta_neutral': -3        // Delta neutral strategies reduce market risk
-  };
-  
-  const modifier = strategy ? (strategyRiskModifier[strategy as keyof typeof strategyRiskModifier] || 0) : 0;
-  const adjustedApy = apyPercentage + modifier;
-  
-  if (adjustedApy < 15) return 'Low'
-  if (adjustedApy < 25) return 'Medium'
+  const modifier: Record<string, number> = {
+    stable_max: -5, concentrated_liquidity: 5, arbitrage: 3,
+    yield_farming: 2, hedge: 0, sei_hypergrowth: 8, blue_chip: -2, delta_neutral: -3,
+  }
+  const adjusted = apy * 100 + (strategy ? (modifier[strategy] || 0) : 0)
+  if (adjusted < 15) return 'Low'
+  if (adjusted < 25) return 'Medium'
   return 'High'
 }
 
-const getVaultColor = (strategy: string) => {
-  const colors = {
-    concentrated_liquidity: '#00f5d4',
-    yield_farming: '#9b5de5',
-    arbitrage: '#ff206e',
-    hedge: '#ffa500',
-    stable_max: '#10b981',
-    sei_hypergrowth: '#f59e0b',
-    blue_chip: '#3b82f6',
-    delta_neutral: '#8b5cf6',
-  }
-  return colors[strategy as keyof typeof colors] || '#00f5d4'
+const getVaultColor = (strategy: string) => ({
+  concentrated_liquidity: '#00f5d4',
+  yield_farming: '#9b5de5',
+  arbitrage: '#ff206e',
+  hedge: '#ffa500',
+  stable_max: '#10b981',
+  sei_hypergrowth: '#f59e0b',
+  blue_chip: '#3b82f6',
+  delta_neutral: '#8b5cf6',
+} as Record<string, string>)[strategy] || '#00f5d4'
+
+const RISK_BADGE_STYLES = {
+  Low: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: 'rgba(16,185,129,0.35)' },
+  Medium: { bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: 'rgba(245,158,11,0.35)' },
+  High: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: 'rgba(239,68,68,0.35)' },
 }
 
-const getRiskBadgeStyle = (riskLevel: 'Low' | 'Medium' | 'High') => {
-  const styles = {
-    Low: {
-      background: 'linear-gradient(45deg, rgba(16, 185, 129, 0.25), rgba(16, 185, 129, 0.45))',
-      color: '#d1fae5',
-      border: '1px solid rgba(16, 185, 129, 0.6)',
-      boxShadow: '0 0 12px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-    },
-    Medium: {
-      background: 'linear-gradient(45deg, rgba(245, 158, 11, 0.25), rgba(245, 158, 11, 0.45))',
-      color: '#fef3c7',
-      border: '1px solid rgba(245, 158, 11, 0.6)',
-      boxShadow: '0 0 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-    },
-    High: {
-      background: 'linear-gradient(45deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.45))',
-      color: '#fecaca',
-      border: '1px solid rgba(239, 68, 68, 0.6)',
-      boxShadow: '0 0 12px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-    }
-  }
-  return styles[riskLevel]
-}
+const STRATEGY_FILTERS = [
+  { key: 'all', label: 'All Vaults', color: 'rgba(255,255,255,0.55)' },
+  { key: 'concentrated_liquidity', label: 'Concentrated', color: '#00f5d4' },
+  { key: 'yield_farming', label: 'Yield Farming', color: '#9b5de5' },
+  { key: 'delta_neutral', label: 'Delta Neutral', color: '#8b5cf6' },
+  { key: 'stable_max', label: 'Stable', color: '#10b981' },
+  { key: 'arbitrage', label: 'Arbitrage', color: '#ff206e' },
+]
 
-/**
- * Render the Vaults dashboard with live stats, a responsive vaults grid, AI chat assistant, and deposit modal.
- *
- * The component fetches and combines API and on-chain data to display TVL, APY, and performance metrics, provides
- * actions for depositing and viewing analytics, and includes GSAP-powered entrance animations for stats and vault cards.
- *
- * @returns JSX element representing the Vaults dashboard page
- */
-export default function VaultsPage() {
-  const router = useRouter();
-  const vaultCardsRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
-  const [showChat, setShowChat] = useState(false);
-  const [showDepositModal, setShowDepositModal] = useState(false);
-  const [depositVault, setDepositVault] = useState<VaultData | null>(null);
+// ─── Sub-components ─────────────────────────────────────────────────────────────
 
-  // Debug chat state changes
+function StatPillar({
+  label, value, color, loading = false, isNumeric = false, decimals = 1, suffix = '',
+}: {
+  label: string; value: string | number; color: string
+  loading?: boolean; isNumeric?: boolean; decimals?: number; suffix?: string
+}) {
+  const [displayed, setDisplayed] = useState(isNumeric ? '0' : '')
+
   useEffect(() => {
-    console.log('[AI Chat] showChat state changed to:', showChat);
-  }, [showChat]);
+    if (loading) return
+    if (!isNumeric) { setDisplayed(value as string); return }
+    const target = typeof value === 'number' ? value : parseFloat(value as string)
+    if (isNaN(target)) { setDisplayed(String(value)); return }
+    const duration = 1400
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setDisplayed((eased * target).toFixed(decimals))
+      if (t < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [loading, value, isNumeric, decimals])
 
-  // State management
-  const {
-    selectedVault,
-    setSelectedVault,
-    getFilteredVaults,
-    isLoading: vaultLoading,
-    isError: vaultError,
-  } = useVaultStore()
-  
-  // Temporary direct fetch to bypass React Query issues
-  const [vaultsData, setVaultsData] = React.useState<VaultData[]>([]);
-  const [queryLoading, setQueryLoading] = React.useState(true);
-  const [queryError, setQueryError] = React.useState<Error | null>(null);
+  return (
+    <div className="yd-stat-pillar" style={{ '--pillar-color': color } as CSSProperties}>
+      <span className="yd-stat-label">{label}</span>
+      <span className="yd-stat-value">
+        {loading ? '...' : displayed}{!loading && isNumeric ? suffix : ''}
+      </span>
+    </div>
+  )
+}
+
+function Sparkline({ vault, color }: { vault: VaultData; color: string }) {
+  const id = `spark-${vault.address.slice(-8)}`
+  const W = 300, H = 36
+  const raw = [
+    0.18,
+    0.28 + vault.performance.winRate * 0.15,
+    0.4 + vault.performance.sharpeRatio * 0.07,
+    0.5 + vault.performance.totalReturn * 0.45,
+    0.62 + vault.apy * 0.28,
+    0.75 + vault.performance.totalReturn * 0.38,
+    0.88 + vault.performance.sharpeRatio * 0.05,
+  ]
+  const pts = raw.map((v, i) => ({
+    x: (i / (raw.length - 1)) * W,
+    y: H - Math.min(Math.max(v, 0.04), 0.96) * H,
+  }))
+  const d = pts.reduce((acc, p, i) => {
+    if (i === 0) return `M ${p.x},${p.y}`
+    const prev = pts[i - 1]
+    const cx = (prev.x + p.x) / 2
+    return `${acc} C ${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`
+  }, '')
+
+  return (
+    <div style={{ margin: '0.75rem -4px 0', opacity: 0.65 }}>
+      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={`${d} L ${W},${H} L 0,${H} Z`} fill={`url(#${id})`} />
+        <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    </div>
+  )
+}
+
+// ─── Main Page ──────────────────────────────────────────────────────────────────
+
+export default function VaultsPage() {
+  const router = useRouter()
+  const vaultCardsRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLElement>(null)
+  const [showChat, setShowChat] = useState(false)
+  const [showDepositModal, setShowDepositModal] = useState(false)
+  const [depositVault, setDepositVault] = useState<VaultData | null>(null)
+  const [activeFilter, setActiveFilter] = useState('all')
+
+  const { selectedVault, setSelectedVault, getFilteredVaults, isLoading: vaultLoading } = useVaultStore()
+  const [vaultsData, setVaultsData] = React.useState<VaultData[]>([])
+  const [queryLoading, setQueryLoading] = React.useState(true)
+  const [queryError, setQueryError] = React.useState<Error | null>(null)
 
   React.useEffect(() => {
     const fetchVaults = async () => {
       try {
-        console.log('[VaultsPage] Direct fetch starting...');
-        setQueryLoading(true);
-        const response = await fetch('/api/vaults');
-        console.log('[VaultsPage] Direct fetch response:', response.status, response.statusText);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        console.log('[VaultsPage] Direct fetch result:', result);
-        
-        if (result.success && result.data) {
-          setVaultsData(result.data);
-          console.log('[VaultsPage] Successfully loaded', result.data.length, 'vaults');
-        } else {
-          throw new Error(result.error || 'Invalid response format');
-        }
-      } catch (error) {
-        console.error('[VaultsPage] Direct fetch error:', error);
-        setQueryError(error as Error);
+        setQueryLoading(true)
+        const res = await fetch('/api/vaults')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const result = await res.json()
+        if (result.success && result.data) setVaultsData(result.data)
+        else throw new Error(result.error || 'Invalid response')
+      } catch (err) {
+        setQueryError(err as Error)
       } finally {
-        setQueryLoading(false);
+        setQueryLoading(false)
       }
-    };
+    }
+    fetchVaults()
+  }, [])
 
-    fetchVaults();
-  }, []);
+  const { data: marketData } = useSeiMarketData()
+  const vaultAddresses = React.useMemo(() => vaultsData?.map(v => v.address) || [], [vaultsData])
+  const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
+  const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
 
-  const { data: marketData } = useSeiMarketData();
-
-  // Get vault addresses for TVL fetching
-  const vaultAddresses = React.useMemo(() => {
-    return vaultsData?.map(v => v.address) || [];
-  }, [vaultsData]);
-
-  // Fetch on-chain TVL for all vaults
-  const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses);
-
-  // Calculate total TVL in USD across all vaults
-  const {
-    formattedUSD: totalTVLInUSD,
-    isLoading: tvlUSDLoading
-  } = useTotalTVLInUSD(vaultsData || [], tvlMap);
-
-  // Combine loading states
   const isLoading = vaultLoading || queryLoading || tvlLoading
-  const error = vaultError || queryError
-  
-  // Get filtered vaults from store - prefer API data over store
-  const filteredVaults = React.useMemo(() => {
-    return vaultsData && vaultsData.length > 0 ? vaultsData : getFilteredVaults()
-  }, [vaultsData, getFilteredVaults])
-  
-  // Debug API data
-  React.useEffect(() => {
-    if (vaultsData) {
-      console.log('[VaultsPage] API vaultsData loaded:', vaultsData.length, 'vaults');
-      console.log('[VaultsPage] First vault example:', vaultsData[0]);
-    }
-  }, [vaultsData]);
-  
-  // Debug store data (throttled)
-  const lastLogRef = useRef<string>('');
-  React.useEffect(() => {
-    const currentState = `${filteredVaults.length}|${selectedVault?.name || 'NONE'}|${depositVault?.name || 'NONE'}|${showDepositModal}`;
-    if (currentState !== lastLogRef.current) {
-      console.log('[VaultsPage] Store state changed:', { 
-        filteredVaults: filteredVaults.length,
-        selectedVault: selectedVault?.name || 'NONE',
-        depositVault: depositVault?.name || 'NONE',
-        showDepositModal 
-      });
-      lastLogRef.current = currentState;
-    }
-  }, [filteredVaults, selectedVault, depositVault, showDepositModal]);
+  const filteredVaults = React.useMemo(
+    () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
+    [vaultsData, getFilteredVaults]
+  )
 
-  // Calculate total TVL from on-chain data (currently unused, replaced by useTotalTVLInUSD)
-  // const totalTVL = React.useMemo(() => {
-  //   if (tvlMap.size === 0) return 0;
-  //   let total = 0;
-  //   tvlMap.forEach((tvl) => {
-  //     total += tvl;
-  //   });
-  //   return total;
-  // }, [tvlMap]);
+  const displayVaults = React.useMemo(() => {
+    if (activeFilter === 'all') return filteredVaults
+    return filteredVaults.filter(v => v.strategy === activeFilter)
+  }, [filteredVaults, activeFilter])
 
-  // Helper to get vault TVL (on-chain if available, else API data)
+  const avgApy = React.useMemo(() => {
+    if (!displayVaults.length) return 0
+    return (displayVaults.reduce((s, v) => s + v.apy, 0) / displayVaults.length) * 100
+  }, [displayVaults])
+
   const getVaultTVL = React.useCallback((vault: VaultData) => {
-    const onChainTVL = tvlMap.get(vault.address.toLowerCase());
-    return onChainTVL !== undefined ? onChainTVL : vault.tvl;
-  }, [tvlMap]);
-  
-  // Handler functions for vault actions
+    const on = tvlMap.get(vault.address.toLowerCase())
+    return on !== undefined ? on : vault.tvl
+  }, [tvlMap])
+
   const handleDeposit = React.useCallback((vault: VaultData) => {
-    try {
-      console.log('[Deposit] handleDeposit called', { 
-        vault: vault?.name || 'VAULT IS NULL/UNDEFINED',
-        vaultExists: !!vault,
-        vaultKeys: vault ? Object.keys(vault) : 'no keys',
-        vaultStrategy: vault?.strategy,
-        vaultAddress: vault?.address
-      });
-      
-      if (!vault) {
-        console.error('[Deposit] ERROR: Vault is null or undefined!');
-        return;
-      }
-      
-      // Set both store state and local state
-      setSelectedVault(vault)
-      setDepositVault(vault)
-      setShowDepositModal(true)
-      
-      // Debug the state immediately
-      console.log('[Deposit] State set - showModal:', true, 'vault:', vault.name);
-      console.log('[Deposit] Full vault data:', JSON.stringify(vault, null, 2));
-      
-      // Force a re-render to check if the state persists
-      setTimeout(() => {
-        console.log('[Deposit] Modal state after 100ms - checking current state');
-      }, 100);
-    } catch (error) {
-      console.error('Deposit error:', error)
-    }
-  }, [setSelectedVault, setDepositVault, setShowDepositModal]);
+    if (!vault) return
+    setSelectedVault(vault)
+    setDepositVault(vault)
+    setShowDepositModal(true)
+  }, [setSelectedVault])
 
   const handleDepositSuccess = React.useCallback((txHash: string) => {
-    // Optional: Show success notification or redirect to transaction
     console.log('Deposit successful:', txHash)
-    // Could add toast notification here
   }, [])
 
   const handleCloseModal = React.useCallback(() => {
-    console.log('[DepositModal] onClose called');
     setShowDepositModal(false)
-    // Delay setting depositVault to null to ensure smooth transition
-    setTimeout(() => {
-      setDepositVault(null)
-      console.log('[DepositModal] Modal state after close', {
-        showDepositModal: false,
-        depositVault: null
-      });
-    }, 300);
-  }, [setDepositVault]);
-  
+    setTimeout(() => setDepositVault(null), 300)
+  }, [])
+
   const handleViewAnalytics = (vault: VaultData) => {
     setSelectedVault(vault)
-    // Navigate to vault analytics page
     router.push(`/vault?address=${vault.address}&tab=analytics`)
   }
 
-  // GSAP Animations
+  // GSAP hero + cards
   useEffect(() => {
-    if (vaultCardsRef.current) {
-      const cards = vaultCardsRef.current.children;
-      
+    if (heroRef.current) {
+      gsap.fromTo(
+        heroRef.current.querySelectorAll('.yd-hero-animate'),
+        { opacity: 0, y: 28 },
+        { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out', delay: 0.1 }
+      )
+      gsap.fromTo(
+        heroRef.current.querySelectorAll('.yd-stat-pillar'),
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.55, stagger: 0.08, ease: 'power2.out', delay: 0.35 }
+      )
+    }
+  }, [])
+
+  useEffect(() => {
+    if (vaultCardsRef.current && !isLoading) {
+      const cards = Array.from(vaultCardsRef.current.children)
       gsap.fromTo(
         cards,
-        { 
-          opacity: 0, 
-          y: 100, 
-          rotationX: -15,
-          scale: 0.8 
-        },
-        { 
-          opacity: 1, 
-          y: 0, 
-          rotationX: 0,
-          scale: 1,
-          duration: 1.2, 
-          stagger: 0.2, 
-          ease: 'back.out(1.7)',
-          scrollTrigger: {
-            trigger: vaultCardsRef.current,
-            start: 'top 80%',
-          }
+        { opacity: 0, y: 60, scale: 0.95 },
+        {
+          opacity: 1, y: 0, scale: 1,
+          duration: 0.7, stagger: 0.1, ease: 'back.out(1.7)',
+          scrollTrigger: { trigger: vaultCardsRef.current, start: 'top 85%' },
         }
-      );
+      )
     }
-
-    if (statsRef.current) {
-      gsap.fromTo(
-        statsRef.current.children,
-        { opacity: 0, y: 50 },
-        { 
-          opacity: 1, 
-          y: 0, 
-          duration: 0.8, 
-          stagger: 0.1,
-          scrollTrigger: {
-            trigger: statsRef.current,
-            start: 'top 90%',
-          }
-        }
-      );
-    }
-  }, []);
-
+  }, [isLoading, displayVaults])
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Navigation */}
+    <div className="min-h-screen relative" style={{ background: '#07080f' }}>
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
-      
-      {/* Demo Banner */}
       <DemoBanner />
 
-      {/* Live Stats Ticker - Positioned right after navigation */}
-      <div className="relative z-10" style={{ paddingTop: '1.5rem' }}>
-        <div className="w-full" style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.25rem', marginTop: '0.125rem' }}>
-          <div 
-            ref={statsRef}
-            style={{
-              background: 'linear-gradient(135deg, rgba(155, 93, 229, 0.15) 0%, rgba(0, 245, 212, 0.08) 50%, rgba(255, 32, 110, 0.12) 100%)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(155, 93, 229, 0.3)',
-              borderRadius: '16px',
-              padding: '6px 20px',
-              boxShadow: '0 8px 32px rgba(0, 245, 212, 0.1), 0 0 0 1px rgba(155, 93, 229, 0.2)',
-              overflow: 'hidden',
-              position: 'relative',
-              display: 'inline-block',
-              width: '100%',
-              maxWidth: '1400px'
-            }}
-          >
-            <div 
-              className="animate-scroll"
-              style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '12px',
-                whiteSpace: 'nowrap',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: 'rgba(255, 255, 255, 0.9)',
-                width: '100%',
-                justifyContent: 'center'
-              }}
-            >
-              {/* First set */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'rgba(0, 0, 0, 0.25)',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="tvl" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>Total TVL</span>
-                <span style={{ fontWeight: 'bold', color: '#00f5d4', fontSize: '13px' }}>{isLoading || tvlUSDLoading ? '...' : totalTVLInUSD}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="vaults" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>Vaults</span>
-                <span style={{ fontWeight: 'bold', color: '#9b5de5', fontSize: '13px' }}>{isLoading ? '...' : filteredVaults.length}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="apy" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>APY</span>
-                <span style={{ fontWeight: 'bold', color: '#10b981', fontSize: '13px' }}>{isLoading ? '...' : `${filteredVaults.length > 0 ? (filteredVaults.reduce((sum, v) => sum + v.apy, 0) / filteredVaults.length).toFixed(1) : '0'}%`}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="uptime" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>AI</span>
-                <span style={{ fontWeight: 'bold', color: '#3b82f6', fontSize: '13px' }}>99.97%</span>
-              </div>
+      {/* ── HERO ──────────────────────────────────────────── */}
+      <section ref={heroRef} className="yd-vaults-hero">
+        {/* SVG grid background */}
+        <svg className="yd-hero-grid-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <defs>
+            <pattern id="heroGrid" width="44" height="44" patternUnits="userSpaceOnUse">
+              <path d="M 44 0 L 0 0 0 44" fill="none" stroke="rgba(0,245,212,0.18)" strokeWidth="0.5" />
+            </pattern>
+            <radialGradient id="heroGridFade" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="white" stopOpacity="1" />
+              <stop offset="65%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </radialGradient>
+            <mask id="heroGridMask">
+              <rect width="100%" height="100%" fill="url(#heroGridFade)" />
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#heroGrid)" mask="url(#heroGridMask)" />
+        </svg>
 
-              {/* Duplicate set for seamless scrolling */}
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
+        {/* Radial glow */}
+        <div className="yd-hero-radial-glow" />
 
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'rgba(0, 0, 0, 0.25)',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="tvl" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>Total TVL</span>
-                <span style={{ fontWeight: 'bold', color: '#00f5d4', fontSize: '13px' }}>{isLoading || tvlUSDLoading ? '...' : totalTVLInUSD}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="vaults" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>Vaults</span>
-                <span style={{ fontWeight: 'bold', color: '#9b5de5', fontSize: '13px' }}>{isLoading ? '...' : filteredVaults.length}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="apy" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>APY</span>
-                <span style={{ fontWeight: 'bold', color: '#10b981', fontSize: '13px' }}>{isLoading ? '...' : `${filteredVaults.length > 0 ? (filteredVaults.reduce((sum, v) => sum + v.apy, 0) / filteredVaults.length).toFixed(1) : '0'}%`}</span>
-              </div>
-              
-              <div style={{ width: '1px', height: '20px', background: 'linear-gradient(to bottom, transparent, rgba(155, 93, 229, 0.4), transparent)', flexShrink: 0 }} />
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px', 
-                background: 'rgba(0, 0, 0, 0.25)', 
-                borderRadius: '8px', 
-                padding: '6px 12px', 
-                border: '1px solid rgba(155, 93, 229, 0.2)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
-                <StatsCardGraphic type="uptime" className="w-4 h-4 flex-shrink-0" />
-                <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.6)', fontWeight: '500' }}>AI</span>
-                <span style={{ fontWeight: 'bold', color: '#3b82f6', fontSize: '13px' }}>99.97%</span>
-              </div>
+        <div className="yd-hero-content">
+          {/* Left: heading */}
+          <div className="yd-hero-left">
+            <div className="yd-live-badge yd-hero-animate">
+              <span className="yd-live-dot" />
+              LIVE
             </div>
+
+            <h1 className="yd-hero-heading yd-hero-animate">
+              AI-POWERED{' '}
+              <span style={{ color: '#00f5d4', textShadow: '0 0 50px rgba(0,245,212,0.35)' }}>YIELD</span>
+              {' '}OPTIMIZATION
+              <br />
+              ON SEI
+            </h1>
+
+            <p className="yd-hero-sub yd-hero-animate">
+              Autonomous liquidity strategies, continuously optimized by AI
+            </p>
           </div>
+
+          {/* Right: stat pillars */}
+          <div className="yd-hero-stats">
+            <StatPillar
+              label="Total TVL"
+              value={isLoading || tvlUSDLoading ? '...' : totalTVLInUSD}
+              color="#00f5d4"
+              loading={isLoading || tvlUSDLoading}
+            />
+            <StatPillar
+              label="Vaults"
+              value={filteredVaults.length}
+              color="#9b5de5"
+              loading={isLoading}
+              isNumeric
+              decimals={0}
+            />
+            <StatPillar
+              label="Avg APY"
+              value={avgApy}
+              color="#10b981"
+              loading={isLoading}
+              isNumeric
+              decimals={1}
+              suffix="%"
+            />
+            <StatPillar
+              label="AI Uptime"
+              value={99.97}
+              color="#3b82f6"
+              isNumeric
+              decimals={2}
+              suffix="%"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── FILTER BAR ────────────────────────────────────── */}
+      <div className="yd-filter-bar">
+        <div className="yd-filter-chips">
+          {STRATEGY_FILTERS.map(f => (
+            <button
+              key={f.key}
+              className={`yd-filter-chip${activeFilter === f.key ? ' active' : ''}`}
+              style={{ '--chip-color': f.color } as CSSProperties}
+              onClick={() => setActiveFilter(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+          {!isLoading && (
+            <span style={{
+              fontFamily: 'var(--font-mono, monospace)',
+              fontSize: 10,
+              color: 'rgba(255,255,255,0.25)',
+              letterSpacing: '0.08em',
+              marginLeft: 8,
+            }}>
+              {displayVaults.length} vault{displayVaults.length !== 1 ? 's' : ''}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Main Content - Header and Vaults */}
-      <div className="relative z-10" style={{ paddingTop: '0' }}>
-        {/* Header Section - Enhanced with minimal spacing */}
-        <section className="py-0 px-4" style={{ paddingTop: '0' }}>
-          <div className="container mx-auto max-w-7xl"> {/* Ensure consistent max-width */}
-            <div className="text-center mb-2">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-secondary">
-                AI-Powered Yield Optimization on SEI
-              </h1>
-            </div>
+      {/* ── VAULT GRID ────────────────────────────────────── */}
+      <div className="yd-vault-grid-section">
+        {isLoading && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '5rem 0' }}>
+            <Loader2 style={{ width: 28, height: 28, color: '#00f5d4', animation: 'spin 1s linear infinite' }} />
+            <span style={{ marginLeft: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>
+              Loading vaults...
+            </span>
           </div>
-        </section>
+        )}
 
-        {/* Vaults Grid */}
-        <section className="py-1 px-4">
-          <div className="container mx-auto max-w-7xl"> {/* Ensure consistent max-width */}
-            {isLoading && (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <span className="ml-2 text-lg">Loading vaults...</span>
-              </div>
-            )}
-            
-            {error && (
-              <div className="text-center py-20">
-                <div className="text-red-400 text-lg mb-4">Failed to load vaults</div>
-                <div className="text-muted-foreground">
-                  {typeof error === 'object' && error.message ? error.message : 'An error occurred'}
-                </div>
-              </div>
-            )}
-            
-            {!isLoading && !error && (
-              <div 
-                ref={vaultCardsRef} 
-                className="grid gap-8 md:gap-12 max-w-7xl mx-auto"
-                style={{ 
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-                  justifyContent: 'center',
-                  gridAutoRows: '1fr',
-                  gap: '2.5rem'
-                }}
-              >
-                {filteredVaults && filteredVaults.map((vault) => {
-                  const vaultColor = getVaultColor(vault.strategy)
-                  const riskLevel = getRiskLevel(vault.apy, vault.strategy)
-                  
-                  return (
-                <Card
+        {queryError && (
+          <div style={{ textAlign: 'center', padding: '5rem 0', color: 'rgba(239,68,68,0.8)' }}>
+            <p style={{ fontSize: 16, marginBottom: 8 }}>Failed to load vaults</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{queryError.message}</p>
+          </div>
+        )}
+
+        {!isLoading && !queryError && (
+          <div ref={vaultCardsRef} className="yd-vault-grid">
+            {displayVaults.map(vault => {
+              const color = getVaultColor(vault.strategy)
+              const risk = getRiskLevel(vault.apy, vault.strategy)
+              const riskStyle = RISK_BADGE_STYLES[risk]
+              const tvl = getVaultTVL(vault)
+              const token = getVaultToken(vault)
+
+              return (
+                <div
                   key={vault.address}
-                  className="vault-solid-card transition-all duration-500 cursor-pointer group relative overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(145deg, #07080f 0%, #0b0d1e 55%, #080911 100%)',
-                    border: `1px solid ${vaultColor}20`,
-                    borderRadius: '20px',
-                    boxShadow: `0 24px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.025)`,
-                    transition: 'border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = `${vaultColor}50`;
-                    e.currentTarget.style.boxShadow = `0 32px 64px rgba(0,0,0,0.8), 0 0 55px ${vaultColor}14, inset 0 1px 0 rgba(255,255,255,0.04)`;
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = `${vaultColor}20`;
-                    e.currentTarget.style.boxShadow = `0 24px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.025)`;
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
+                  className="yd-vault-card-wrap"
+                  style={{ '--card-color': color } as CSSProperties}
                 >
-                  {/* Top accent line */}
-                  <div
-                    className="absolute top-0 left-0 right-0 h-px pointer-events-none"
-                    style={{ background: `linear-gradient(90deg, transparent 0%, ${vaultColor}cc 50%, transparent 100%)` }}
-                  />
-                  {/* Ambient top glow */}
-                  <div
-                    className="absolute top-0 left-0 right-0 h-28 pointer-events-none"
-                    style={{ background: `radial-gradient(ellipse at 50% -5%, ${vaultColor}22 0%, transparent 70%)`, opacity: 0.6 }}
-                  />
-
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-3">
-                      {/* Left: Strategy badge + Name */}
-                      <div className="flex-1 min-w-0">
-                        <div
-                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold mb-2.5"
-                          style={{
-                            background: `${vaultColor}14`,
-                            color: vaultColor,
-                            border: `1px solid ${vaultColor}28`,
-                            letterSpacing: '0.05em',
-                            textTransform: 'uppercase',
-                            fontSize: '0.65rem',
-                          }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: vaultColor }} />
-                          {vault.strategy.replace('_', ' ')}
-                        </div>
-                        <CardTitle className="text-xl font-black text-white leading-tight">
-                          {vault.name}
-                        </CardTitle>
-                      </div>
-                      {/* Right: TVL */}
-                      <div className="text-right flex-shrink-0">
-                        <div className="text-xs font-semibold mb-0.5" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.6rem' }}>TVL</div>
-                        <div className="text-lg font-black text-white">{formatAmount(getVaultTVL(vault), getVaultToken(vault))}</div>
-                      </div>
-                    </div>
-
-                    {/* APY Hero Row */}
-                    <div className="flex items-end justify-between mt-5">
-                      <div>
-                        <div className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)', letterSpacing: '0.06em', textTransform: 'uppercase', fontSize: '0.6rem' }}>Annual Yield</div>
-                        <div
-                          className="text-5xl font-black tracking-tight leading-none"
-                          style={{
-                            color: vaultColor,
-                            textShadow: `0 0 24px ${vaultColor}80, 0 0 60px ${vaultColor}25`,
-                            fontVariantNumeric: 'tabular-nums',
-                          }}
-                        >
-                          {(vault.apy * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                      {/* Risk Badge */}
-                      <div
-                        style={{
-                          padding: '0.35rem 0.85rem',
-                          ...getRiskBadgeStyle(riskLevel),
-                          whiteSpace: 'nowrap',
-                          borderRadius: '10px',
-                          display: 'inline-block',
-                          fontSize: '0.72rem',
-                          fontWeight: '700',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                          backdropFilter: 'blur(12px)',
-                          letterSpacing: '0.04em',
-                        }}
-                      >
-                        {riskLevel} Risk
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="pt-0">
-                    {/* Color-keyed divider */}
+                  <div className="yd-vault-card-body">
+                    {/* Top accent bar */}
                     <div
-                      className="h-px mt-3 mb-4"
-                      style={{ background: `linear-gradient(90deg, transparent, ${vaultColor}35, transparent)` }}
+                      className="yd-card-top-bar"
+                      style={{ background: `linear-gradient(90deg, transparent, ${color}cc 50%, transparent)` }}
+                    />
+                    {/* Ambient top glow */}
+                    <div
+                      className="yd-card-top-glow"
+                      style={{ background: `radial-gradient(ellipse at 50% -10%, ${color}1a 0%, transparent 70%)` }}
                     />
 
-                    <p className="text-xs font-medium mb-5" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.02em' }}>
-                      {vault.strategy.replace('_', ' ').toUpperCase()} strategy · {vault.tokenA}–{vault.tokenB}
-                    </p>
+                    {/* Header row: strategy badge + token pair */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <span style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontSize: '9px',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color,
+                        background: `${color}14`,
+                        border: `1px solid ${color}28`,
+                        borderRadius: 100,
+                        padding: '3px 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}>
+                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
+                        {vault.strategy.replace(/_/g, ' ')}
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontSize: '11px',
+                        color: 'rgba(255,255,255,0.35)',
+                        letterSpacing: '0.04em',
+                      }}>
+                        {vault.tokenA}/{vault.tokenB}
+                      </span>
+                    </div>
 
-                    {/* Metrics — two clearly separated columns */}
-                    <div className="flex gap-0 mb-6">
-                      {/* Left column */}
-                      <div className="flex-1 flex flex-col gap-2.5 pr-4" style={{ borderRight: `1px solid ${vaultColor}12` }}>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Performance</span>
-                          <span className="text-xs font-bold text-emerald-400">{(vault.performance.totalReturn * 100).toFixed(1)}%</span>
+                    {/* Vault name */}
+                    <h3 style={{
+                      fontFamily: 'var(--font-display, system-ui)',
+                      fontSize: '18px',
+                      fontWeight: 700,
+                      color: 'rgba(255,255,255,0.9)',
+                      lineHeight: 1.2,
+                      marginBottom: 0,
+                    }}>
+                      {vault.name}
+                    </h3>
+
+                    {/* APY Hero */}
+                    <div className="yd-apy-hero">
+                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                        <div>
+                          <div
+                            className="yd-apy-value"
+                            style={{
+                              color,
+                              textShadow: `0 0 40px ${color}55, 0 0 80px ${color}1a`,
+                            }}
+                          >
+                            {(vault.apy * 100).toFixed(1)}%
+                          </div>
+                          <div className="yd-apy-label">Annual Yield</div>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Sharpe Ratio</span>
-                          <span className="text-xs font-bold text-blue-400">{vault.performance.sharpeRatio.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Win Rate</span>
-                          <span className="text-xs font-bold text-violet-400">{(vault.performance.winRate * 100).toFixed(0)}%</span>
-                        </div>
-                      </div>
-                      {/* Right column */}
-                      <div className="flex-1 flex flex-col gap-2.5 pl-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Fee Tier</span>
-                          <span className="text-xs font-bold text-sky-400">{(vault.fee * 100).toFixed(2)}%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Max Drawdown</span>
-                          <span className={`text-xs font-bold ${
-                            vault.performance.maxDrawdown > 0.05 ? 'text-red-400' : 'text-emerald-400'
-                          }`}>
-                            {(vault.performance.maxDrawdown * 100).toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Chain ID</span>
-                          <span className="text-xs font-bold text-cyan-400">{vault.chainId}</span>
-                        </div>
+
+                        {/* Risk badge */}
+                        <span style={{
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontSize: '10px',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: riskStyle.color,
+                          background: riskStyle.bg,
+                          border: `1px solid ${riskStyle.border}`,
+                          borderRadius: 8,
+                          padding: '5px 12px',
+                          alignSelf: 'flex-end',
+                          marginBottom: '6px',
+                        }}>
+                          {risk} Risk
+                        </span>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="vault-action-buttons flex justify-center gap-3 mt-4">
-                      <Button
-                        className="flex-1 max-w-[180px] font-bold text-sm h-11 transition-all duration-300 hover:scale-105 active:scale-95 relative z-20"
-                        style={{
-                          background: `linear-gradient(135deg, ${vaultColor}e0 0%, ${vaultColor}a0 100%)`,
-                          border: `1px solid ${vaultColor}55`,
-                          color: '#050508',
-                          borderRadius: '12px',
-                          boxShadow: `0 4px 20px ${vaultColor}30`,
-                          pointerEvents: 'auto',
-                          cursor: 'pointer',
-                          fontWeight: 800,
-                        }}
+                    {/* Separator */}
+                    <div
+                      className="yd-card-separator"
+                      style={{ background: `linear-gradient(90deg, transparent, ${color}22, transparent)` }}
+                    />
+
+                    {/* 3-metric strip */}
+                    <div className="yd-metric-strip">
+                      <div className="yd-metric-item">
+                        <span className="yd-metric-value" style={{ color: '#10b981' }}>
+                          {formatAmount(tvl, token)}
+                        </span>
+                        <span className="yd-metric-label">TVL</span>
+                      </div>
+                      <div className="yd-metric-divider" />
+                      <div className="yd-metric-item">
+                        <span className="yd-metric-value" style={{ color: '#00f5d4' }}>
+                          {(vault.performance.winRate * 100).toFixed(0)}%
+                        </span>
+                        <span className="yd-metric-label">Win Rate</span>
+                      </div>
+                      <div className="yd-metric-divider" />
+                      <div className="yd-metric-item">
+                        <span className="yd-metric-value" style={{ color: '#9b5de5' }}>
+                          {vault.performance.sharpeRatio.toFixed(2)}
+                        </span>
+                        <span className="yd-metric-label">Sharpe</span>
+                      </div>
+                    </div>
+
+                    {/* Sparkline */}
+                    <Sparkline vault={vault} color={color} />
+
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: 10, marginTop: '1.1rem' }}>
+                      <button
                         onClick={(e) => {
-                          console.log('[BUTTON CLICK] Deposit button clicked - IMMEDIATE', new Date().toISOString());
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log('[VaultsPage] Deposit button clicked for vault:', vault.name);
-                          console.log('[VaultsPage] Vault object:', vault);
-                          console.log('[VaultsPage] Event details:', { target: e.target, currentTarget: e.currentTarget });
-                          console.log('[VaultsPage] About to call handleDeposit with vault:', vault);
-                          handleDeposit(vault);
-                          console.log('[VaultsPage] handleDeposit call completed');
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleDeposit(vault)
+                        }}
+                        style={{
+                          flex: 1,
+                          height: '44px',
+                          borderRadius: '12px',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontSize: '11px',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          border: 'none',
+                          background: `linear-gradient(135deg, ${color}e0, ${color}a0)`,
+                          color: '#050508',
+                          boxShadow: `0 4px 20px ${color}30`,
+                          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.transform = 'translateY(-2px)'
+                          e.currentTarget.style.boxShadow = `0 8px 28px ${color}45`
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.transform = 'translateY(0)'
+                          e.currentTarget.style.boxShadow = `0 4px 20px ${color}30`
                         }}
                       >
                         Deposit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="flex-1 max-w-[180px] font-bold text-sm h-11 transition-all duration-300 hover:scale-105 active:scale-95 relative z-20"
-                        style={{
-                          background: `${vaultColor}08`,
-                          border: `1px solid ${vaultColor}28`,
-                          color: 'rgba(255,255,255,0.75)',
-                          borderRadius: '12px',
-                          fontWeight: 700,
-                        }}
+                      </button>
+                      <button
                         onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          console.log('[VaultsPage] Analytics button clicked for vault:', vault.name);
-                          handleViewAnalytics(vault);
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleViewAnalytics(vault)
+                        }}
+                        style={{
+                          flex: 1,
+                          height: '44px',
+                          borderRadius: '12px',
+                          fontFamily: 'var(--font-mono, monospace)',
+                          fontSize: '11px',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          background: `${color}0c`,
+                          border: `1px solid ${color}25`,
+                          color: 'rgba(255,255,255,0.65)',
+                          transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = `${color}18`
+                          e.currentTarget.style.borderColor = `${color}45`
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.88)'
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = `${color}0c`
+                          e.currentTarget.style.borderColor = `${color}25`
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.65)'
                         }}
                       >
                         Analytics
-                      </Button>
+                      </button>
                     </div>
-                  </CardContent>
-                </Card>
-                  )
-                })}
-              </div>
-            )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        </section>
+        )}
       </div>
 
-      {/* AI Chat Interface - Fixed CSS Overrides */}
+      {/* ── AI CHAT PANEL ─────────────────────────────────── */}
       {showChat && (
-        <div 
-          className="fixed inset-0 z-40 flex items-end justify-end p-4 pointer-events-none"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 40,
-            pointerEvents: 'none',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'flex-end',
-            padding: '1rem'
-          }}
-        >
-          <div 
-            className="pointer-events-auto w-full max-w-md h-[600px] mr-4 mb-20"
-            style={{
-              pointerEvents: 'auto',
-              width: '100%',
-              maxWidth: '28rem',
-              minWidth: '320px',
-              height: '600px',
-              marginRight: '1rem',
-              marginBottom: '5rem',
-              borderRadius: '20px',
-              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 245, 212, 0.2)',
-              // Force text color inheritance
-              color: '#ffffff',
-              overflow: 'hidden',
-              position: 'relative'
-            }}
-          >
-            {/* Debug Info - Improved Styling */}
-            <div style={{ 
-              position: 'absolute', 
-              top: '10px', 
-              right: '10px', 
-              background: 'rgba(0, 245, 212, 0.9)', 
-              color: 'black', 
-              padding: '4px 8px', 
-              borderRadius: '6px', 
-              fontSize: '10px',
-              fontWeight: '600',
-              zIndex: 1000,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
-            }}>
-              Chat: {showChat ? 'ACTIVE' : 'CLOSED'}
-            </div>
-            
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 40, pointerEvents: 'none',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '1rem',
+        }}>
+          <div style={{
+            pointerEvents: 'auto',
+            width: '100%', maxWidth: '28rem', minWidth: '320px',
+            height: '600px', marginRight: '1rem', marginBottom: '5rem',
+            borderRadius: '20px',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.5), 0 0 30px rgba(0,245,212,0.15)',
+            color: '#fff', overflow: 'hidden', position: 'relative',
+          }}>
             <AIChat
-              className="h-full ai-chat-override"
+              className="h-full"
               vaultAddress={selectedVault?.address}
               context={{
                 currentPage: 'vaults',
                 vaultData: filteredVaults,
                 userPreferences: {
-                  preferredTimeframe: '1d',
-                  riskTolerance: 'medium',
-                  autoRebalance: true,
-                  selectedVault: selectedVault,
-                  marketData: marketData
-                }
+                  preferredTimeframe: '1d', riskTolerance: 'medium',
+                  autoRebalance: true, selectedVault, marketData,
+                },
               }}
               initialMessage="🎯 Welcome to SEI DLP Vaults! I'm Kairos, your AI assistant. I can help you analyze vault performance, predict optimal ranges, and recommend rebalancing strategies. What vault would you like to optimize today?"
             />
-            
-            {/* Inline CSS Override for AI Chat Input - Highest Specificity */}
-            <style jsx>{`
-              .ai-chat-override input {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%) !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
-                color: #ffffff !important;
-                font-size: 14px !important;
-                padding: 12px 16px !important;
-                border-radius: 12px !important;
-                backdrop-filter: blur(10px) !important;
-                outline: none !important;
-              }
-              
-              .ai-chat-override input:focus {
-                border-color: rgba(0, 245, 212, 0.5) !important;
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%) !important;
-                box-shadow: 0 0 20px rgba(0, 245, 212, 0.2) !important;
-              }
-              
-              .ai-chat-override input::placeholder {
-                color: rgba(255, 255, 255, 0.4) !important;
-              }
-              
-              .ai-chat-override .text-xs {
-                color: rgba(255, 255, 255, 0.5) !important;
-                font-size: 11px !important;
-              }
-              
-              .ai-chat-override * {
-                color: #ffffff;
-              }
-            `}</style>
           </div>
         </div>
       )}
 
-      {/* Deposit Modal */}
+      {/* ── DEPOSIT MODAL ─────────────────────────────────── */}
       <DepositModal
         vault={depositVault}
         isOpen={showDepositModal}
@@ -900,166 +637,52 @@ export default function VaultsPage() {
         onSuccess={handleDepositSuccess}
       />
 
-      {/* Floating AI Chat Button - Ultra-Enhanced Visibility Design */}
-      <div 
-        className="ai-chat-button-container-override"
-        style={{ 
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 999999,
-          isolation: 'isolate',
-          pointerEvents: 'auto'
-        }}
-      >
-        {/* Mobile responsive positioning */}
-        <style jsx>{`
-          @media (max-width: 768px) {
-            .ai-chat-button-container-override {
-              bottom: 20px !important;
-              right: 20px !important;
-            }
-            .ai-chat-button-main-override {
-              width: 70px !important;
-              height: 70px !important;
-              padding: 18px !important;
-            }
-          }
-          @media (max-width: 480px) {
-            .ai-chat-button-container-override {
-              bottom: 16px !important;
-              right: 16px !important;
-            }
-            .ai-chat-button-main-override {
-              width: 64px !important;
-              height: 64px !important;
-              padding: 16px !important;
-            }
-          }
-        `}</style>
-        <div className="relative" style={{ isolation: 'isolate' }}>
-          {/* Ultra-Bright Glow Ring for Maximum Visibility */}
-          <div 
-            className="absolute inset-0 rounded-full"
-            style={{ 
-              background: 'linear-gradient(45deg, #00f5d4, #ff206e, #9b5de5, #00f5d4)',
-              backgroundSize: '400% 400%',
-              borderRadius: '50%',
-              animation: 'aiChatGlow 3s ease-in-out infinite',
-              filter: 'blur(8px)',
-              opacity: '0.6',
-              transform: 'scale(1.4)'
-            }}
-          ></div>
-          
-          {/* High-Contrast Border Ring */}
-          <div 
-            className="absolute inset-0 rounded-full"
-            style={{ 
-              background: 'conic-gradient(from 0deg, #ffffff, #00f5d4, #ffffff, #ff206e, #ffffff)',
-              borderRadius: '50%',
-              padding: '3px',
-              animation: 'aiChatBorderSpin 4s linear infinite'
-            }}
-          >
-            <div style={{ 
-              background: '#000000',
-              borderRadius: '50%',
-              width: '100%',
-              height: '100%'
-            }}></div>
-          </div>
-          
-          {/* Main Ultra-Visible Button */}
+      {/* ── FLOATING AI BUTTON ────────────────────────────── */}
+      <div style={{
+        position: 'fixed', bottom: '24px', right: '24px',
+        zIndex: 999999, isolation: 'isolate', pointerEvents: 'auto',
+      }}>
+        <div style={{ position: 'relative' }}>
+          {/* Glow ring */}
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: '50%',
+            background: 'linear-gradient(45deg, #00f5d4, #ff206e, #9b5de5, #00f5d4)',
+            backgroundSize: '400% 400%',
+            filter: 'blur(8px)', opacity: 0.55, transform: 'scale(1.35)',
+          }} />
           <button
-            onClick={() => {
-              console.log('[AI Chat] Button clicked, current showChat:', showChat);
-              setShowChat(!showChat);
-              console.log('[AI Chat] Setting showChat to:', !showChat);
-            }}
-            className="ai-chat-button-main-override relative text-white rounded-full transition-all duration-300 hover:scale-110 group"
-            style={{ 
+            onClick={() => setShowChat(v => !v)}
+            style={{
               position: 'relative',
               background: 'linear-gradient(135deg, #00f5d4 0%, #10b981 30%, #ff206e 70%, #9b5de5 100%)',
-              border: '4px solid #ffffff',
+              border: '3px solid rgba(255,255,255,0.9)',
               borderRadius: '50%',
-              padding: '20px',
-              boxShadow: '0 0 50px rgba(0, 245, 212, 0.8), 0 0 100px rgba(255, 32, 110, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.2)',
+              width: '64px', height: '64px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '80px',
-              height: '80px',
-              fontSize: '28px',
-              zIndex: 999999,
-              isolation: 'isolate',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)'
+              boxShadow: '0 0 40px rgba(0,245,212,0.6), 0 0 80px rgba(255,32,110,0.3)',
+              transition: 'transform 0.25s ease',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 80px rgba(0, 245, 212, 1), 0 0 150px rgba(255, 32, 110, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.3)';
-              e.currentTarget.style.transform = 'scale(1.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 0 50px rgba(0, 245, 212, 0.8), 0 0 100px rgba(255, 32, 110, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.2)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.12)' }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+            aria-label={showChat ? 'Close AI Assistant' : 'Open AI Assistant'}
           >
-            {showChat ? <X className="w-8 h-8" style={{ filter: 'drop-shadow(0 0 10px #ffffff)' }} /> : <MessageCircle className="w-8 h-8" style={{ filter: 'drop-shadow(0 0 10px #ffffff)' }} />}
-            
-            {/* Ultra-Bright Tooltip */}
-            <div 
-              className="absolute -top-20 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap pointer-events-none"
-              style={{
-                background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
-                border: '2px solid #00f5d4',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                fontWeight: '700',
-                color: '#ffffff',
-                textShadow: '0 0 10px #00f5d4',
-                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.8), 0 0 50px rgba(0, 245, 212, 0.5)',
-                zIndex: 9999999
-              }}
-            >
-              {showChat ? '✕ Close AI Assistant' : '🤖 Ask Kairos AI'}
-              <div 
-                className="absolute top-full left-1/2 transform -translate-x-1/2"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderLeft: '8px solid transparent',
-                  borderRight: '8px solid transparent',
-                  borderTop: '8px solid #00f5d4'
-                }}
-              ></div>
-            </div>
+            {showChat
+              ? <X style={{ width: 24, height: 24, color: '#050508' }} />
+              : <MessageCircle style={{ width: 24, height: 24, color: '#050508' }} />
+            }
           </button>
-          
-          {/* Ultra-Bright Status Indicator - Fixed positioning to prevent cutoff */}
           {!showChat && (
-            <div 
-              className="absolute -top-1 -right-1"
-              style={{
-                width: '18px',
-                height: '18px',
-                background: 'radial-gradient(circle, #00ff00 0%, #00cc00 100%)',
-                borderRadius: '50%',
-                border: '2px solid #ffffff',
-                boxShadow: '0 0 20px rgba(0, 255, 0, 0.8), 0 0 40px rgba(0, 255, 0, 0.4)',
-                animation: 'aiChatPulse 2s ease-in-out infinite',
-                zIndex: 9999999,
-                transform: 'translate(-2px, -2px)' // Ensure it stays within button bounds
-              }}
-            ></div>
+            <span style={{
+              position: 'absolute', top: -2, right: -2,
+              width: 14, height: 14, borderRadius: '50%',
+              background: '#22c55e', border: '2px solid #07080f',
+              boxShadow: '0 0 10px rgba(34,197,94,0.7)',
+              animation: 'ydLivePulse 2s ease-in-out infinite',
+            }} />
           )}
         </div>
       </div>
-
     </div>
-  );
+  )
 }

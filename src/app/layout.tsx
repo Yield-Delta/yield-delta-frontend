@@ -1,10 +1,22 @@
 
-import { Inter } from 'next/font/google'
+import { Inter, DM_Mono, Syne } from 'next/font/google'
 import './globals.css'
 import { Web3Provider } from '@/components/providers/Web3Provider'
 import { ThemeProvider } from 'next-themes'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
+
+const dmMono = DM_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
+})
+
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-display',
+})
 // Metadata for SEO and social sharing
 export const metadata = {
   title: 'Yield Delta',
@@ -79,7 +91,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${dmMono.variable} ${syne.variable} font-sans`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
