@@ -133,6 +133,7 @@ export function SolanaWalletModal({
             style={{
               position: 'fixed',
               inset: 0,
+              zIndex: 9999998,
               background: 'rgba(0, 0, 0, 0.78)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
@@ -147,7 +148,7 @@ export function SolanaWalletModal({
             transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
             style={{
               position: 'relative',
-              zIndex: 1,
+              zIndex: 9999999,
               width: '100%',
               maxWidth: '420px',
               maxHeight: 'calc(100dvh - 7.5rem)',
