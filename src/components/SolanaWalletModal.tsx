@@ -107,15 +107,20 @@ export function SolanaWalletModal({
     <AnimatePresence>
       {isOpen && (
         // Portal-style fixed overlay — always above nav (z-index higher than nav's 99999)
+        // paddingTop accounts for testnet banner (2rem) + nav bar (3.5rem) + breathing room
         <div
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 9999999,
+            overflowY: 'auto',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'center',
-            padding: '1rem',
+            paddingTop: '6rem',
+            paddingBottom: '1.5rem',
+            paddingLeft: '1rem',
+            paddingRight: '1rem',
           }}
         >
           {/* Backdrop */}
@@ -126,11 +131,12 @@ export function SolanaWalletModal({
             transition={{ duration: 0.2 }}
             onClick={handleClose}
             style={{
-              position: 'absolute',
+              position: 'fixed',
               inset: 0,
-              background: 'rgba(0, 0, 0, 0.75)',
+              background: 'rgba(0, 0, 0, 0.78)',
               backdropFilter: 'blur(8px)',
               WebkitBackdropFilter: 'blur(8px)',
+              zIndex: -1,
             }}
           />
 
@@ -144,11 +150,12 @@ export function SolanaWalletModal({
               position: 'relative',
               width: '100%',
               maxWidth: '420px',
+              maxHeight: 'calc(100dvh - 7.5rem)',
+              overflowY: 'auto',
               background: 'linear-gradient(160deg, #080412 0%, #0e0520 45%, #06030f 100%)',
               border: '1px solid rgba(153, 69, 255, 0.45)',
               borderRadius: '24px',
               boxShadow: '0 0 0 1px rgba(153,69,255,0.08) inset, 0 0 80px rgba(153,69,255,0.18), 0 40px 80px rgba(0,0,0,0.9)',
-              overflow: 'hidden',
             }}
           >
             {/* Top gradient accent strip */}

@@ -690,35 +690,41 @@ export default function VaultsPage() {
                       {vault.strategy.replace('_', ' ').toUpperCase()} strategy · {vault.tokenA}–{vault.tokenB}
                     </p>
 
-                    {/* Metrics Grid */}
-                    <div className="grid grid-cols-2 gap-x-5 gap-y-2.5 mb-6">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Performance</span>
-                        <span className="text-xs font-bold text-emerald-400">{(vault.performance.totalReturn * 100).toFixed(1)}%</span>
+                    {/* Metrics — two clearly separated columns */}
+                    <div className="flex gap-0 mb-6">
+                      {/* Left column */}
+                      <div className="flex-1 flex flex-col gap-2.5 pr-4" style={{ borderRight: `1px solid ${vaultColor}12` }}>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Performance</span>
+                          <span className="text-xs font-bold text-emerald-400">{(vault.performance.totalReturn * 100).toFixed(1)}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Sharpe Ratio</span>
+                          <span className="text-xs font-bold text-blue-400">{vault.performance.sharpeRatio.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Win Rate</span>
+                          <span className="text-xs font-bold text-violet-400">{(vault.performance.winRate * 100).toFixed(0)}%</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Fee Tier</span>
-                        <span className="text-xs font-bold text-sky-400">{(vault.fee * 100).toFixed(2)}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Sharpe Ratio</span>
-                        <span className="text-xs font-bold text-blue-400">{vault.performance.sharpeRatio.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Max Drawdown</span>
-                        <span className={`text-xs font-bold ${
-                          vault.performance.maxDrawdown > 0.05 ? 'text-red-400' : 'text-emerald-400'
-                        }`}>
-                          {(vault.performance.maxDrawdown * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Win Rate</span>
-                        <span className="text-xs font-bold text-violet-400">{(vault.performance.winRate * 100).toFixed(0)}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Chain ID</span>
-                        <span className="text-xs font-bold text-cyan-400">{vault.chainId}</span>
+                      {/* Right column */}
+                      <div className="flex-1 flex flex-col gap-2.5 pl-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Fee Tier</span>
+                          <span className="text-xs font-bold text-sky-400">{(vault.fee * 100).toFixed(2)}%</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Max Drawdown</span>
+                          <span className={`text-xs font-bold ${
+                            vault.performance.maxDrawdown > 0.05 ? 'text-red-400' : 'text-emerald-400'
+                          }`}>
+                            {(vault.performance.maxDrawdown * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.38)' }}>Chain ID</span>
+                          <span className="text-xs font-bold text-cyan-400">{vault.chainId}</span>
+                        </div>
                       </div>
                     </div>
 
