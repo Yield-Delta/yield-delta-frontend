@@ -112,8 +112,8 @@ export function ChainSelector({
               </div>
             )}
 
-            {/* Chain Name */}
-            <span className="font-medium">
+            {/* Chain Name — hide on small/medium screens in compact mode */}
+            <span className={`font-medium ${compact ? 'hidden xl:inline' : ''}`}>
               {activeMetadata?.displayName || 'Select Chain'}
             </span>
 

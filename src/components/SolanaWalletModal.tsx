@@ -1,22 +1,8 @@
-/**
- * Solana Wallet Modal
- * Beautiful modal for connecting to Solana wallets (Phantom, Solflare, etc.)
- */
-
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wallet, ExternalLink, AlertCircle } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Wallet, ExternalLink, AlertCircle, X, Zap } from 'lucide-react'
 import { useSolanaWallet, SolanaWalletType } from '@/hooks/useSolanaWallet'
 import { ChainId } from '@/types/chain'
 import { getChainMetadata } from '@/lib/chainConfig'
@@ -27,34 +13,41 @@ interface SolanaWalletModalProps {
   chainId?: ChainId
 }
 
-// Wallet metadata for display
 const WALLET_INFO: Record<SolanaWalletType, {
   name: string
   description: string
   icon: string
   downloadUrl: string
-  color: string
+  accentColor: string
+  gradientFrom: string
+  gradientTo: string
 }> = {
   [SolanaWalletType.PHANTOM]: {
     name: 'Phantom',
     description: 'The most popular Solana wallet',
     icon: '👻',
     downloadUrl: 'https://phantom.app/download',
-    color: 'from-purple-500 to-indigo-500',
+    accentColor: '#ab9ff2',
+    gradientFrom: 'rgba(171,159,242,0.12)',
+    gradientTo: 'rgba(99,91,255,0.06)',
   },
   [SolanaWalletType.SOLFLARE]: {
     name: 'Solflare',
-    description: 'Secure and user-friendly Solana wallet',
+    description: 'Secure & user-friendly Solana wallet',
     icon: '🔥',
     downloadUrl: 'https://solflare.com/download',
-    color: 'from-orange-500 to-red-500',
+    accentColor: '#fc8c4a',
+    gradientFrom: 'rgba(252,140,74,0.12)',
+    gradientTo: 'rgba(239,68,68,0.06)',
   },
   [SolanaWalletType.BACKPACK]: {
     name: 'Backpack',
     description: 'Multi-chain wallet with Solana support',
     icon: '🎒',
     downloadUrl: 'https://backpack.app/',
-    color: 'from-cyan-500 to-blue-500',
+    accentColor: '#22d3ee',
+    gradientFrom: 'rgba(34,211,238,0.12)',
+    gradientTo: 'rgba(59,130,246,0.06)',
   },
 }
 
@@ -72,22 +65,38 @@ export function SolanaWalletModal({
   } = useSolanaWallet()
 
   const [selectedWallet, setSelectedWallet] = useState<SolanaWalletType | null>(null)
-
   const chainMetadata = getChainMetadata(chainId)
 
-  // Handle wallet connection
+  // Lock body scroll while open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose()
+    }
+    if (isOpen) document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isOpen])
+
   const handleConnect = async (walletType: SolanaWalletType) => {
     try {
       setSelectedWallet(walletType)
       await connect(walletType, chainId)
-      onClose()
+      handleClose()
     } catch (err) {
       console.error('Failed to connect:', err)
       setSelectedWallet(null)
     }
   }
 
-  // Reset state when modal closes
   const handleClose = () => {
     clearError()
     setSelectedWallet(null)
@@ -95,169 +104,405 @@ export function SolanaWalletModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent
-        className="sm:max-w-md border-0"
-        style={{
-          background: 'linear-gradient(145deg, #06030f 0%, #0c0520 50%, #07031a 100%)',
-          border: '1px solid rgba(153, 69, 255, 0.3)',
-          boxShadow: '0 0 80px rgba(153, 69, 255, 0.12), 0 32px 64px rgba(0,0,0,0.9), inset 0 1px 0 rgba(153, 69, 255, 0.12)',
-          backdropFilter: 'blur(28px)',
-          WebkitBackdropFilter: 'blur(28px)',
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-black bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, #9945FF 0%, #14F195 100%)' }}>
-            Connect Solana Wallet
-          </DialogTitle>
-          <DialogDescription style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.85rem' }}>
-            Choose your preferred wallet to connect to {chainMetadata.displayName}
-          </DialogDescription>
-        </DialogHeader>
+    <AnimatePresence>
+      {isOpen && (
+        // Portal-style fixed overlay — always above nav (z-index higher than nav's 99999)
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
+          }}
+        >
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleClose}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+            }}
+          />
 
-        <div className="space-y-4 py-4">
-          {/* Error Alert */}
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-                <Alert variant="destructive" className="border-red-500/30 bg-red-500/10">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Modal Panel */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 8 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: '420px',
+              background: 'linear-gradient(160deg, #080412 0%, #0e0520 45%, #06030f 100%)',
+              border: '1px solid rgba(153, 69, 255, 0.45)',
+              borderRadius: '24px',
+              boxShadow: '0 0 0 1px rgba(153,69,255,0.08) inset, 0 0 80px rgba(153,69,255,0.18), 0 40px 80px rgba(0,0,0,0.9)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Top gradient accent strip */}
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              height: '1px',
+              background: 'linear-gradient(90deg, transparent, #9945FF 30%, #14F195 70%, transparent)',
+            }} />
 
-          {/* Chain Info */}
-          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(153,69,255,0.08)', border: '1px solid rgba(153,69,255,0.25)' }}>
-            {chainMetadata.iconUrl && (
-              <img
-                src={chainMetadata.iconUrl}
-                alt={chainMetadata.displayName}
-                className="w-8 h-8 rounded-full"
-              />
-            )}
-            <div>
-              <div className="font-semibold text-sm">{chainMetadata.displayName}</div>
-              <div className="text-xs text-muted-foreground">
-                {chainMetadata.isTestnet ? 'Testnet' : 'Mainnet'}
+            {/* Ambient top glow */}
+            <div style={{
+              position: 'absolute',
+              top: 0, left: 0, right: 0,
+              height: '120px',
+              background: 'radial-gradient(ellipse at 50% -10%, rgba(153,69,255,0.28) 0%, transparent 70%)',
+              pointerEvents: 'none',
+            }} />
+
+            {/* Close button */}
+            <button
+              onClick={handleClose}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                width: '32px',
+                height: '32px',
+                borderRadius: '10px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'rgba(255,255,255,0.5)',
+                transition: 'all 0.2s',
+                zIndex: 10,
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.9)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'
+                ;(e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.5)'
+              }}
+            >
+              <X size={14} />
+            </button>
+
+            {/* Header */}
+            <div style={{ padding: '32px 28px 20px' }}>
+              {/* Solana wordmark row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #9945FF, #14F195)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 16px rgba(153,69,255,0.4)',
+                }}>
+                  <Zap size={18} color="#000" strokeWidth={2.5} />
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: '1.4rem',
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    background: 'linear-gradient(135deg, #9945FF 0%, #14F195 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    Connect Wallet
+                  </div>
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255,255,255,0.4)',
+                    marginTop: '2px',
+                    fontWeight: 500,
+                  }}>
+                    {chainMetadata.displayName} · {chainMetadata.isTestnet ? 'Devnet' : 'Mainnet'}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Wallet Options */}
-          <div className="space-y-2">
-            {Object.entries(WALLET_INFO).map(([walletType, info]) => {
-              const isAvailable = availableWallets.includes(walletType as SolanaWalletType)
-              const isLoading = isConnecting && selectedWallet === walletType
+            {/* Divider */}
+            <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, rgba(153,69,255,0.25), transparent)', margin: '0 28px' }} />
 
-              return (
-                <WalletOption
-                  key={walletType}
-                  walletType={walletType as SolanaWalletType}
-                  info={info}
-                  isAvailable={isAvailable}
-                  isLoading={isLoading}
-                  onConnect={handleConnect}
-                />
-              )
-            })}
-          </div>
+            {/* Content */}
+            <div style={{ padding: '20px 28px 28px' }}>
 
-          {/* Info Section */}
-          <div className="text-xs text-center space-y-1 pt-4" style={{ color: 'rgba(255,255,255,0.3)', borderTop: '1px solid rgba(153,69,255,0.15)', paddingTop: '1rem' }}>
-            <p>Don&apos;t have a wallet?</p>
-            <p>Click on any wallet above to download and install</p>
-          </div>
+              {/* Error alert */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginBottom: '16px' }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    style={{
+                      background: 'rgba(239,68,68,0.1)',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: '12px',
+                      padding: '10px 14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.8rem',
+                      color: '#fca5a5',
+                    }}
+                  >
+                    <AlertCircle size={14} style={{ flexShrink: 0, color: '#ef4444' }} />
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Wallet options */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {Object.entries(WALLET_INFO).map(([walletType, info], i) => {
+                  const isAvailable = availableWallets.includes(walletType as SolanaWalletType)
+                  const isLoading = isConnecting && selectedWallet === walletType
+
+                  return (
+                    <WalletOptionCard
+                      key={walletType}
+                      index={i}
+                      walletType={walletType as SolanaWalletType}
+                      info={info}
+                      isAvailable={isAvailable}
+                      isLoading={isLoading}
+                      onConnect={handleConnect}
+                    />
+                  )
+                })}
+              </div>
+
+              {/* Footer note */}
+              <div style={{
+                marginTop: '20px',
+                paddingTop: '16px',
+                borderTop: '1px solid rgba(153,69,255,0.12)',
+                textAlign: 'center',
+              }}>
+                <p style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>
+                  New to Solana? Click any wallet above to install it.
+                </p>
+                <p style={{ fontSize: '0.72rem', color: 'rgba(153,69,255,0.6)', marginTop: '2px' }}>
+                  Non-custodial · Your keys, your assets
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+    </AnimatePresence>
   )
 }
 
-// Wallet Option Component
-interface WalletOptionProps {
+// Individual wallet option card
+interface WalletOptionCardProps {
+  index: number
   walletType: SolanaWalletType
   info: typeof WALLET_INFO[SolanaWalletType]
   isAvailable: boolean
   isLoading: boolean
-  onConnect: (walletType: SolanaWalletType) => void
+  onConnect: (w: SolanaWalletType) => void
 }
 
-function WalletOption({
-  walletType,
-  info,
-  isAvailable,
-  isLoading,
-  onConnect,
-}: WalletOptionProps) {
+function WalletOptionCard({ index, walletType, info, isAvailable, isLoading, onConnect }: WalletOptionCardProps) {
+  const [hovered, setHovered] = useState(false)
+
   return (
     <motion.div
-      whileHover={{ scale: isAvailable ? 1.02 : 1 }}
-      whileTap={{ scale: isAvailable ? 0.98 : 1 }}
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.06, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
     >
-      <Button
-        variant="outline"
-        className={`
-          w-full h-auto p-4 relative overflow-hidden transition-all duration-300
-          ${isAvailable ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}
-          ${isLoading ? 'animate-pulse' : ''}
-        `}
-        style={{
-          background: isAvailable ? 'rgba(153,69,255,0.06)' : 'rgba(255,255,255,0.02)',
-          border: '1px solid rgba(153,69,255,0.2)',
-          borderRadius: '14px',
-        }}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => isAvailable && !isLoading && onConnect(walletType)}
-        disabled={!isAvailable || isLoading}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onKeyDown={e => e.key === 'Enter' && isAvailable && !isLoading && onConnect(walletType)}
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '14px 16px',
+          borderRadius: '16px',
+          border: `1px solid ${hovered && isAvailable ? info.accentColor + '50' : 'rgba(255,255,255,0.08)'}`,
+          background: hovered && isAvailable
+            ? `linear-gradient(135deg, ${info.gradientFrom}, ${info.gradientTo})`
+            : 'rgba(255,255,255,0.03)',
+          cursor: isAvailable ? 'pointer' : 'default',
+          opacity: isLoading ? 0.7 : 1,
+          transition: 'all 0.2s ease',
+          overflow: 'hidden',
+          outline: 'none',
+        }}
       >
-        {/* Hover gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-r ${info.color} opacity-0 hover:opacity-10 transition-opacity rounded-[13px]`} />
+        {/* Hover shimmer */}
+        {hovered && isAvailable && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: `radial-gradient(ellipse at 0% 50%, ${info.accentColor}12, transparent 60%)`,
+            pointerEvents: 'none',
+          }} />
+        )}
 
-        <div className="relative flex items-center justify-between w-full">
-          {/* Left: Icon + Info */}
-          <div className="flex items-center gap-4">
-            <div className="text-4xl">{info.icon}</div>
-            <div className="text-left">
-              <div className="font-semibold flex items-center gap-2">
+        {/* Left: icon + text */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', position: 'relative', zIndex: 1 }}>
+          {/* Icon */}
+          <div style={{
+            width: '44px',
+            height: '44px',
+            borderRadius: '12px',
+            background: hovered && isAvailable
+              ? `linear-gradient(135deg, ${info.accentColor}25, ${info.accentColor}10)`
+              : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${hovered && isAvailable ? info.accentColor + '40' : 'rgba(255,255,255,0.06)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '22px',
+            transition: 'all 0.2s',
+            flexShrink: 0,
+          }}>
+            {info.icon}
+          </div>
+
+          {/* Text */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                color: '#ffffff',
+                letterSpacing: '-0.01em',
+              }}>
                 {info.name}
-                {!isAvailable && (
-                  <span className="text-xs text-muted-foreground">(Not installed)</span>
-                )}
-              </div>
-              <div className="text-xs text-muted-foreground">{info.description}</div>
+              </span>
+              {!isAvailable && (
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.35)',
+                  background: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  padding: '1px 6px',
+                  letterSpacing: '0.02em',
+                }}>
+                  NOT INSTALLED
+                </span>
+              )}
+              {isAvailable && (
+                <span style={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: '#14F195',
+                  background: 'rgba(20,241,149,0.1)',
+                  border: '1px solid rgba(20,241,149,0.25)',
+                  borderRadius: '6px',
+                  padding: '1px 6px',
+                }}>
+                  DETECTED
+                </span>
+              )}
+            </div>
+            <div style={{
+              fontSize: '0.78rem',
+              color: 'rgba(255,255,255,0.4)',
+              marginTop: '2px',
+              fontWeight: 400,
+            }}>
+              {info.description}
             </div>
           </div>
-
-          {/* Right: Action */}
-          <div>
-            {isLoading ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full"
-              />
-            ) : isAvailable ? (
-              <Wallet className="w-5 h-5 text-cyan-400" />
-            ) : (
-              <a
-                href={info.downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300"
-              >
-                <span className="text-xs">Install</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
-          </div>
         </div>
-      </Button>
+
+        {/* Right: action */}
+        <div style={{ position: 'relative', zIndex: 1, flexShrink: 0 }}>
+          {isLoading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+              style={{
+                width: '20px',
+                height: '20px',
+                borderRadius: '50%',
+                border: `2px solid ${info.accentColor}`,
+                borderTopColor: 'transparent',
+              }}
+            />
+          ) : isAvailable ? (
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '10px',
+              background: `linear-gradient(135deg, ${info.accentColor}cc, ${info.accentColor}80)`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: `0 4px 12px ${info.accentColor}40`,
+            }}>
+              <Wallet size={14} color="#000" strokeWidth={2.5} />
+            </div>
+          ) : (
+            <a
+              href={info.downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '6px 10px',
+                borderRadius: '10px',
+                background: 'rgba(153,69,255,0.12)',
+                border: '1px solid rgba(153,69,255,0.3)',
+                color: '#c084fc',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'all 0.2s',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLAnchorElement
+                el.style.background = 'rgba(153,69,255,0.22)'
+                el.style.color = '#d8b4fe'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLAnchorElement
+                el.style.background = 'rgba(153,69,255,0.12)'
+                el.style.color = '#c084fc'
+              }}
+            >
+              Install
+              <ExternalLink size={11} />
+            </a>
+          )}
+        </div>
+      </div>
     </motion.div>
   )
 }

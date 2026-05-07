@@ -112,8 +112,8 @@ export function MultiChainWalletButton() {
   return (
     <>
       <div className="flex items-center gap-2">
-        {/* Chain Selector */}
-        <ChainSelector onChainSelect={handleChainSelect} />
+        {/* Chain Selector - compact on tablet to avoid overlapping GooeyNav */}
+        <ChainSelector onChainSelect={handleChainSelect} compact={true} />
 
         {/* Wallet Connection Button */}
         {activeMetadata?.type === ChainType.EVM ? (
@@ -146,8 +146,9 @@ export function MultiChainWalletButton() {
               if (!connected) {
                 return (
                   <Button onClick={openConnectModal} className="btn-cyber">
-                    <Wallet className="w-4 h-4 mr-2" />
-                    Connect EVM Wallet
+                    <Wallet className="w-4 h-4 mr-1.5" />
+                    <span className="hidden xl:inline">Connect EVM Wallet</span>
+                    <span className="xl:hidden">Connect</span>
                   </Button>
                 )
               }
@@ -214,8 +215,9 @@ export function MultiChainWalletButton() {
               onClick={() => setShowSolanaModal(true)}
               className="btn-cyber"
             >
-              <Wallet className="w-4 h-4 mr-2" />
-              Connect Solana Wallet
+              <Wallet className="w-4 h-4 mr-1.5" />
+              <span className="hidden xl:inline">Connect Solana Wallet</span>
+              <span className="xl:hidden">Connect</span>
             </Button>
           )
         ) : activeMetadata?.type === ChainType.SUI ? (
