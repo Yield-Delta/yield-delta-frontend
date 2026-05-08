@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Navigation from '@/components/Navigation';
-import { TrendingUp, TrendingDown, Brain, Target, Activity, Eye, Clock, Hash } from 'lucide-react';
+import { TrendingUp, TrendingDown, Brain, Target, Activity, Clock, Hash } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -220,7 +220,7 @@ const MarketSentimentPage = () => {
             ].map((cat) => (
               <button
                 key={cat.value}
-                onClick={() => setSelectedCategory(cat.value as any)}
+                onClick={() => setSelectedCategory(cat.value as 'all' | 'fundamental' | 'technical' | 'social')}
                 className={`font-['Syne'] text-sm font-bold uppercase px-4 py-1 border-b-2 transition-all ${
                   selectedCategory === cat.value ? 'border-[#ff2a2a] text-[#ff2a2a]' : 'border-transparent hover:border-[#111]'
                 }`}

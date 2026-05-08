@@ -4,12 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import {
   TrendingUp,
-  TrendingDown,
   Activity,
-  BarChart3,
-  Clock,
-  Layers,
-  Target,
   Zap,
   ChevronDown,
   RefreshCw,
@@ -256,6 +251,18 @@ const TIMEFRAMES = [
   { label: '1W', value: '1w', days: 365 },
 ];
 
+// Cyberpunk inspired colors
+const colors = {
+  bg: '#050505',
+  text: '#e0e0e0',
+  grid: '#1a1a1a',
+  up: '#ccff00',
+  down: '#ff003c',
+  accent1: '#00f0ff',
+  accent2: '#ff00ff',
+  muted: '#4a4a4a'
+};
+
 const ChartsPage = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const rsiContainerRef = useRef<HTMLDivElement>(null);
@@ -273,18 +280,6 @@ const ChartsPage = () => {
   const [ohlcData, setOhlcData] = useState<OHLCData[]>([]);
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Cyberpunk inspired colors
-  const colors = {
-    bg: '#050505',
-    text: '#e0e0e0',
-    grid: '#1a1a1a',
-    up: '#ccff00',
-    down: '#ff003c',
-    accent1: '#00f0ff',
-    accent2: '#ff00ff',
-    muted: '#4a4a4a'
-  };
 
   const [indicators, setIndicators] = useState<IndicatorConfig[]>([
     { name: 'SMA 20', enabled: true, color: colors.accent1, period: 20 },
