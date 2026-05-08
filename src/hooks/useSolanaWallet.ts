@@ -17,7 +17,9 @@ declare global {
     phantom?: {
       solana?: SolanaWallet
     }
-    solflare?: SolanaWallet
+    // Phantom also injects as window.solana on some browsers/tablets
+    solana?: SolanaWallet & { isPhantom?: boolean; isSolflare?: boolean }
+    solflare?: SolanaWallet & { isSolflare?: boolean }
     backpack?: SolanaWallet
   }
 }
@@ -55,6 +57,7 @@ interface UseSolanaWalletReturn {
   hasPhantom: boolean
   hasSolflare: boolean
   hasBackpack: boolean
+  redetect: () => void
   
   // Error handling
   error: string | null
@@ -86,24 +89,32 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
   const [error, setError] = useState<string | null>(null)
   const [availableWallets, setAvailableWallets] = useState<SolanaWalletType[]>([])
 
-  // Detect available wallets
-  useEffect(() => {
+  const redetect = useCallback(() => {
+    if (typeof window === 'undefined') return
     const detected: SolanaWalletType[] = []
-    
-    if (typeof window !== 'undefined') {
-      if (window.phantom?.solana) {
-        detected.push(SolanaWalletType.PHANTOM)
-      }
-      if (window.solflare) {
-        detected.push(SolanaWalletType.SOLFLARE)
-      }
-      if (window.backpack) {
-        detected.push(SolanaWalletType.BACKPACK)
-      }
-    }
-    
+    // Phantom injects as window.phantom.solana OR window.solana (with isPhantom flag)
+    if (window.phantom?.solana || window.solana?.isPhantom) detected.push(SolanaWalletType.PHANTOM)
+    if (window.solflare || window.solana?.isSolflare) detected.push(SolanaWalletType.SOLFLARE)
+    if (window.backpack) detected.push(SolanaWalletType.BACKPACK)
     setAvailableWallets(detected)
   }, [])
+
+  // Detect available wallets — run immediately and retry at intervals
+  // because browser extensions inject into window asynchronously after page load.
+  // Also re-detect on visibility change so returning from the Phantom app updates state.
+  useEffect(() => {
+    const onVisible = () => { if (document.visibilityState === 'visible') redetect() }
+
+    redetect()
+    const t1 = setTimeout(redetect, 500)
+    const t2 = setTimeout(redetect, 1500)
+    const t3 = setTimeout(redetect, 3000)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [redetect])
 
   // Get wallet provider
   const getWalletProvider = useCallback((walletType: SolanaWalletType): SolanaWallet | null => {
@@ -111,9 +122,9 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
 
     switch (walletType) {
       case SolanaWalletType.PHANTOM:
-        return window.phantom?.solana ?? null
+        return window.phantom?.solana ?? (window.solana?.isPhantom ? window.solana : null)
       case SolanaWalletType.SOLFLARE:
-        return window.solflare ?? null
+        return window.solflare ?? (window.solana?.isSolflare ? window.solana : null)
       case SolanaWalletType.BACKPACK:
         return window.backpack ?? null
       default:
@@ -209,6 +220,7 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
     hasPhantom: availableWallets.includes(SolanaWalletType.PHANTOM),
     hasSolflare: availableWallets.includes(SolanaWalletType.SOLFLARE),
     hasBackpack: availableWallets.includes(SolanaWalletType.BACKPACK),
+    redetect,
     error,
     clearError,
   }

@@ -1,480 +1,446 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { TrendingUp, ArrowRight, Loader2, Info } from 'lucide-react';
-import * as THREE from 'three';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useVaults } from '@/hooks/useVaults';
 
-gsap.registerPlugin(ScrollTrigger);
+const STRATEGY_COLORS: Record<string, string> = {
+  concentrated_liquidity: '#00f5d4',
+  yield_farming: '#9945FF',
+  arbitrage: '#ff206e',
+  stable_max: '#14F195',
+  delta_neutral: '#8b5cf6',
+  hedge: '#fc8c4a',
+  sei_hypergrowth: '#fc8c4a',
+  blue_chip: '#3b82f6',
+}
+
+const getStrategyColor = (s: string) => STRATEGY_COLORS[s] ?? '#00f5d4'
 
 const MarketPage = () => {
-  const router = useRouter();
-  const mountRef = useRef<HTMLDivElement>(null);
-  const statsCardsRef = useRef<HTMLDivElement>(null);
-  const tableRef = useRef<HTMLDivElement>(null);
-  const [scene, setScene] = useState<THREE.Scene | null>(null);
-
-  // Fetch real vault data from API
-  const { data: vaults, isLoading, isError } = useVaults();
+  const router = useRouter()
+  const { data: vaults, isLoading, isError } = useVaults()
 
   const formatNumber = (num: number, decimals = 2) => {
-    if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
-    if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`;
-    return `$${num.toFixed(decimals)}`;
-  };
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `$${(num / 1000).toFixed(0)}K`
+    return `$${num.toFixed(decimals)}`
+  }
 
-  // Calculate total TVL from real vaults
-  const totalTVL = vaults?.reduce((sum, v) => sum + v.tvl, 0) || 0;
+  const totalTVL = vaults?.reduce((sum, v) => sum + v.tvl, 0) || 0
   const avgAPY = vaults && vaults.length > 0
     ? (vaults.reduce((sum, v) => sum + v.apy, 0) / vaults.length) * 100
-    : 0;
+    : 0
 
-  // Three.js Setup for background
-  useEffect(() => {
-    const currentMount = mountRef.current;
-    if (!currentMount || scene) return;
-
-    // Scene setup
-    const newScene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setClearColor(0x000000, 0);
-    currentMount.appendChild(renderer.domElement);
-
-    // Particle system
-    const particleCount = 800;
-    const particles = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const colors = new Float32Array(particleCount * 3);
-
-    for (let i = 0; i < particleCount * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 100;
-      positions[i + 1] = (Math.random() - 0.5) * 100;
-      positions[i + 2] = (Math.random() - 0.5) * 100;
-
-      // Colors for particles - market theme
-      const color = new THREE.Color();
-      color.setHSL(Math.random() * 0.4 + 0.4, 0.8, 0.6); // Blue to purple range
-      colors[i] = color.r;
-      colors[i + 1] = color.g;
-      colors[i + 2] = color.b;
-    }
-
-    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const particleMaterial = new THREE.PointsMaterial({
-      size: 1.2,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.25,
-    });
-
-    const particleSystem = new THREE.Points(particles, particleMaterial);
-    newScene.add(particleSystem);
-
-    // Geometric shapes for depth
-    const geometries = [
-      new THREE.OctahedronGeometry(2),
-      new THREE.TetrahedronGeometry(1.5),
-      new THREE.IcosahedronGeometry(1),
-    ];
-
-    geometries.forEach((geometry, index) => {
-      const material = new THREE.MeshBasicMaterial({
-        color: [0x3b82f6, 0x8b5cf6, 0x06b6d4][index],
-        wireframe: true,
-        transparent: true,
-        opacity: 0.12,
-      });
-
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.set(
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 60,
-        (Math.random() - 0.5) * 60
-      );
-      newScene.add(mesh);
-    });
-
-    camera.position.z = 30;
-    setScene(newScene);
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-
-      particleSystem.rotation.x += 0.0008;
-      particleSystem.rotation.y += 0.0015;
-
-      newScene.children.forEach((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.rotation.x += 0.008;
-          child.rotation.y += 0.008;
-        }
-      });
-
-      renderer.render(newScene, camera);
-    };
-
-    animate();
-
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (currentMount && renderer.domElement) {
-        currentMount.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, [scene]);
-
-  // GSAP Animations
-  useEffect(() => {
-    if (statsCardsRef.current) {
-      const cards = statsCardsRef.current.children;
-
-      gsap.fromTo(
-        cards,
-        { opacity: 0, y: 80, scale: 0.9 },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 1,
-          stagger: 0.15,
-          ease: 'back.out(1.4)',
-          scrollTrigger: {
-            trigger: statsCardsRef.current,
-            start: 'top 85%',
-          }
-        }
-      );
-    }
-
-    if (tableRef.current) {
-      gsap.fromTo(
-        tableRef.current,
-        { opacity: 0, y: 60 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.2,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: tableRef.current,
-            start: 'top 90%',
-          }
-        }
-      );
-    }
-  }, [vaults]);
+  const STATS = [
+    { label: 'Total TVL', value: isLoading ? '...' : formatNumber(totalTVL), accent: '#00f5d4', tag: 'LIVE DATA' },
+    { label: 'Active Vaults', value: isLoading ? '...' : String(vaults?.length ?? 0), accent: '#9945FF', tag: 'ON SEI' },
+    { label: 'Avg APY', value: isLoading ? '...' : `${avgAPY.toFixed(1)}%`, accent: '#14F195', tag: 'CURRENT' },
+  ]
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Three.js Background */}
-      <div
-        ref={mountRef}
-        className="fixed inset-0 z-0"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.08) 40%, rgba(6, 182, 212, 0.05) 70%, transparent 100%)'
-        }}
-      />
-
-      {/* Background overlay */}
-      <div className="fixed inset-0 z-5 bg-gradient-to-b from-background/70 via-background/60 to-background/70 pointer-events-none" />
-
-      {/* Navigation */}
+    <div style={{ minHeight: '100vh', background: '#07080f', position: 'relative' }}>
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
 
-      {/* Header */}
-      <div className="relative z-10" style={{ paddingTop: '1.5rem' }}>
-        <div
-          className="border-b border-white/20 backdrop-blur-xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.08) 50%, rgba(6, 182, 212, 0.12) 100%)',
-            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          <div className="max-w-7xl mx-auto px-4 py-16">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400">
-                  SEI Vaults Market
-                </h1>
-                <p className="text-gray-300 text-lg font-medium">
-                  Live vault data on SEI Atlantic-2 Testnet (Chain ID 1328)
-                </p>
+      {/* ── HEADER ── */}
+      <div style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.5rem' }}>
+        {/* Dot-grid texture */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundImage: 'radial-gradient(rgba(153,69,255,0.18) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+          maskImage: 'radial-gradient(ellipse at 50% 0%, black 30%, transparent 80%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at 50% 0%, black 30%, transparent 80%)',
+          pointerEvents: 'none',
+        }} />
+        {/* Top radial glow */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, height: '160px',
+          background: 'radial-gradient(ellipse at 50% -20%, rgba(0,245,212,0.18) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '3rem 1.5rem 2.5rem', position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap' }}>
+            <div>
+              {/* Pill badge */}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                marginBottom: '14px', padding: '4px 10px 4px 8px',
+                borderRadius: '999px', background: 'rgba(20,241,149,0.07)',
+                border: '1px solid rgba(20,241,149,0.18)',
+              }}>
+                <span style={{
+                  width: '6px', height: '6px', borderRadius: '50%',
+                  background: '#14F195', boxShadow: '0 0 8px #14F195', display: 'block',
+                  animation: 'yd-pulse 2s ease-in-out infinite',
+                }} />
+                <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(20,241,149,0.8)' }}>
+                  LIVE DATA
+                </span>
               </div>
-              <div className="flex items-center gap-4">
-                <div
-                  className="flex items-center gap-3 px-5 py-3 rounded-full"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)',
-                    border: '1px solid rgba(16, 185, 129, 0.4)',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: '0 4px 20px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" style={{ boxShadow: '0 0 12px rgba(16, 185, 129, 0.9)' }}></div>
-                  <span className="text-green-300 font-semibold text-sm">Live Data</span>
-                </div>
-                <div
-                  className="flex items-center gap-3 px-5 py-3 rounded-full"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.15) 100%)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: '0 4px 20px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                  }}
-                >
-                  <span className="text-blue-300 font-medium text-sm">Chain ID</span>
-                  <span className="text-blue-400 font-bold">1328</span>
-                </div>
-              </div>
+
+              <h1 style={{
+                margin: 0, fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, color: '#fff',
+              }}>
+                SEI VAULTS{' '}
+                <span style={{
+                  background: 'linear-gradient(135deg, #00f5d4, #9945FF)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>
+                  MARKET
+                </span>
+              </h1>
+              <p style={{ margin: '10px 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.38)' }}>
+                Live vault data on SEI Atlantic-2 Testnet (Chain ID 1328)
+              </p>
+            </div>
+
+            {/* Chain ID pill */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '7px',
+              padding: '7px 14px', borderRadius: '999px',
+              background: 'rgba(0,245,212,0.06)', border: '1px solid rgba(0,245,212,0.18)',
+              flexShrink: 0,
+            }}>
+              <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Chain ID</span>
+              <span style={{ fontSize: '0.72rem', color: '#00f5d4', fontWeight: 800, letterSpacing: '0.02em' }}>1328</span>
             </div>
           </div>
         </div>
+
+        {/* Bottom shimmer line */}
+        <div style={{
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent 5%, #9945FF 35%, #14F195 65%, transparent 95%)',
+        }} />
       </div>
 
-      {/* Stats Cards - Real Data */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-16">
-        <div ref={statsCardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {[
-            {
-              label: 'Total TVL',
-              value: isLoading ? '...' : formatNumber(totalTVL),
-              change: 'Live',
-              icon: TrendingUp,
-              color: 'blue'
-            },
-            {
-              label: 'Active Vaults',
-              value: isLoading ? '...' : (vaults?.length || 0).toString(),
-              change: 'On SEI',
-              icon: TrendingUp,
-              color: 'green'
-            },
-            {
-              label: 'Avg APY',
-              value: isLoading ? '...' : `${avgAPY.toFixed(1)}%`,
-              change: 'Current',
-              icon: TrendingUp,
-              color: 'purple'
-            }
-          ].map((stat, index) => (
-            <div
-              key={index}
-              className="group cursor-pointer transition-all duration-500 hover:scale-105"
-              style={{
-                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '24px',
-                padding: '2rem',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset',
-              }}
-              onMouseEnter={(e) => {
-                const colors = { blue: '#3b82f6', green: '#10b981', purple: '#8b5cf6' };
-                const color = colors[stat.color as keyof typeof colors];
-                e.currentTarget.style.borderColor = `${color}60`;
-                e.currentTarget.style.boxShadow = `0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px ${color}40, 0 0 0 1px rgba(255, 255, 255, 0.15) inset`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
-              }}
+      {/* ── STATS + TABLE ── */}
+      <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '2.5rem 1.5rem' }}>
+
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2.5rem' }}>
+          {STATS.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.07, duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             >
-              <div className="flex items-center justify-between mb-6">
-                <stat.icon className={`w-10 h-10 text-${stat.color}-400 group-hover:scale-110 transition-transform duration-300`} style={{ filter: 'drop-shadow(0 0 8px currentColor)' }} />
-                <div
-                  className={`text-xs font-bold text-${stat.color}-300 px-3 py-1.5 rounded-full`}
-                  style={{
-                    background: `rgba(${stat.color === 'blue' ? '59, 130, 246' : stat.color === 'green' ? '16, 185, 129' : '139, 92, 246'}, 0.2)`,
-                    border: `1px solid rgba(${stat.color === 'blue' ? '59, 130, 246' : stat.color === 'green' ? '16, 185, 129' : '139, 92, 246'}, 0.4)`,
-                    backdropFilter: 'blur(8px)',
-                    boxShadow: `0 2px 10px rgba(${stat.color === 'blue' ? '59, 130, 246' : stat.color === 'green' ? '16, 185, 129' : '139, 92, 246'}, 0.15)`
-                  }}
-                >
-                  {stat.change}
-                </div>
-              </div>
-              <div className="text-3xl font-black mb-2 text-white group-hover:text-white transition-colors" style={{ textShadow: '0 0 20px rgba(255, 255, 255, 0.5)' }}>{stat.value}</div>
-              <div className="text-gray-300 text-sm font-medium">{stat.label}</div>
-            </div>
+              <StatCard {...stat} />
+            </motion.div>
           ))}
         </div>
 
-        {/* Vaults Table - Real Data */}
-        <div
-          ref={tableRef}
-          className="overflow-hidden"
+        {/* Table panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '32px',
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+            background: 'rgba(255,255,255,0.025)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: '20px',
+            overflow: 'hidden',
           }}
         >
-          <div className="p-8 border-b border-white/20">
-            <h2 className="text-2xl font-bold flex items-center gap-3 text-white">
-              <TrendingUp className="w-6 h-6 text-blue-400" style={{ filter: 'drop-shadow(0 0 8px currentColor)' }} />
+          {/* Top shimmer */}
+          <div style={{
+            height: '1px',
+            background: 'linear-gradient(90deg, transparent 5%, #00f5d4 40%, #9945FF 70%, transparent 95%)',
+          }} />
+
+          {/* Table header row */}
+          <div style={{
+            padding: '1.25rem 1.5rem',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', alignItems: 'center', gap: '10px',
+          }}>
+            <TrendingUp size={16} style={{ color: '#00f5d4' }} />
+            <span style={{
+              fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.1em',
+              textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)',
+            }}>
               Live Vaults
-            </h2>
+            </span>
           </div>
 
-          <div className="overflow-x-auto">
-            {isLoading && (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-400 mr-3" />
-                <span className="text-lg text-gray-300">Loading vaults...</span>
-              </div>
-            )}
+          {/* Loading */}
+          {isLoading && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem 0', gap: '12px' }}>
+              <Loader2 style={{ width: 22, height: 22, color: '#00f5d4', animation: 'yd-spin 1s linear infinite' }} />
+              <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.35)' }}>Loading vaults...</span>
+            </div>
+          )}
 
-            {isError && (
-              <div className="text-center py-20">
-                <div className="text-red-400 text-lg mb-4">Failed to load vaults</div>
-                <p className="text-gray-400">Please try again later</p>
-              </div>
-            )}
+          {/* Error */}
+          {isError && (
+            <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+              <p style={{ fontSize: '0.9rem', color: 'rgba(239,68,68,0.8)', marginBottom: '8px' }}>Failed to load vaults</p>
+              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.28)' }}>Please try again later</p>
+            </div>
+          )}
 
-            {!isLoading && !isError && vaults && vaults.length === 0 && (
-              <div className="text-center py-20">
-                <Info className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <div className="text-xl font-bold text-white mb-2">No Vaults Available</div>
-                <p className="text-gray-400">Vaults are being deployed. Check back soon!</p>
-              </div>
-            )}
+          {/* Empty */}
+          {!isLoading && !isError && vaults && vaults.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '5rem 0' }}>
+              <Info size={32} style={{ color: 'rgba(255,255,255,0.2)', margin: '0 auto 16px', display: 'block' }} />
+              <p style={{ fontSize: '1rem', fontWeight: 700, color: 'rgba(255,255,255,0.7)', marginBottom: '6px' }}>No Vaults Available</p>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>Vaults are being deployed. Check back soon!</p>
+            </div>
+          )}
 
-            {!isLoading && !isError && vaults && vaults.length > 0 && (
-              <table className="w-full">
+          {/* Table */}
+          {!isLoading && !isError && vaults && vaults.length > 0 && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
-                    <th className="text-left p-6 font-semibold text-gray-300 text-sm">Vault</th>
-                    <th className="text-right p-6 font-semibold text-gray-300 text-sm">Strategy</th>
-                    <th className="text-right p-6 font-semibold text-gray-300 text-sm">TVL</th>
-                    <th className="text-right p-6 font-semibold text-gray-300 text-sm">APY</th>
-                    <th className="text-right p-6 font-semibold text-gray-300 text-sm">Pair</th>
-                    <th className="text-center p-6 font-semibold text-gray-300 text-sm">Action</th>
+                  <tr style={{ background: 'rgba(255,255,255,0.025)' }}>
+                    {['Vault', 'Strategy', 'TVL', 'APY', 'Pair', ''].map((col) => (
+                      <th key={col} style={{
+                        padding: '10px 16px',
+                        textAlign: col === 'Vault' || col === '' ? 'left' : 'right',
+                        fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em',
+                        textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {col}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {vaults.map((vault) => (
-                    <tr
-                      key={vault.address}
-                      className="border-t border-white/10 transition-all duration-300 hover:scale-[1.01]"
-                      style={{ background: 'transparent' }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
-                    >
-                      <td className="p-6">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold text-white"
-                            style={{
-                              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)',
-                              boxShadow: '0 8px 20px rgba(59, 130, 246, 0.4)'
-                            }}
-                          >
-                            {vault.tokenA.slice(0, 3)}
-                          </div>
-                          <div>
-                            <div className="font-bold text-white text-lg">{vault.name}</div>
-                            <div className="text-sm text-gray-300 font-medium">Chain ID: {vault.chainId}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-6 text-right">
-                        <div
-                          className="inline-block px-4 py-1.5 rounded-full text-xs font-bold"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.15) 100%)',
-                            border: '1px solid rgba(139, 92, 246, 0.4)',
-                            color: '#c4b5fd',
-                            boxShadow: '0 2px 10px rgba(139, 92, 246, 0.2)'
-                          }}
+                  <AnimatePresence>
+                    {vaults.map((vault, i) => {
+                      const color = getStrategyColor(vault.strategy)
+                      return (
+                        <motion.tr
+                          key={vault.address}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.04, duration: 0.22 }}
+                          style={{ display: 'table-row' }}
                         >
-                          {vault.strategy.replace('_', ' ').toUpperCase()}
-                        </div>
-                      </td>
-                      <td className="p-6 text-right">
-                        <div className="font-bold text-white text-lg">{formatNumber(vault.tvl)}</div>
-                      </td>
-                      <td className="p-6 text-right">
-                        <div className="text-green-400 font-bold text-lg" style={{ filter: 'drop-shadow(0 0 8px currentColor)' }}>
-                          {(vault.apy * 100).toFixed(1)}%
-                        </div>
-                      </td>
-                      <td className="p-6 text-right">
-                        <div className="font-bold text-cyan-400">{vault.tokenA}-{vault.tokenB}</div>
-                      </td>
-                      <td className="p-6 text-center">
-                        <button
-                          onClick={() => router.push(`/vault?address=${vault.address}`)}
-                          className="text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-3 mx-auto font-bold hover:scale-105 group"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(139, 92, 246, 0.8) 100%)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(59, 130, 246, 0.5)',
-                            boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.boxShadow = '0 12px 35px rgba(59, 130, 246, 0.5)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.boxShadow = '0 8px 25px rgba(59, 130, 246, 0.3)';
-                          }}
-                        >
-                          View Details
-                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          <VaultRow
+                            vault={vault}
+                            color={color}
+                            formatNumber={formatNumber}
+                            onView={() => router.push(`/vault?address=${vault.address}`)}
+                          />
+                        </motion.tr>
+                      )
+                    })}
+                  </AnimatePresence>
                 </tbody>
               </table>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </motion.div>
 
-        {/* Footer Note */}
-        <div
-          className="mt-16 text-center text-gray-300 text-sm p-8 rounded-2xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          }}
-        >
-          <div className="flex items-center justify-center gap-3 mb-3">
-            <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" style={{ boxShadow: '0 0 10px rgba(16, 185, 129, 0.8)' }}></div>
-            <span className="font-semibold">Live data from SEI Atlantic-2 Testnet</span>
+        {/* Footer */}
+        <div style={{ marginTop: '2.5rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span style={{
+              width: '6px', height: '6px', borderRadius: '50%',
+              background: '#14F195', boxShadow: '0 0 8px #14F195', display: 'block',
+            }} />
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.35)' }}>
+              Live data from SEI Atlantic-2 Testnet
+            </span>
           </div>
-          <p className="font-medium">All vault data is fetched directly from smart contracts • Chain ID: 1328</p>
+          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)' }}>
+            All vault data fetched directly from smart contracts · Chain ID: 1328
+          </p>
         </div>
       </div>
-    </div>
-  );
-};
 
-export default MarketPage;
+      <style>{`
+        @keyframes yd-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes yd-spin  { to{transform:rotate(360deg)} }
+      `}</style>
+    </div>
+  )
+}
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+function StatCard({ label, value, accent, tag }: { label: string; value: string; accent: string; tag: string }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        background: hovered ? `${accent}06` : 'rgba(255,255,255,0.025)',
+        border: `1px solid ${hovered ? accent + '35' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: '16px',
+        padding: '1.5rem',
+        transition: 'all 0.2s ease',
+        cursor: 'default',
+      }}
+    >
+      {/* Scan shimmer on hover */}
+      {hovered && (
+        <motion.div
+          initial={{ x: '-100%' }}
+          animate={{ x: '200%' }}
+          transition={{ duration: 0.55, ease: 'easeInOut' }}
+          style={{
+            position: 'absolute', top: 0, bottom: 0, width: '40%',
+            background: `linear-gradient(90deg, transparent, ${accent}18, transparent)`,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {/* Top glow on hover */}
+      {hovered && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(ellipse at 50% 0%, ${accent}0a, transparent 70%)`,
+          pointerEvents: 'none',
+        }} />
+      )}
+
+      <div style={{
+        fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.12em',
+        textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)',
+        marginBottom: '10px',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 900, letterSpacing: '-0.04em',
+        color: accent, lineHeight: 1, marginBottom: '10px',
+        textShadow: hovered ? `0 0 30px ${accent}50` : 'none',
+        transition: 'text-shadow 0.2s',
+      }}>
+        {value}
+      </div>
+      <div style={{
+        fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em',
+        textTransform: 'uppercase', color: `${accent}60`,
+      }}>
+        {tag}
+      </div>
+    </div>
+  )
+}
+
+function VaultRow({ vault, color, formatNumber, onView }: {
+  vault: { address: string; name: string; strategy: string; tvl: number; apy: number; tokenA: string; tokenB: string; chainId: number }
+  color: string
+  formatNumber: (n: number, d?: number) => string
+  onView: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <>
+      <td
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        colSpan={6}
+        style={{ padding: 0 }}
+      >
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <tbody>
+            <tr
+              style={{
+                background: hovered ? 'rgba(255,255,255,0.035)' : 'transparent',
+                borderBottom: '1px solid rgba(255,255,255,0.045)',
+                transition: 'background 0.15s ease',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
+            >
+              {/* Vault name */}
+              <td style={{ padding: '14px 16px', width: '30%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+                    background: `linear-gradient(135deg, ${color}cc, ${color}55)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.65rem', fontWeight: 900, color: '#050508', letterSpacing: '0.02em',
+                  }}>
+                    {vault.tokenA.slice(0, 3).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'rgba(255,255,255,0.9)', letterSpacing: '-0.01em' }}>
+                      {vault.name}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.28)', marginTop: '2px' }}>
+                      Chain {vault.chainId}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              {/* Strategy */}
+              <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                <span style={{
+                  display: 'inline-block',
+                  fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                  color, background: `${color}12`, border: `1px solid ${color}28`,
+                  borderRadius: '999px', padding: '3px 10px',
+                }}>
+                  {vault.strategy.replace(/_/g, ' ')}
+                </span>
+              </td>
+
+              {/* TVL */}
+              <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'rgba(255,255,255,0.85)' }}>
+                  {formatNumber(vault.tvl)}
+                </span>
+              </td>
+
+              {/* APY */}
+              <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.9rem', color: '#14F195', letterSpacing: '-0.01em' }}>
+                  {(vault.apy * 100).toFixed(1)}%
+                </span>
+              </td>
+
+              {/* Pair */}
+              <td style={{ padding: '14px 16px', textAlign: 'right' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'rgba(255,255,255,0.45)' }}>
+                  {vault.tokenA}/{vault.tokenB}
+                </span>
+              </td>
+
+              {/* Action */}
+              <td style={{ padding: '14px 16px' }}>
+                <button
+                  onClick={onView}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    padding: '6px 14px', borderRadius: '999px',
+                    background: hovered ? `${color}18` : 'transparent',
+                    border: `1px solid ${hovered ? color + '55' : 'rgba(255,255,255,0.1)'}`,
+                    color: hovered ? color : 'rgba(255,255,255,0.4)',
+                    fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.04em',
+                    cursor: 'pointer', transition: 'all 0.15s ease', outline: 'none',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  View
+                  <ArrowRight size={11} />
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </>
+  )
+}
+
+export default MarketPage

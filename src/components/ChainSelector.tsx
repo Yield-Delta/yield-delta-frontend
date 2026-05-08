@@ -1,24 +1,8 @@
-/**
- * Chain Selector Component
- * Beautiful UI for selecting between supported blockchains
- * Displays wallet connection status and balances per chain
- */
-
 'use client'
 
-import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { ChevronDown, Check, AlertCircle, Wallet } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
+import React, { useState, useRef, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronDown, Check, Wallet, AlertCircle } from 'lucide-react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
 import { ChainId, ChainType, WalletState, WalletStatus } from '@/types/chain'
 import { CHAIN_METADATA, getChainMetadata } from '@/lib/chainConfig'
@@ -47,279 +31,432 @@ export function ChainSelector({
   } = useMultiChainStore()
 
   const [isOpen, setIsOpen] = useState(false)
+  const [triggerHovered, setTriggerHovered] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const activeMetadata = activeChain ? getChainMetadata(activeChain) : null
+  const isConnected = activeChain ? isWalletConnectedForChain(activeChain) : false
 
-  // Get wallet state for a chain
-  const getWalletStateForChain = (chainId: ChainId) => {
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isOpen])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false) }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  const getWalletStateForChain = (chainId: ChainId): WalletState | null => {
     const metadata = getChainMetadata(chainId)
     switch (metadata.type) {
-      case ChainType.EVM:
-        return evm
-      case ChainType.SOLANA:
-        return solana
-      case ChainType.SUI:
-        return sui
-      default:
-        return null
+      case ChainType.EVM: return evm
+      case ChainType.SOLANA: return solana
+      case ChainType.SUI: return sui
+      default: return null
     }
   }
 
-  // Handle chain selection
   const handleChainSelect = (chainId: ChainId) => {
     setActiveChain(chainId)
     setIsOpen(false)
     onChainSelect?.(chainId)
   }
 
-  // Group chains by type
   const evmChains = Object.values(CHAIN_METADATA).filter(c => c.type === ChainType.EVM)
   const solanaChains = Object.values(CHAIN_METADATA).filter(c => c.type === ChainType.SOLANA)
   const suiChains = Object.values(CHAIN_METADATA).filter(c => c.type === ChainType.SUI)
 
+  const active = triggerHovered || isOpen
+
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className={`${className} ${
-            compact ? 'px-3' : 'px-4'
-          } relative overflow-hidden border-cyan-500/30 bg-background/80 backdrop-blur-sm hover:bg-cyan-500/10 hover:border-cyan-500/50 transition-all duration-300`}
-        >
-          {/* Animated gradient background */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5 opacity-0 hover:opacity-100"
-            animate={{
-              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-            style={{ backgroundSize: '200% 200%' }}
-          />
-
-          <div className="relative flex items-center gap-2">
-            {/* Chain Icon */}
-            {activeMetadata?.iconUrl && (
-              <div className="w-5 h-5 rounded-full overflow-hidden border border-cyan-500/30">
-                <img
-                  src={activeMetadata.iconUrl}
-                  alt={activeMetadata.displayName}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            {/* Chain Name — hide on small/medium screens in compact mode */}
-            <span className={`font-medium ${compact ? 'hidden xl:inline' : ''}`}>
-              {activeMetadata?.displayName || 'Select Chain'}
-            </span>
-
-            {/* Testnet Badge */}
-            {activeMetadata?.isTestnet && !compact && (
-              <Badge
-                variant="outline"
-                className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/30"
-              >
-                Testnet
-              </Badge>
-            )}
-
-            {/* Connection Status Indicator */}
-            {activeChain && isWalletConnectedForChain(activeChain) && (
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            )}
-
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-          </div>
-        </Button>
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent
-        align="end"
-        className="w-80 border-0 p-1"
+    <div
+      ref={containerRef}
+      className={className}
+      style={{ position: 'relative', display: 'inline-block' }}
+    >
+      {/* ── Trigger ─────────────────────────────────────────── */}
+      <button
+        onClick={() => setIsOpen(o => !o)}
+        onMouseEnter={() => setTriggerHovered(true)}
+        onMouseLeave={() => setTriggerHovered(false)}
         style={{
-          background: 'linear-gradient(145deg, #07080f 0%, #0b0d1c 100%)',
-          border: '1px solid rgba(0, 245, 212, 0.18)',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,245,212,0.06) inset, 0 0 50px rgba(0,245,212,0.05)',
-          backdropFilter: 'blur(28px)',
-          WebkitBackdropFilter: 'blur(28px)',
+          position: 'relative',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '7px',
+          padding: compact ? '5px 11px 5px 9px' : '6px 13px 6px 10px',
+          borderRadius: '999px',
+          background: active
+            ? 'rgba(0,245,212,0.07)'
+            : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${isOpen
+            ? 'rgba(0,245,212,0.45)'
+            : active
+              ? 'rgba(0,245,212,0.22)'
+              : 'rgba(255,255,255,0.1)'}`,
+          cursor: 'pointer',
+          transition: 'all 0.18s ease',
+          outline: 'none',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          boxShadow: isOpen
+            ? '0 0 0 1px rgba(0,245,212,0.1) inset, 0 0 18px rgba(0,245,212,0.07)'
+            : 'none',
         }}
       >
-        <DropdownMenuLabel className="text-xs font-bold tracking-widest uppercase px-3 py-2" style={{ color: 'rgba(0,245,212,0.7)', letterSpacing: '0.12em' }}>Select Blockchain</DropdownMenuLabel>
-        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.2), transparent)', height: '1px', border: 'none', margin: '0 8px' }} />
+        {/* Live status dot */}
+        <span style={{
+          width: '6px',
+          height: '6px',
+          borderRadius: '50%',
+          flexShrink: 0,
+          background: isConnected ? '#10b981' : 'rgba(255,255,255,0.18)',
+          boxShadow: isConnected ? '0 0 7px #10b981' : 'none',
+          transition: 'all 0.3s',
+        }} />
 
-        {/* EVM Chains (SEI) */}
-        <div className="py-1">
-          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
-            EVM Chains
-          </div>
-          {evmChains.map((chain) => (
-            <ChainMenuItem
-              key={chain.id}
-              chain={chain}
-              isActive={activeChain === chain.id}
-              isConnected={isWalletConnectedForChain(chain.id)}
-              walletState={getWalletStateForChain(chain.id)}
-              onSelect={() => handleChainSelect(chain.id)}
-              showBalance={showBalances}
+        {/* Chain icon */}
+        {activeMetadata?.iconUrl && (
+          <span style={{
+            width: '17px',
+            height: '17px',
+            borderRadius: '50%',
+            overflow: 'hidden',
+            flexShrink: 0,
+            display: 'block',
+            border: '1px solid rgba(255,255,255,0.12)',
+          }}>
+            <img
+              src={activeMetadata.iconUrl}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
-          ))}
-        </div>
+          </span>
+        )}
 
-        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.15), transparent)', height: '1px', border: 'none', margin: '4px 8px' }} />
+        {/* Chain name */}
+        {!compact && (
+          <span style={{
+            fontSize: '0.78rem',
+            fontWeight: 600,
+            letterSpacing: '0.01em',
+            color: isOpen ? 'rgba(0,245,212,0.92)' : 'rgba(255,255,255,0.82)',
+            transition: 'color 0.18s',
+            whiteSpace: 'nowrap',
+          }}>
+            {activeMetadata?.displayName ?? 'Select Chain'}
+          </span>
+        )}
 
-        {/* Solana Chains */}
-        <div className="py-1">
-          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
-            Solana
-          </div>
-          {solanaChains.map((chain) => (
-            <ChainMenuItem
-              key={chain.id}
-              chain={chain}
-              isActive={activeChain === chain.id}
-              isConnected={isWalletConnectedForChain(chain.id)}
-              walletState={getWalletStateForChain(chain.id)}
-              onSelect={() => handleChainSelect(chain.id)}
-              showBalance={showBalances}
-            />
-          ))}
-        </div>
+        {/* Testnet badge */}
+        {activeMetadata?.isTestnet && !compact && (
+          <span style={{
+            fontSize: '0.58rem',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            color: '#f59e0b',
+            background: 'rgba(245,158,11,0.1)',
+            border: '1px solid rgba(245,158,11,0.22)',
+            borderRadius: '999px',
+            padding: '1px 5px',
+          }}>
+            TEST
+          </span>
+        )}
 
-        <DropdownMenuSeparator style={{ background: 'linear-gradient(90deg, transparent, rgba(0,245,212,0.15), transparent)', height: '1px', border: 'none', margin: '4px 8px' }} />
+        {/* Chevron */}
+        <motion.span
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          style={{ display: 'flex', alignItems: 'center' }}
+        >
+          <ChevronDown
+            size={12}
+            style={{ color: isOpen ? 'rgba(0,245,212,0.7)' : 'rgba(255,255,255,0.38)' }}
+          />
+        </motion.span>
+      </button>
 
-        {/* Sui Chains (Coming Soon) */}
-        <div className="py-1 opacity-50">
-          <div className="px-3 py-1.5 text-xs font-bold tracking-widest uppercase flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>
-            Sui
-            <Badge variant="outline" className="text-xs">
-              Coming Soon
-            </Badge>
-          </div>
-          {suiChains.map((chain) => (
-            <ChainMenuItem
-              key={chain.id}
-              chain={chain}
-              isActive={false}
-              isConnected={false}
-              walletState={null}
-              onSelect={() => {}}
-              showBalance={false}
-              disabled
-            />
-          ))}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {/* ── Dropdown Panel ──────────────────────────────────── */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.975 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -5, scale: 0.975 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.65 }}
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 7px)',
+              right: 0,
+              zIndex: 9999,
+              width: '272px',
+              background: 'linear-gradient(158deg, #07080f 0%, #0b0d1c 100%)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.85), 0 0 0 1px rgba(0,245,212,0.13), 0 0 40px rgba(0,245,212,0.04)',
+            }}
+          >
+            {/* Top shimmer line */}
+            <div style={{
+              height: '1px',
+              background: 'linear-gradient(90deg, transparent 5%, rgba(0,245,212,0.5) 40%, rgba(153,69,255,0.5) 70%, transparent 95%)',
+            }} />
+
+            <div style={{ padding: '8px' }}>
+              <ChainGroup label="EVM Chains">
+                {evmChains.map((chain, i) => (
+                  <ChainRow
+                    key={chain.id}
+                    index={i}
+                    chain={chain}
+                    isActive={activeChain === chain.id}
+                    isConnected={isWalletConnectedForChain(chain.id)}
+                    walletState={getWalletStateForChain(chain.id)}
+                    showBalance={showBalances}
+                    onSelect={() => handleChainSelect(chain.id)}
+                  />
+                ))}
+              </ChainGroup>
+
+              <Divider />
+
+              <ChainGroup label="Solana">
+                {solanaChains.map((chain, i) => (
+                  <ChainRow
+                    key={chain.id}
+                    index={i}
+                    chain={chain}
+                    isActive={activeChain === chain.id}
+                    isConnected={isWalletConnectedForChain(chain.id)}
+                    walletState={getWalletStateForChain(chain.id)}
+                    showBalance={showBalances}
+                    onSelect={() => handleChainSelect(chain.id)}
+                  />
+                ))}
+              </ChainGroup>
+
+              <Divider />
+
+              <ChainGroup label="Sui" soon>
+                {suiChains.map((chain, i) => (
+                  <ChainRow
+                    key={chain.id}
+                    index={i}
+                    chain={chain}
+                    isActive={false}
+                    isConnected={false}
+                    walletState={null}
+                    showBalance={false}
+                    onSelect={() => {}}
+                    disabled
+                  />
+                ))}
+              </ChainGroup>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
-// Chain Menu Item Component
-interface ChainMenuItemProps {
+function Divider() {
+  return (
+    <div style={{
+      height: '1px',
+      background: 'rgba(255,255,255,0.05)',
+      margin: '4px 6px',
+    }} />
+  )
+}
+
+function ChainGroup({ label, soon, children }: { label: string; soon?: boolean; children: React.ReactNode }) {
+  return (
+    <div style={{ paddingBottom: '2px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        padding: '6px 10px 5px',
+      }}>
+        <span style={{
+          fontSize: '0.6rem',
+          fontWeight: 800,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase' as const,
+          color: 'rgba(255,255,255,0.22)',
+        }}>
+          {label}
+        </span>
+        {soon && (
+          <span style={{
+            fontSize: '0.55rem',
+            fontWeight: 700,
+            letterSpacing: '0.06em',
+            color: 'rgba(153,69,255,0.75)',
+            background: 'rgba(153,69,255,0.1)',
+            border: '1px solid rgba(153,69,255,0.18)',
+            borderRadius: '999px',
+            padding: '1px 5px',
+          }}>
+            SOON
+          </span>
+        )}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+interface ChainRowProps {
+  index: number
   chain: ReturnType<typeof getChainMetadata>
   isActive: boolean
   isConnected: boolean
   walletState: WalletState | null
-  onSelect: () => void
   showBalance: boolean
+  onSelect: () => void
   disabled?: boolean
 }
 
-function ChainMenuItem({
+function ChainRow({
+  index,
   chain,
   isActive,
   isConnected,
   walletState,
-  onSelect,
   showBalance,
+  onSelect,
   disabled = false,
-}: ChainMenuItemProps) {
+}: ChainRowProps) {
+  const [hovered, setHovered] = useState(false)
+
   return (
-    <DropdownMenuItem
-      className={`
-        relative cursor-pointer transition-all duration-200 rounded-lg mx-1 mb-0.5
-        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
-      `}
-      style={{
-        background: isActive ? 'rgba(0, 245, 212, 0.1)' : 'transparent',
-        borderLeft: isActive ? '2px solid rgba(0, 245, 212, 0.7)' : '2px solid transparent',
-        paddingLeft: '10px',
-      }}
+    <motion.button
+      initial={{ opacity: 0, x: -4 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.18 }}
       onClick={disabled ? undefined : onSelect}
+      onMouseEnter={() => !disabled && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       disabled={disabled}
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        padding: '7px 10px',
+        borderRadius: '10px',
+        background: isActive
+          ? 'rgba(0,245,212,0.07)'
+          : hovered
+          ? 'rgba(255,255,255,0.04)'
+          : 'transparent',
+        border: isActive
+          ? '1px solid rgba(0,245,212,0.18)'
+          : '1px solid transparent',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.3 : 1,
+        transition: 'all 0.14s ease',
+        outline: 'none',
+        textAlign: 'left' as const,
+      }}
     >
-      <div className="flex items-center justify-between w-full gap-3">
-        {/* Left: Icon + Name */}
-        <div className="flex items-center gap-3 flex-1">
-          {/* Chain Icon */}
-          {chain.iconUrl && (
-            <div className="w-6 h-6 rounded-full overflow-hidden border border-cyan-500/30 flex-shrink-0">
-              <img
-                src={chain.iconUrl}
-                alt={chain.displayName}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          {/* Chain Info */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">{chain.displayName}</span>
-              {chain.isTestnet && (
-                <Badge
-                  variant="outline"
-                  className="text-xs bg-amber-500/10 text-amber-400 border-amber-500/30 px-1 py-0"
-                >
-                  Test
-                </Badge>
-              )}
-            </div>
-            
-            {/* Balance */}
-            {showBalance && isConnected && walletState?.balance && (
-              <span className="text-xs text-muted-foreground">
-                {formatBalance(walletState.balance, chain.id)} {chain.nativeCurrency.symbol}
-              </span>
-            )}
-          </div>
+      {/* Chain icon */}
+      {chain.iconUrl ? (
+        <div style={{
+          width: '28px',
+          height: '28px',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          flexShrink: 0,
+          border: `1px solid ${isActive ? 'rgba(0,245,212,0.25)' : 'rgba(255,255,255,0.07)'}`,
+        }}>
+          <img src={chain.iconUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
+      ) : (
+        <div style={{
+          width: '28px',
+          height: '28px',
+          borderRadius: '8px',
+          background: 'rgba(255,255,255,0.05)',
+          flexShrink: 0,
+        }} />
+      )}
 
-        {/* Right: Status Indicators */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Connection Status */}
-          {isConnected ? (
-            <div className="flex items-center gap-1 text-green-400">
-              <Wallet className="w-4 h-4" />
-              <span className="text-xs">Connected</span>
-            </div>
-          ) : walletState?.status === WalletStatus.CONNECTING ? (
-            <div className="flex items-center gap-1 text-cyan-400">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <AlertCircle className="w-4 h-4" />
-              </motion.div>
-              <span className="text-xs">Connecting...</span>
-            </div>
-          ) : null}
-
-          {/* Active Indicator */}
-          {isActive && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="text-cyan-400"
-            >
-              <Check className="w-4 h-4" />
-            </motion.div>
+      {/* Name + balance */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            color: isActive ? 'rgba(0,245,212,0.92)' : 'rgba(255,255,255,0.85)',
+            transition: 'color 0.14s',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap' as const,
+          }}>
+            {chain.displayName}
+          </span>
+          {chain.isTestnet && (
+            <span style={{
+              fontSize: '0.55rem',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              color: '#f59e0b',
+              background: 'rgba(245,158,11,0.1)',
+              border: '1px solid rgba(245,158,11,0.18)',
+              borderRadius: '999px',
+              padding: '1px 4px',
+              flexShrink: 0,
+            }}>
+              TEST
+            </span>
           )}
         </div>
+        {showBalance && isConnected && walletState?.balance && (
+          <span style={{
+            fontSize: '0.68rem',
+            color: 'rgba(255,255,255,0.32)',
+            display: 'block',
+            marginTop: '1px',
+          }}>
+            {formatBalance(walletState.balance, chain.id)} {chain.nativeCurrency.symbol}
+          </span>
+        )}
       </div>
-    </DropdownMenuItem>
+
+      {/* Status indicators */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
+        {isConnected && (
+          <span style={{
+            width: '5px',
+            height: '5px',
+            borderRadius: '50%',
+            background: '#10b981',
+            boxShadow: '0 0 6px #10b981',
+            display: 'block',
+          }} />
+        )}
+        {isActive && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+            style={{ color: 'rgba(0,245,212,0.8)', display: 'flex' }}
+          >
+            <Check size={13} strokeWidth={2.5} />
+          </motion.span>
+        )}
+      </div>
+    </motion.button>
   )
 }
