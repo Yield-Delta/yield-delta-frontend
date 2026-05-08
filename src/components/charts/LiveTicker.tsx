@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, BarChart3, RefreshCw, Wifi, WifiOff } from 'lucide-react';
-import { useWebSocket, type ConnectionStatus } from '@/hooks/useWebSocket';
+import { TrendingUp, TrendingDown, Activity, BarChart3, RefreshCw, Wifi } from 'lucide-react';
 
 interface LiveTickerProps {
   symbol: string;
@@ -27,24 +26,21 @@ const MOCK_TICKERS: TickerItem[] = [
 ];
 
 export default function LiveTicker({ symbol, className = '' }: LiveTickerProps) {
-  const { prices, status, isConnected, connectionType } = useWebSocket();
   const [tickers, setTickers] = useState<TickerItem[]>(MOCK_TICKERS);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [status, setStatus] = useState<'connected' | 'disconnected'>('connected');
 
-  // Update prices from WebSocket
+  // Simulate price updates
   useEffect(() => {
-    setTickers(prev => prev.map(ticker => {
-      const wsPrice = prices.get(ticker.symbol);
-      if (wsPrice) {
-        return {
-          ...ticker,
-          price: wsPrice,
-          change24h: ticker.change24h + (Math.random() - 0.5) * 0.1,
-        };
-      }
-      return ticker;
-    }));
-  }, [prices]);
+    const interval = setInterval(() => {
+      setTickers(prev => prev.map(ticker => ({
+        ...ticker,
+        price: ticker.price * (1 + (Math.random() - 0.5) * 0.001),
+        change24h: ticker.change24h + (Math.random() - 0.5) * 0.05,
+      })));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Rotate through tickers
   useEffect(() => {
@@ -55,17 +51,12 @@ export default function LiveTicker({ symbol, className = '' }: LiveTickerProps) 
   }, [tickers.length]);
 
   // Get status indicator color
-  const getStatusColor = (status: ConnectionStatus) => {
+  const getStatusColor = () => {
     switch (status) {
       case 'connected': return 'bg-green-500';
-      case 'connecting':
-      case 'reconnecting': return 'bg-yellow-500';
       default: return 'bg-red-500';
     }
   };
-
-  // Get status icon
-  const StatusIcon = isConnected ? Wifi : WifiOff;
 
   // Format price
   const formatPrice = (price: number) => {
@@ -102,13 +93,13 @@ export default function LiveTicker({ symbol, className = '' }: LiveTickerProps) 
         {/* Connection status */}
         <div className="flex items-center gap-2 pr-4 border-r border-white/10">
           <motion.div
-            className={`w-2 h-2 rounded-full ${getStatusColor(status)}`}
+            className={`w-2 h-2 rounded-full ${getStatusColor()}`}
             animate={status === 'connected' ? { scale: [1, 1.2, 1] } : {}}
             transition={{ repeat: Infinity, duration: 2 }}
           />
-          <StatusIcon className={`w-4 h-4 ${isConnected ? 'text-green-400' : 'text-red-400'}`} />
+          <Wifi className={`w-4 h-4 ${status === 'connected' ? 'text-green-400' : 'text-red-400'}`} />
           <span className="text-xs font-mono text-gray-400 hidden sm:inline">
-            {connectionType === 'binance' ? 'Binance' : connectionType === 'mock' ? 'Live' : 'Offline'}
+            {status === 'connected' ? 'Live' : 'Offline'}
           </span>
         </div>
 
@@ -179,7 +170,7 @@ export default function LiveTicker({ symbol, className = '' }: LiveTickerProps) 
           className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           title="Refresh"
         >
-          <RefreshCw className={`w-4 h-4 text-gray-400 ${status === 'connecting' ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-gray-400`} />
         </button>
 
         {/* Ticker navigation dots */}

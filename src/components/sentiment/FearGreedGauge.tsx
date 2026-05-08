@@ -23,7 +23,7 @@ export default function FearGreedGauge({
 }: FearGreedGaugeProps) {
   const [animatedValue, setAnimatedValue] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
 
   const sizes = {
     sm: { width: 200, height: 120, strokeWidth: 8, fontSize: 24, labelSize: 10 },

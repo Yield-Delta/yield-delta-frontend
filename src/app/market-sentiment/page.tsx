@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity, RefreshCw, Calendar, Filter } from 'lucide-react';
-import { FearGreedGauge } from '@/components/sentiment/FearGreedGauge';
-import { SentimentScoreDisplay } from '@/components/sentiment/SentimentScoreDisplay';
-import { RadarChart } from '@/components/sentiment/RadarChart';
-import { SentimentBreakdown } from '@/components/sentiment/SentimentBreakdown';
+import { TrendingUp, TrendingDown, Activity, RefreshCw, Calendar } from 'lucide-react';
+import FearGreedGauge from '@/components/sentiment/FearGreedGauge';
+import SentimentScoreDisplay from '@/components/sentiment/SentimentScoreDisplay';
+import RadarChart from '@/components/sentiment/RadarChart';
+import SentimentBreakdown from '@/components/sentiment/SentimentBreakdown';
 import { MetricCard } from '@/components/sentiment/MetricCard';
 import { SentimentTimeline } from '@/components/sentiment/SentimentTimeline';
 import { SentimentTable } from '@/components/sentiment/SentimentTable';
@@ -131,12 +131,12 @@ const MarketSentimentPage = () => {
   }, [selectedTimeframe]);
 
   const radarData = [
-    { label: 'Technical', value: marketStats.technicalScore },
-    { label: 'Fundamental', value: marketStats.fundamentalScore },
-    { label: 'Social', value: marketStats.socialScore },
-    { label: 'Fear/Greed', value: 100 - marketStats.fearIndex },
-    { label: 'Momentum', value: 65 },
-    { label: 'Volume', value: 72 },
+    { axis: 'Technical', value: marketStats.technicalScore, color: '#06b6d4' },
+    { axis: 'Fundamental', value: marketStats.fundamentalScore, color: '#10b981' },
+    { axis: 'Social', value: marketStats.socialScore, color: '#8b5cf6' },
+    { axis: 'Fear/Greed', value: 100 - marketStats.fearIndex, color: '#f59e0b' },
+    { axis: 'Momentum', value: 65, color: '#ec4899' },
+    { axis: 'Volume', value: 72, color: '#3b82f6' },
   ];
 
   const filteredSentimentData =
@@ -204,7 +204,12 @@ const MarketSentimentPage = () => {
             transition={{ delay: 0.1 }}
             className="lg:col-span-1"
           >
-            <FearGreedGauge value={marketStats.fearIndex} size="large" />
+            <FearGreedGauge value={marketStats.fearIndex} size="lg" classification={
+              marketStats.fearIndex >= 75 ? 'Extreme Greed' :
+              marketStats.fearIndex >= 55 ? 'Greed' :
+              marketStats.fearIndex >= 45 ? 'Neutral' :
+              marketStats.fearIndex >= 25 ? 'Fear' : 'Extreme Fear'
+            } />
           </motion.div>
 
           <motion.div
@@ -219,6 +224,7 @@ const MarketSentimentPage = () => {
               fundamentalScore={marketStats.fundamentalScore}
               socialScore={marketStats.socialScore}
               confidence={marketStats.confidenceLevel}
+              timeframe={selectedTimeframe}
             />
           </motion.div>
         </div>
@@ -229,7 +235,7 @@ const MarketSentimentPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <RadarChart data={radarData} title="Sentiment Dimensions" />
+            <RadarChart data={radarData} />
           </motion.div>
 
           <motion.div
@@ -237,7 +243,11 @@ const MarketSentimentPage = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <SentimentBreakdown metrics={filteredSentimentData} />
+            <SentimentBreakdown
+              technical={marketStats.technicalScore}
+              fundamental={marketStats.fundamentalScore}
+              social={marketStats.socialScore}
+            />
           </motion.div>
         </div>
 
@@ -314,7 +324,7 @@ const MarketSentimentPage = () => {
               timeRange={timeRange}
               tokenFilters={tokenFilters}
               onSourceChange={setSelectedSources}
-              onTimeRangeChange={(v) => console.log('Time range:', v)}
+              onTimeRangeChange={(v: string) => console.log('Time range:', v)}
               onTokenChange={setSelectedTokens}
             />
           </div>

@@ -3,10 +3,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Activity, Target, Zap, Gauge } from 'lucide-react';
+import { OHLCData } from './EnhancedCandlestickChart';
 import { LineData, Time } from 'lightweight-charts';
 
 interface TechnicalAnalysisPanelProps {
-  ohlcData: { time: Time; open: number; high: number; low: number; close: number; volume: number }[];
+  ohlcData: OHLCData[];
   rsiData?: LineData<Time>[];
   macdData?: { macd: number; signal: number; histogram: number };
   className?: string;
@@ -60,8 +61,8 @@ export default function TechnicalAnalysisPanel({
     const range24h = ((high24h - low24h) / low24h) * 100;
 
     // Volume
-    const avgVolume = ohlcData.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20;
-    const currentVolume = latestCandle.volume;
+    const avgVolume = ohlcData.slice(-20).reduce((sum, c) => sum + (c.volume || 0), 0) / 20;
+    const currentVolume = latestCandle.volume || 0;
     const volumeRatio = currentVolume / avgVolume;
 
     return {

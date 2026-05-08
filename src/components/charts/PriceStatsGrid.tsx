@@ -3,16 +3,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, BarChart3, Activity, DollarSign, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { Time } from 'lightweight-charts';
-
-interface OHLCData {
-  time: Time;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
+import { OHLCData } from './EnhancedCandlestickChart';
 
 interface PriceStatsGridProps {
   ohlcData: OHLCData[];
@@ -60,8 +51,8 @@ export default function PriceStatsGrid({
     const last24 = ohlcData.slice(-24);
     const high24h = Math.max(...last24.map(c => c.high));
     const low24h = Math.min(...last24.map(c => c.low));
-    const volume24h = last24.reduce((sum, c) => sum + c.volume, 0);
-    const avgVolume = ohlcData.slice(-20).reduce((sum, c) => sum + c.volume, 0) / 20;
+    const volume24h = last24.reduce((sum, c) => sum + (c.volume || 0), 0);
+    const avgVolume = ohlcData.slice(-20).reduce((sum, c) => sum + (c.volume || 0), 0) / 20;
 
     // Support/Resistance using recent highs/lows
     const lookback = Math.min(20, ohlcData.length);

@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Check, Wallet, AlertCircle } from 'lucide-react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
-import { ChainId, ChainType, WalletState, WalletStatus } from '@/types/chain'
+import { ChainId, ChainType, WalletState, WalletStatus, NetworkEnvironment } from '@/types/chain'
 import { CHAIN_METADATA, getChainMetadata } from '@/lib/chainConfig'
 import { formatBalance } from '@/lib/chainUtils'
 
@@ -64,6 +64,8 @@ export function ChainSelector({
   }
 
   const handleChainSelect = (chainId: ChainId) => {
+    const metadata = getChainMetadata(chainId)
+    if (metadata.environment !== NetworkEnvironment.TESTNET) return
     setActiveChain(chainId)
     setIsOpen(false)
     onChainSelect?.(chainId)
@@ -222,6 +224,7 @@ export function ChainSelector({
                     walletState={getWalletStateForChain(chain.id)}
                     showBalance={showBalances}
                     onSelect={() => handleChainSelect(chain.id)}
+                    disabled={chain.environment !== NetworkEnvironment.TESTNET}
                   />
                 ))}
               </ChainGroup>
@@ -239,6 +242,7 @@ export function ChainSelector({
                     walletState={getWalletStateForChain(chain.id)}
                     showBalance={showBalances}
                     onSelect={() => handleChainSelect(chain.id)}
+                    disabled={chain.environment !== NetworkEnvironment.TESTNET}
                   />
                 ))}
               </ChainGroup>
@@ -430,6 +434,17 @@ function ChainRow({
             marginTop: '1px',
           }}>
             {formatBalance(walletState.balance, chain.id)} {chain.nativeCurrency.symbol}
+          </span>
+        )}
+        {disabled && !chain.isTestnet && (
+          <span style={{
+            fontSize: '0.58rem',
+            fontWeight: 600,
+            color: 'rgba(153,69,255,0.7)',
+            display: 'block',
+            marginTop: '1px',
+          }}>
+            Coming Soon
           </span>
         )}
       </div>

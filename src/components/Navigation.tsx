@@ -543,25 +543,7 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
 
   return (
     <>
-      {/* Testnet Banner - Integrated with Navigation */}
-      {isTestnet && (
-        <div
-          className="fixed top-0 left-0 right-0 z-[100000] bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 h-8 flex items-center justify-center border-b border-orange-600/20"
-          style={{
-            boxShadow: '0 2px 10px rgba(251, 146, 60, 0.3)',
-            backdropFilter: 'blur(8px)'
-          }}
-        >
-          <div className="flex items-center gap-2 text-white">
-            <AlertTriangle className="h-4 w-4 animate-pulse" />
-            <span className="font-bold text-sm tracking-wide">TESTNET MODE</span>
-            <span className="text-white/80 mx-1">|</span>
-            <span className="text-white/90 text-xs">SEI Atlantic-2</span>
-            <span className="text-white/80 mx-1">•</span>
-            <span className="text-white/90 text-xs font-medium">Test Tokens Only</span>
-          </div>
-        </div>
-      )}
+      {/* Testnet Banner removed - redundant */}
 
       <nav
         className={`${baseClasses} ${variantClasses[variant]} ${className}`}
