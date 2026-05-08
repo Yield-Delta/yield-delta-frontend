@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, TrendingDown, Menu, Wifi, WifiOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, Menu, Wifi } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import LiveTicker from '@/components/charts/LiveTicker';
 import ControlSidebar, { useChartControls } from '@/components/charts/ControlSidebar';
@@ -13,7 +13,6 @@ import DrawingTools, { useDrawings } from '@/components/charts/DrawingTools';
 import TechnicalAnalysisPanel from '@/components/charts/TechnicalAnalysisPanel';
 import PriceStatsGrid from '@/components/charts/PriceStatsGrid';
 import TokenPairSelector, { useTokenFavorites } from '@/components/charts/TokenPairSelector';
-import { Time } from 'lightweight-charts';
 
 interface Token {
   symbol: string;
@@ -75,7 +74,7 @@ function generateOHLCData(days: number, basePrice: number): ChartOHLCData[] {
     const volume = 1000000 + Math.random() * 5000000;
 
     data.push({
-      time: time as Time,
+      time: time as number,
       open,
       high,
       low,

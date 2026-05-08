@@ -431,3 +431,364 @@
 .chart-animate-in:nth-child(4) { animation-delay: 0.4s; }
 .chart-animate-in:nth-child(5) { animation-delay: 0.5s; }
 .chart-animate-in:nth-child(6) { animation-delay: 0.6s; }
+
+/* ========================================
+   SENTIMENT PAGE - PREMIUM STYLES
+   ======================================== */
+
+/* Fear & Greed Gauge */
+.fear-greed-gauge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fear-greed-gauge-bg {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.fear-greed-gauge-fill {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease-out;
+}
+
+.fear-greed-value {
+  position: absolute;
+  text-align: center;
+}
+
+.fear-greed-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Sentiment Score Display */
+.sentiment-score-display {
+  background: var(--chart-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--chart-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.score-main {
+  font-size: 3rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.score-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  text-align: center;
+}
+
+/* Radar Chart */
+.radar-chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
+.radar-chart-label {
+  font-size: 12px;
+  fill: rgba(255, 255, 255, 0.7);
+}
+
+/* Metric Cards */
+.metric-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, var(--chart-glow) 0%, transparent 70%);
+  opacity: 0.5;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.metric-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.metric-card-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.metric-card-change.up {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--neon-green);
+}
+
+.metric-card-change.down {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--neon-red);
+}
+
+.metric-card-change.neutral {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--neon-gold);
+}
+
+/* Timeline */
+.sentiment-timeline {
+  position: relative;
+}
+
+.timeline-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--neon-red), var(--neon-gold), var(--neon-green));
+  opacity: 0.3;
+}
+
+.timeline-marker {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-marker:hover {
+  transform: scale(1.5);
+}
+
+.timeline-tooltip {
+  position: absolute;
+  bottom: calc(100% + 1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--chart-bg);
+  border: 1px solid var(--chart-border);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  min-width: 150px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.timeline-marker:hover .timeline-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Sentiment Table */
+.sentiment-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sentiment-table th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sentiment-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sentiment-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.sentiment-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.sentiment-badge.bullish {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--neon-green);
+}
+
+.sentiment-badge.bearish {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--neon-red);
+}
+
+.sentiment-badge.neutral {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--neon-gold);
+}
+
+/* Filters */
+.sentiment-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sentiment-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sentiment-filter-btn.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+}
+
+/* Drill-down Modal */
+.drill-down-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.drill-down-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.drill-down-content {
+  position: relative;
+  background: var(--chart-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--chart-border);
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.drill-down-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+
+.drill-down-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Sentiment Breakdown Cards */
+.sentiment-breakdown-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sentiment-breakdown-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.sentiment-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.sentiment-breakdown-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.sentiment-breakdown-trend {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.sentiment-breakdown-description {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
+}
+
+/* Loading States */
+.sentiment-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: chart-shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* Responsive Sentiment Styles */
+@media (max-width: 768px) {
+  .score-breakdown {
+    grid-template-columns: 1fr;
+  }
+
+  .radar-chart-container {
+    height: 250px;
+  }
+
+  .sentiment-table {
+    font-size: 0.875rem;
+  }
+}
