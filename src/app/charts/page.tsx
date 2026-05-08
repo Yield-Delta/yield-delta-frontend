@@ -12,7 +12,9 @@ import {
   Target,
   Zap,
   ChevronDown,
-  RefreshCw
+  RefreshCw,
+  Crosshair,
+  Maximize2
 } from 'lucide-react';
 import {
   createChart,
@@ -77,14 +79,10 @@ const generateOHLCData = (days: number = 90, currentPrice: number): OHLCData[] =
   const data: OHLCData[] = [];
   const now = new Date();
 
-  // Work backwards from current price to generate historical data
-  // Use a deterministic seed based on days to ensure consistency
   let price = currentPrice;
   const priceHistory: number[] = [price];
 
-  // Generate price history going backwards
   for (let i = 1; i <= days; i++) {
-    // Random walk with mean reversion towards current price
     const volatility = 0.025 + Math.random() * 0.015;
     const meanReversion = (currentPrice - price) * 0.02;
     const change = (Math.random() - 0.5) * volatility + meanReversion;
@@ -92,7 +90,6 @@ const generateOHLCData = (days: number = 90, currentPrice: number): OHLCData[] =
     priceHistory.unshift(price);
   }
 
-  // Generate OHLC from price history
   for (let i = 0; i <= days; i++) {
     const date = new Date(now);
     date.setDate(date.getDate() - (days - i));
@@ -139,7 +136,6 @@ const calculateEMA = (data: OHLCData[], period: number): LineData[] => {
   const result: LineData[] = [];
   const multiplier = 2 / (period + 1);
 
-  // Start with SMA for first value
   let ema = data.slice(0, period).reduce((acc, d) => acc + d.close, 0) / period;
 
   for (let i = period - 1; i < data.length; i++) {
@@ -190,8 +186,7 @@ const calculateMACD = (data: OHLCData[]): { macd: LineData[]; signal: LineData[]
   const signalLine: LineData[] = [];
   const histogram: HistogramData[] = [];
 
-  // Calculate MACD line (EMA12 - EMA26)
-  const startIndex = 26 - 12; // Offset for different EMA lengths
+  const startIndex = 26 - 12;
   for (let i = startIndex; i < ema12.length; i++) {
     const ema26Index = i - startIndex;
     if (ema26Index >= 0 && ema26Index < ema26.length) {
@@ -202,7 +197,6 @@ const calculateMACD = (data: OHLCData[]): { macd: LineData[]; signal: LineData[]
     }
   }
 
-  // Calculate Signal line (9-period EMA of MACD)
   if (macdLine.length >= 9) {
     const multiplier = 2 / 10;
     let signal = macdLine.slice(0, 9).reduce((acc, d) => acc + d.value, 0) / 9;
@@ -215,12 +209,11 @@ const calculateMACD = (data: OHLCData[]): { macd: LineData[]; signal: LineData[]
         signalLine.push({ time: macdLine[i].time, value: parseFloat(signal.toFixed(4)) });
       }
 
-      // Calculate histogram
       const histValue = macdLine[i].value - (signalLine[signalLine.length - 1]?.value || 0);
       histogram.push({
         time: macdLine[i].time,
         value: parseFloat(histValue.toFixed(4)),
-        color: histValue >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)',
+        color: histValue >= 0 ? '#ccff00' : '#ff003c', // Cyberpunk green and red
       });
     }
   }
@@ -250,10 +243,10 @@ const calculateBollingerBands = (data: OHLCData[], period: number = 20, stdDev: 
 };
 
 const TOKENS = [
-  { symbol: 'SEI', name: 'SEI Network', color: '#dc2626', coingeckoId: 'sei-network' },
-  { symbol: 'ETH', name: 'Ethereum', color: '#6366f1', coingeckoId: 'ethereum' },
-  { symbol: 'BTC', name: 'Bitcoin', color: '#f59e0b', coingeckoId: 'bitcoin' },
-  { symbol: 'USDC', name: 'USD Coin', color: '#2563eb', coingeckoId: 'usd-coin' },
+  { symbol: 'SEI', name: 'SEI Network', color: '#ff003c', coingeckoId: 'sei-network' },
+  { symbol: 'ETH', name: 'Ethereum', color: '#00f0ff', coingeckoId: 'ethereum' },
+  { symbol: 'BTC', name: 'Bitcoin', color: '#ccff00', coingeckoId: 'bitcoin' },
+  { symbol: 'USDC', name: 'USD Coin', color: '#ffffff', coingeckoId: 'usd-coin' },
 ];
 
 const TIMEFRAMES = [
@@ -281,13 +274,25 @@ const ChartsPage = () => {
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Cyberpunk inspired colors
+  const colors = {
+    bg: '#050505',
+    text: '#e0e0e0',
+    grid: '#1a1a1a',
+    up: '#ccff00',
+    down: '#ff003c',
+    accent1: '#00f0ff',
+    accent2: '#ff00ff',
+    muted: '#4a4a4a'
+  };
+
   const [indicators, setIndicators] = useState<IndicatorConfig[]>([
-    { name: 'SMA 20', enabled: true, color: '#06b6d4', period: 20 },
-    { name: 'SMA 50', enabled: true, color: '#8b5cf6', period: 50 },
-    { name: 'EMA 12', enabled: false, color: '#f59e0b', period: 12 },
-    { name: 'EMA 26', enabled: false, color: '#ec4899', period: 26 },
-    { name: 'Bollinger Bands', enabled: true, color: '#10b981' },
-    { name: 'Volume', enabled: true, color: '#6366f1' },
+    { name: 'SMA 20', enabled: true, color: colors.accent1, period: 20 },
+    { name: 'SMA 50', enabled: true, color: colors.accent2, period: 50 },
+    { name: 'EMA 12', enabled: false, color: '#ffb000', period: 12 },
+    { name: 'EMA 26', enabled: false, color: '#8a2be2', period: 26 },
+    { name: 'Bollinger Bands', enabled: true, color: colors.muted },
+    { name: 'Volume', enabled: true, color: colors.muted },
   ]);
 
   const [showRSI, setShowRSI] = useState(true);
@@ -302,25 +307,21 @@ const ChartsPage = () => {
   const low24h = ohlcData.length > 0 ? Math.min(...ohlcData.slice(-24).map(d => d.low)) : 0;
   const volume24h = ohlcData.length > 0 ? ohlcData.slice(-24).reduce((sum, d) => sum + (d.volume || 0), 0) : 0;
 
-  // Load data with real prices from API
   useEffect(() => {
     let isMounted = true;
 
     const loadData = async () => {
       setIsLoading(true);
       try {
-        // Fetch real price from CoinGecko
         const currentPrice = await fetchCurrentPrice(selectedToken.coingeckoId);
 
         if (isMounted) {
-          // Generate OHLC data based on real current price
           const data = generateOHLCData(selectedTimeframe.days, currentPrice);
           setOhlcData(data);
         }
       } catch (error) {
         console.error('Error loading chart data:', error);
         if (isMounted) {
-          // Fallback to default price if API fails
           const fallbackPrice = getFallbackPrice(selectedToken.coingeckoId);
           const data = generateOHLCData(selectedTimeframe.days, fallbackPrice);
           setOhlcData(data);
@@ -339,11 +340,9 @@ const ChartsPage = () => {
     };
   }, [selectedToken, selectedTimeframe]);
 
-  // Initialize main chart
   const initMainChart = useCallback(() => {
     if (!chartContainerRef.current || ohlcData.length === 0) return;
 
-    // Clean up existing chart
     if (mainChartRef.current) {
       mainChartRef.current.remove();
       mainChartRef.current = null;
@@ -352,23 +351,24 @@ const ChartsPage = () => {
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(255, 255, 255, 0.7)',
+        textColor: colors.text,
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        vertLines: { color: colors.grid, style: 1 },
+        horzLines: { color: colors.grid, style: 1 },
       },
       crosshair: {
         mode: 1,
-        vertLine: { color: 'rgba(255, 255, 255, 0.3)', width: 1, style: 2 },
-        horzLine: { color: 'rgba(255, 255, 255, 0.3)', width: 1, style: 2 },
+        vertLine: { color: colors.accent1, width: 1, style: 3 },
+        horzLine: { color: colors.accent1, width: 1, style: 3 },
       },
       rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
         scaleMargins: { top: 0.1, bottom: 0.2 },
       },
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
         timeVisible: true,
         secondsVisible: false,
       },
@@ -377,23 +377,21 @@ const ChartsPage = () => {
 
     mainChartRef.current = chart;
 
-    // Candlestick series
     const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#10b981',
-      downColor: '#ef4444',
-      borderUpColor: '#10b981',
-      borderDownColor: '#ef4444',
-      wickUpColor: '#10b981',
-      wickDownColor: '#ef4444',
+      upColor: colors.up,
+      downColor: colors.down,
+      borderUpColor: colors.up,
+      borderDownColor: colors.down,
+      wickUpColor: colors.up,
+      wickDownColor: colors.down,
     });
 
     candleSeries.setData(ohlcData as CandlestickData<Time>[]);
     candleSeriesRef.current = candleSeries;
 
-    // Volume
     if (indicators.find(i => i.name === 'Volume')?.enabled) {
       const volumeSeries = chart.addSeries(HistogramSeries, {
-        color: '#6366f1',
+        color: colors.muted,
         priceFormat: { type: 'volume' },
         priceScaleId: '',
       });
@@ -405,14 +403,13 @@ const ChartsPage = () => {
       const volumeData = ohlcData.map(d => ({
         time: d.time,
         value: d.volume || 0,
-        color: d.close >= d.open ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+        color: d.close >= d.open ? `${colors.up}33` : `${colors.down}33`,
       }));
 
       volumeSeries.setData(volumeData);
       volumeSeriesRef.current = volumeSeries;
     }
 
-    // SMA indicators
     indicators.forEach(indicator => {
       if (!indicator.enabled || !indicator.period) return;
 
@@ -437,19 +434,18 @@ const ChartsPage = () => {
       }
     });
 
-    // Bollinger Bands
     if (indicators.find(i => i.name === 'Bollinger Bands')?.enabled) {
       const bb = calculateBollingerBands(ohlcData);
 
       const upperSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(16, 185, 129, 0.5)',
+        color: `${colors.accent1}40`,
         lineWidth: 1,
         title: 'BB Upper',
       });
       upperSeries.setData(bb.upper);
 
       const lowerSeries = chart.addSeries(LineSeries, {
-        color: 'rgba(16, 185, 129, 0.5)',
+        color: `${colors.accent1}40`,
         lineWidth: 1,
         title: 'BB Lower',
       });
@@ -459,7 +455,6 @@ const ChartsPage = () => {
     chart.timeScale().fitContent();
   }, [ohlcData, indicators]);
 
-  // Initialize RSI chart
   const initRSIChart = useCallback(() => {
     if (!rsiContainerRef.current || ohlcData.length === 0 || !showRSI) return;
 
@@ -471,18 +466,19 @@ const ChartsPage = () => {
     const chart = createChart(rsiContainerRef.current, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(255, 255, 255, 0.7)',
+        textColor: colors.text,
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        vertLines: { color: colors.grid },
+        horzLines: { color: colors.grid },
       },
       rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
         scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
         visible: false,
       },
       handleScroll: { vertTouchDrag: false },
@@ -490,25 +486,23 @@ const ChartsPage = () => {
 
     rsiChartRef.current = chart;
 
-    // RSI line
     const rsiData = calculateRSI(ohlcData);
     const rsiSeries = chart.addSeries(LineSeries, {
-      color: '#8b5cf6',
+      color: colors.accent2,
       lineWidth: 2,
       title: 'RSI',
     });
     rsiSeries.setData(rsiData);
 
-    // Overbought/oversold lines
     const overbought = chart.addSeries(LineSeries, {
-      color: 'rgba(239, 68, 68, 0.5)',
+      color: `${colors.down}80`,
       lineWidth: 1,
       lineStyle: 2,
     });
     overbought.setData(rsiData.map(d => ({ time: d.time, value: 70 })));
 
     const oversold = chart.addSeries(LineSeries, {
-      color: 'rgba(16, 185, 129, 0.5)',
+      color: `${colors.up}80`,
       lineWidth: 1,
       lineStyle: 2,
     });
@@ -517,7 +511,6 @@ const ChartsPage = () => {
     chart.timeScale().fitContent();
   }, [ohlcData, showRSI]);
 
-  // Initialize MACD chart
   const initMACDChart = useCallback(() => {
     if (!macdContainerRef.current || ohlcData.length === 0 || !showMACD) return;
 
@@ -529,17 +522,18 @@ const ChartsPage = () => {
     const chart = createChart(macdContainerRef.current, {
       layout: {
         background: { color: 'transparent' },
-        textColor: 'rgba(255, 255, 255, 0.7)',
+        textColor: colors.text,
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
       },
       grid: {
-        vertLines: { color: 'rgba(255, 255, 255, 0.03)' },
-        horzLines: { color: 'rgba(255, 255, 255, 0.03)' },
+        vertLines: { color: colors.grid },
+        horzLines: { color: colors.grid },
       },
       rightPriceScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
       },
       timeScale: {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: colors.grid,
         timeVisible: true,
       },
       handleScroll: { vertTouchDrag: false },
@@ -549,24 +543,21 @@ const ChartsPage = () => {
 
     const { macd, signal, histogram } = calculateMACD(ohlcData);
 
-    // Histogram
     const histogramSeries = chart.addSeries(HistogramSeries, {
-      color: '#10b981',
+      color: colors.accent1,
       priceFormat: { type: 'price', precision: 4 },
     });
     histogramSeries.setData(histogram);
 
-    // MACD line
     const macdSeries = chart.addSeries(LineSeries, {
-      color: '#06b6d4',
+      color: colors.text,
       lineWidth: 2,
       title: 'MACD',
     });
     macdSeries.setData(macd);
 
-    // Signal line
     const signalSeries = chart.addSeries(LineSeries, {
-      color: '#f59e0b',
+      color: colors.accent2,
       lineWidth: 2,
       title: 'Signal',
     });
@@ -575,7 +566,6 @@ const ChartsPage = () => {
     chart.timeScale().fitContent();
   }, [ohlcData, showMACD]);
 
-  // Sync time scales
   useEffect(() => {
     if (!mainChartRef.current) return;
 
@@ -598,14 +588,12 @@ const ChartsPage = () => {
     };
   }, []);
 
-  // Initialize all charts
   useEffect(() => {
     initMainChart();
     initRSIChart();
     initMACDChart();
   }, [initMainChart, initRSIChart, initMACDChart]);
 
-  // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (chartContainerRef.current && mainChartRef.current) {
@@ -636,362 +624,278 @@ const ChartsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Background gradient */}
-      <div
-        className="fixed inset-0 z-0"
+    <div className="min-h-screen bg-[#050505] text-[#e0e0e0] font-sans selection:bg-[#ccff00] selection:text-black overflow-x-hidden">
+      {/* Brutalist Grid Background */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-[0.03] z-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%)'
+          backgroundImage: `
+            linear-gradient(to right, #ffffff 1px, transparent 1px),
+            linear-gradient(to bottom, #ffffff 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}
+      />
+      
+      {/* Noise overlay */}
+      <div 
+        className="fixed inset-0 pointer-events-none opacity-20 z-0 mix-blend-overlay"
+        style={{
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")'
         }}
       />
 
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
 
-      {/* Main Content */}
-      <div className="relative z-10" style={{ paddingTop: '1.5rem' }}>
-        {/* Header */}
-        <div
-          className="border-b border-white/10"
-          style={{
-            background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%)',
-          }}
-        >
-          <div className="max-w-[1600px] mx-auto px-4 py-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              {/* Token Selector & Price */}
-              <div className="flex items-center gap-6">
-                {/* Token Dropdown */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowTokenDropdown(!showTokenDropdown)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-white/10"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                    }}
-                  >
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
-                      style={{ background: selectedToken.color }}
-                    >
-                      {selectedToken.symbol.slice(0, 2)}
-                    </div>
-                    <div className="text-left">
-                      <div className="font-bold text-white text-lg">{selectedToken.symbol}/USD</div>
-                      <div className="text-xs text-gray-400">{selectedToken.name}</div>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showTokenDropdown ? 'rotate-180' : ''}`} />
-                  </button>
+      <main className="relative z-10 pt-24 px-4 md:px-8 pb-12 max-w-[1800px] mx-auto">
+        {/* Terminal Header */}
+        <header className="mb-8 border-b-2 border-[#1a1a1a] pb-6 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.2em] text-[#00f0ff] font-mono">
+              <Crosshair className="w-4 h-4" />
+              <span>System.Terminal // Market.Data</span>
+            </div>
+            
+            <div className="relative group inline-block">
+              <button
+                onClick={() => setShowTokenDropdown(!showTokenDropdown)}
+                className="flex items-end gap-4 hover:opacity-80 transition-opacity"
+              >
+                <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none" style={{ color: selectedToken.color }}>
+                  {selectedToken.symbol}
+                </h1>
+                <span className="text-2xl md:text-4xl text-[#4a4a4a] font-bold mb-1">/USD</span>
+                <ChevronDown className={`w-8 h-8 mb-2 text-[#4a4a4a] transition-transform ${showTokenDropdown ? 'rotate-180' : ''}`} />
+              </button>
 
-                  {showTokenDropdown && (
-                    <div
-                      className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden z-50"
-                      style={{
-                        background: 'rgba(20, 20, 30, 0.95)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(20px)',
+              {showTokenDropdown && (
+                <div className="absolute top-full left-0 mt-4 w-64 bg-[#0a0a0a] border-2 border-[#1a1a1a] p-2 z-50">
+                  {TOKENS.map(token => (
+                    <button
+                      key={token.symbol}
+                      onClick={() => {
+                        setSelectedToken(token);
+                        setShowTokenDropdown(false);
                       }}
+                      className="w-full text-left px-4 py-3 hover:bg-[#1a1a1a] transition-colors flex justify-between items-center group"
                     >
-                      {TOKENS.map(token => (
-                        <button
-                          key={token.symbol}
-                          onClick={() => {
-                            setSelectedToken(token);
-                            setShowTokenDropdown(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 transition-colors"
-                        >
-                          <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm"
-                            style={{ background: token.color }}
-                          >
-                            {token.symbol.slice(0, 2)}
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold text-white">{token.symbol}</div>
-                            <div className="text-xs text-gray-400">{token.name}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Price Display */}
-                <div>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-white">
-                      ${currentPrice.toFixed(4)}
-                    </span>
-                    <span className={`flex items-center gap-1 text-lg font-semibold ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {priceChange >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                      {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-4">
-                {[
-                  { label: '24h High', value: `$${high24h.toFixed(4)}`, icon: TrendingUp, color: 'text-green-400' },
-                  { label: '24h Low', value: `$${low24h.toFixed(4)}`, icon: TrendingDown, color: 'text-red-400' },
-                  { label: '24h Volume', value: `$${(volume24h / 1000000).toFixed(2)}M`, icon: BarChart3, color: 'text-blue-400' },
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                    <div>
-                      <div className="text-xs text-gray-400">{stat.label}</div>
-                      <div className="font-semibold text-white">{stat.value}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart Controls */}
-        <div className="max-w-[1600px] mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Timeframe Selector */}
-            <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-gray-400" />
-              <div className="flex gap-2">
-                {TIMEFRAMES.map(tf => (
-                  <button
-                    key={tf.value}
-                    onClick={() => setSelectedTimeframe(tf)}
-                    className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all min-w-[52px] ${
-                      selectedTimeframe.value === tf.value
-                        ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 shadow-lg'
-                        : 'text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
-                    }`}
-                    style={{
-                      boxShadow: selectedTimeframe.value === tf.value
-                        ? '0 4px 15px rgba(99, 102, 241, 0.3)'
-                        : 'none'
-                    }}
-                  >
-                    {tf.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Indicator Toggles */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Layers className="w-4 h-4 text-gray-400" />
-              {indicators.map(indicator => (
-                <button
-                  key={indicator.name}
-                  onClick={() => toggleIndicator(indicator.name)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                    indicator.enabled
-                      ? 'bg-white/10 border border-white/20'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
-                  }`}
-                  style={indicator.enabled ? { borderColor: indicator.color + '50', boxShadow: `0 2px 10px ${indicator.color}20` } : {}}
-                >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ background: indicator.enabled ? indicator.color : 'rgba(255,255,255,0.2)' }}
-                  />
-                  {indicator.name}
-                </button>
-              ))}
-            </div>
-
-            {/* Sub-chart toggles */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowRSI(!showRSI)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                  showRSI ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
-                }`}
-                style={showRSI ? { boxShadow: '0 2px 10px rgba(168, 85, 247, 0.2)' } : {}}
-              >
-                <Activity className="w-3.5 h-3.5" />
-                RSI
-              </button>
-              <button
-                onClick={() => setShowMACD(!showMACD)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                  showMACD ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
-                }`}
-                style={showMACD ? { boxShadow: '0 2px 10px rgba(6, 182, 212, 0.2)' } : {}}
-              >
-                <Zap className="w-3.5 h-3.5" />
-                MACD
-              </button>
-              <button
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    const currentPrice = await fetchCurrentPrice(selectedToken.coingeckoId);
-                    setOhlcData(generateOHLCData(selectedTimeframe.days, currentPrice));
-                  } catch {
-                    const fallbackPrice = getFallbackPrice(selectedToken.coingeckoId);
-                    setOhlcData(generateOHLCData(selectedTimeframe.days, fallbackPrice));
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts Container */}
-        <div className="max-w-[1600px] mx-auto px-4 pb-8">
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-            }}
-          >
-            {/* Main Candlestick Chart */}
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-indigo-400" />
-                  <span className="font-semibold text-white">Price Chart</span>
-                </div>
-                <div className="text-xs text-gray-400">
-                  {selectedToken.symbol}/USD • {selectedTimeframe.label} timeframe
-                </div>
-              </div>
-              <div
-                ref={chartContainerRef}
-                className="w-full rounded-xl overflow-hidden"
-                style={{ height: '450px' }}
-              />
-            </div>
-
-            {/* RSI Chart */}
-            {showRSI && (
-              <div className="px-4 pb-4 border-t border-white/5">
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-medium text-white">RSI (14)</span>
-                    <span className="text-xs text-gray-400 ml-2">
-                      Overbought: 70 | Oversold: 30
-                    </span>
-                  </div>
-                </div>
-                <div
-                  ref={rsiContainerRef}
-                  className="w-full rounded-xl overflow-hidden"
-                  style={{ height: '120px' }}
-                />
-              </div>
-            )}
-
-            {/* MACD Chart */}
-            {showMACD && (
-              <div className="px-4 pb-4 border-t border-white/5">
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-cyan-400" />
-                    <span className="text-sm font-medium text-white">MACD (12, 26, 9)</span>
-                    <div className="flex items-center gap-3 ml-4 text-xs">
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400" />
-                        MACD
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        Signal
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-400" />
-                        Histogram
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  ref={macdContainerRef}
-                  className="w-full rounded-xl overflow-hidden"
-                  style={{ height: '150px' }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Technical Analysis Summary */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                title: 'Trend Analysis',
-                icon: TrendingUp,
-                color: 'green',
-                items: [
-                  { label: 'Short-term', value: priceChange >= 0 ? 'Bullish' : 'Bearish', positive: priceChange >= 0 },
-                  { label: 'SMA 20', value: currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) ? 'Above' : 'Below', positive: currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) },
-                  { label: 'SMA 50', value: currentPrice > (calculateSMA(ohlcData, 50).slice(-1)[0]?.value || 0) ? 'Above' : 'Below', positive: currentPrice > (calculateSMA(ohlcData, 50).slice(-1)[0]?.value || 0) },
-                ]
-              },
-              {
-                title: 'Momentum',
-                icon: Activity,
-                color: 'purple',
-                items: [
-                  { label: 'RSI (14)', value: calculateRSI(ohlcData).slice(-1)[0]?.value.toFixed(1) || 'N/A', positive: (calculateRSI(ohlcData).slice(-1)[0]?.value || 50) < 70 && (calculateRSI(ohlcData).slice(-1)[0]?.value || 50) > 30 },
-                  { label: 'MACD', value: calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 ? 'Positive' : 'Negative', positive: calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 },
-                  { label: 'Signal', value: calculateMACD(ohlcData).macd.slice(-1)[0]?.value > (calculateMACD(ohlcData).signal.slice(-1)[0]?.value || 0) ? 'Bullish' : 'Bearish', positive: calculateMACD(ohlcData).macd.slice(-1)[0]?.value > (calculateMACD(ohlcData).signal.slice(-1)[0]?.value || 0) },
-                ]
-              },
-              {
-                title: 'Volatility',
-                icon: Target,
-                color: 'cyan',
-                items: [
-                  { label: 'Daily Range', value: `${(((high24h - low24h) / low24h) * 100).toFixed(2)}%`, positive: true },
-                  { label: 'BB Width', value: 'Normal', positive: true },
-                  { label: 'Volume', value: volume24h > 2000000 ? 'High' : 'Normal', positive: volume24h > 2000000 },
-                ]
-              },
-            ].map((section, i) => (
-              <div
-                key={i}
-                className="rounded-xl p-4"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
-              >
-                <div className="flex items-center gap-2 mb-4">
-                  <section.icon className={`w-5 h-5 text-${section.color}-400`} />
-                  <span className="font-semibold text-white">{section.title}</span>
-                </div>
-                <div className="space-y-3">
-                  {section.items.map((item, j) => (
-                    <div key={j} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">{item.label}</span>
-                      <span className={`text-sm font-medium ${item.positive ? 'text-green-400' : 'text-red-400'}`}>
-                        {item.value}
-                      </span>
-                    </div>
+                      <span className="font-bold text-xl" style={{ color: token.color }}>{token.symbol}</span>
+                      <span className="text-xs text-[#4a4a4a] font-mono group-hover:text-white transition-colors">{token.name}</span>
+                    </button>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start lg:items-end gap-2">
+            <div className="text-xs text-[#4a4a4a] font-mono uppercase tracking-widest">Current_Price</div>
+            <div className="flex items-baseline gap-4">
+              <div className="text-5xl md:text-6xl font-mono font-bold tracking-tight">
+                ${currentPrice.toFixed(4)}
               </div>
+              <div className={`flex items-center gap-1 text-xl font-mono ${priceChange >= 0 ? 'text-[#ccff00]' : 'text-[#ff003c]'}`}>
+                {priceChange >= 0 ? '▲' : '▼'}
+                {Math.abs(priceChangePercent).toFixed(2)}%
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Action Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          {/* Brutalist Tabs for Timeframe */}
+          <div className="flex border-2 border-[#1a1a1a] bg-[#0a0a0a]">
+            {TIMEFRAMES.map(tf => (
+              <button
+                key={tf.value}
+                onClick={() => setSelectedTimeframe(tf)}
+                className={`px-6 py-3 text-sm font-mono font-bold transition-colors ${
+                  selectedTimeframe.value === tf.value
+                    ? 'bg-[#e0e0e0] text-black'
+                    : 'text-[#888] hover:text-white hover:bg-[#1a1a1a]'
+                }`}
+              >
+                {tf.label}
+              </button>
             ))}
           </div>
+
+          {/* Indicators & Toggles */}
+          <div className="flex flex-wrap gap-2">
+            {indicators.map(indicator => (
+              <button
+                key={indicator.name}
+                onClick={() => toggleIndicator(indicator.name)}
+                className={`px-3 py-1 text-xs font-mono border ${
+                  indicator.enabled
+                    ? 'bg-[#1a1a1a] text-white'
+                    : 'border-[#1a1a1a] text-[#4a4a4a] hover:border-[#4a4a4a]'
+                }`}
+                style={indicator.enabled ? { borderColor: indicator.color } : {}}
+              >
+                <span style={{ color: indicator.enabled ? indicator.color : 'inherit' }}>■</span> {indicator.name}
+              </button>
+            ))}
+            <div className="w-px bg-[#1a1a1a] mx-2" />
+            <button
+              onClick={() => setShowRSI(!showRSI)}
+              className={`px-3 py-1 text-xs font-mono border ${showRSI ? 'border-[#ff00ff] text-[#ff00ff] bg-[#ff00ff]/10' : 'border-[#1a1a1a] text-[#4a4a4a]'}`}
+            >
+              RSI
+            </button>
+            <button
+              onClick={() => setShowMACD(!showMACD)}
+              className={`px-3 py-1 text-xs font-mono border ${showMACD ? 'border-[#00f0ff] text-[#00f0ff] bg-[#00f0ff]/10' : 'border-[#1a1a1a] text-[#4a4a4a]'}`}
+            >
+              MACD
+            </button>
+          </div>
         </div>
-      </div>
+
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          
+          {/* Chart Area */}
+          <div className="xl:col-span-3 space-y-6">
+            <div className="border-2 border-[#1a1a1a] bg-[#050505] relative group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              
+              <div className="p-4 flex justify-between items-center border-b border-[#1a1a1a]">
+                <div className="text-xs font-mono text-[#888] uppercase flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#ccff00]" />
+                  Main_Chart_View
+                </div>
+                <button className="text-[#4a4a4a] hover:text-white transition-colors">
+                  <Maximize2 className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="p-2">
+                <div ref={chartContainerRef} className="w-full h-[500px]" />
+              </div>
+            </div>
+
+            {showRSI && (
+              <div className="border-2 border-[#1a1a1a] bg-[#050505] p-2">
+                <div className="text-[10px] font-mono text-[#ff00ff] mb-2 px-2 flex justify-between">
+                  <span>RELATIVE_STRENGTH_INDEX // 14</span>
+                  <span className="text-[#4a4a4a]">OS: 30 / OB: 70</span>
+                </div>
+                <div ref={rsiContainerRef} className="w-full h-[120px]" />
+              </div>
+            )}
+
+            {showMACD && (
+              <div className="border-2 border-[#1a1a1a] bg-[#050505] p-2">
+                <div className="text-[10px] font-mono text-[#00f0ff] mb-2 px-2 flex gap-4">
+                  <span>MACD // 12,26,9</span>
+                  <span className="text-[#e0e0e0]">MACD</span>
+                  <span className="text-[#ff00ff]">SIGNAL</span>
+                  <span className="text-[#00f0ff]">HISTOGRAM</span>
+                </div>
+                <div ref={macdContainerRef} className="w-full h-[150px]" />
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar Stats */}
+          <div className="space-y-6">
+            {/* Market Data Panel */}
+            <div className="border-2 border-[#1a1a1a] bg-[#0a0a0a]">
+              <div className="bg-[#1a1a1a] p-3 text-xs font-mono font-bold uppercase tracking-widest border-b border-[#1a1a1a]">
+                Market_Data.sys
+              </div>
+              <div className="p-4 space-y-4 font-mono">
+                <div>
+                  <div className="text-[10px] text-[#888] mb-1">24H_HIGH</div>
+                  <div className="text-xl text-[#ccff00]">${high24h.toFixed(4)}</div>
+                </div>
+                <div className="w-full h-px bg-[#1a1a1a]" />
+                <div>
+                  <div className="text-[10px] text-[#888] mb-1">24H_LOW</div>
+                  <div className="text-xl text-[#ff003c]">${low24h.toFixed(4)}</div>
+                </div>
+                <div className="w-full h-px bg-[#1a1a1a]" />
+                <div>
+                  <div className="text-[10px] text-[#888] mb-1">24H_VOLUME</div>
+                  <div className="text-xl text-[#00f0ff]">${(volume24h / 1000000).toFixed(2)}M</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Analysis Panel */}
+            <div className="border-2 border-[#1a1a1a] bg-[#0a0a0a]">
+               <div className="bg-[#1a1a1a] p-3 text-xs font-mono font-bold uppercase tracking-widest border-b border-[#1a1a1a] flex justify-between items-center">
+                <span>Analysis.log</span>
+                <span className="animate-pulse w-2 h-2 bg-[#ccff00]" />
+              </div>
+              <div className="p-4 space-y-6 font-mono text-sm">
+                
+                {/* Trend */}
+                <div>
+                  <div className="text-[#888] mb-2 uppercase text-xs flex items-center gap-2">
+                    <TrendingUp className="w-3 h-3" /> Trend
+                  </div>
+                  <div className="flex justify-between border-b border-[#1a1a1a] py-1">
+                    <span>Status</span>
+                    <span className={priceChange >= 0 ? 'text-[#ccff00]' : 'text-[#ff003c]'}>
+                      {priceChange >= 0 ? 'BULLISH' : 'BEARISH'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#1a1a1a] py-1">
+                    <span>SMA20</span>
+                    <span className={currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) ? 'text-[#ccff00]' : 'text-[#ff003c]'}>
+                      {currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) ? 'ABOVE' : 'BELOW'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Momentum */}
+                <div>
+                  <div className="text-[#888] mb-2 uppercase text-xs flex items-center gap-2">
+                    <Zap className="w-3 h-3" /> Momentum
+                  </div>
+                  <div className="flex justify-between border-b border-[#1a1a1a] py-1">
+                    <span>RSI</span>
+                    <span className="text-[#ff00ff]">
+                      {calculateRSI(ohlcData).slice(-1)[0]?.value.toFixed(1) || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#1a1a1a] py-1">
+                    <span>MACD</span>
+                    <span className={calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 ? 'text-[#ccff00]' : 'text-[#ff003c]'}>
+                      {calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 ? 'POS' : 'NEG'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  const currentPrice = await fetchCurrentPrice(selectedToken.coingeckoId);
+                  setOhlcData(generateOHLCData(selectedTimeframe.days, currentPrice));
+                } catch {
+                  const fallbackPrice = getFallbackPrice(selectedToken.coingeckoId);
+                  setOhlcData(generateOHLCData(selectedTimeframe.days, fallbackPrice));
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              className="w-full py-4 border-2 border-[#1a1a1a] bg-[#050505] hover:bg-[#1a1a1a] hover:border-[#e0e0e0] transition-colors font-mono uppercase text-sm flex items-center justify-center gap-3 group"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-[#00f0ff]' : 'text-[#4a4a4a] group-hover:text-white'}`} />
+              <span>{isLoading ? 'SYNCING...' : 'FORCE_SYNC'}</span>
+            </button>
+          </div>
+
+        </div>
+      </main>
     </div>
   );
 };
