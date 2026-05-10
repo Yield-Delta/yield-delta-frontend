@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useEffect, useRef, useState, useCallback, useMemo, CSSProperties } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
-import { MessageCircle, X, Loader2, ChevronRight, TrendingUp, Zap, Shield, Target, Activity, Clock } from 'lucide-react';
+import { MessageCircle, X, Loader2, ChevronRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSeiMarketData } from '@/hooks/useMarketData';
@@ -168,11 +168,6 @@ export default function VaultsPage() {
     return (vaults.reduce((sum, v) => sum + v.apy, 0) / vaults.length) * 100
   }, [vaults])
 
-  const handleDeposit = useCallback((vault: VaultData) => {
-    setDepositVault(vault)
-    setShowDepositModal(true)
-  }, [])
-
   const handleCloseModal = useCallback(() => {
     setShowDepositModal(false)
     setDepositVault(null)
@@ -315,7 +310,7 @@ export default function VaultsPage() {
                       <header className="flex justify-between items-start mb-16">
                         <div className="flex items-center gap-4">
                            <div className="w-12 h-12 rounded-sm bg-slate-900 border border-slate-800 flex items-center justify-center relative overflow-hidden group-hover:border-[#00f5d4]/50 transition-colors shadow-inner">
-                             <img src={`/chains/${vault.chainId === 1328 ? 'sei.svg' : 'solana.svg'}`} alt="chain" className="w-7 h-7 z-10" />
+                             <Image src={`/chains/${vault.chainId === 1328 ? 'sei.svg' : 'solana.svg'}`} alt="chain" width={28} height={28} className="w-7 h-7 z-10" />
                              <div className="absolute inset-0 bg-white/5 group-hover:bg-[#00f5d4]/10 transition-colors" />
                            </div>
                            <div>
@@ -395,7 +390,7 @@ export default function VaultsPage() {
                 vaultData: displayVaults,
                 userPreferences: {
                   preferredTimeframe: '1d', riskTolerance: 'medium',
-                  autoRebalance: true, selectedVault, marketData: marketData as any,
+                  autoRebalance: true, selectedVault, marketData: marketData || undefined,
                 },
               }}
               initialMessage="🎯 Welcome to Yield Delta Vaults! I'm Kairos, your AI assistant. I can help you analyze vault performance, predict optimal ranges, and recommend rebalancing strategies. What vault would you like to optimize today?"
@@ -454,6 +449,13 @@ export default function VaultsPage() {
               boxShadow: '0 0 10px rgba(34,197,94,0.7)',
               animation: 'ydLivePulse 2s ease-in-out infinite',
             }} />
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+     }} />
           )}
         </div>
       </div>

@@ -1,10 +1,9 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { TrendingUp, ArrowRight, Loader2, Info, Activity, Clock, Layers, Globe, ShieldCheck, Zap, Database } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, Loader2, Info, Globe, ShieldCheck, Zap, Database } from 'lucide-react';
 import { useVaults } from '@/hooks/useVaults';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

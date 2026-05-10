@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState, useRef, CSSProperties, useCallback, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, TrendingUp, Shield, Target, Loader2, Coins, Activity, Clock, ChevronRight, Layout, Zap, Database, Cpu } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Shield, Target, Loader2, Activity, Zap, Database, Cpu } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   ResponsiveContainer,
@@ -218,7 +218,7 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
   const vault = selectedVault || (vaultAddress ? getVaultByAddress(vaultAddress) : null)
 
   const { position, hasPosition, refetch: refetchPosition } = useVaultPosition(vaultAddress || '')
-  const { tvlMap, isLoading: tvlLoading, refetch: refetchTVL } = useVaultTVL(vaultAddress ? [vaultAddress] : [])
+  const { tvlMap, refetch: refetchTVL } = useVaultTVL(vaultAddress ? [vaultAddress] : [])
   const onChainTVL = vaultAddress ? (tvlMap.get(vaultAddress.toLowerCase()) || 0) : 0
 
   const vaultPrimaryToken = vault ? getPrimaryDepositToken(vault) : null
