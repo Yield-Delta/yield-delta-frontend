@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Navigation from '@/components/Navigation';
-import { TrendingUp, TrendingDown, Brain, Target, Activity, Clock, Hash, ChevronRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, Brain, Target, Activity, Clock, ChevronRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Public_Sans, Space_Grotesk } from 'next/font/google';

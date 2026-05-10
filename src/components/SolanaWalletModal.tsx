@@ -71,11 +71,11 @@ export function SolanaWalletModal({
     return () => { document.body.style.overflow = '' }
   }, [isOpen, redetect])
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
-    if (isOpen) document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [isOpen, handleClose])
+  const handleClose = useCallback(() => {
+    clearError()
+    setSelectedWallet(null)
+    onClose()
+  }, [clearError, onClose])
 
   const handleConnect = async (walletType: SolanaWalletType) => {
     try {
@@ -107,11 +107,11 @@ export function SolanaWalletModal({
     }
   }
 
-  const handleClose = () => {
-    clearError()
-    setSelectedWallet(null)
-    onClose()
-  }
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
+    if (isOpen) document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isOpen, handleClose])
 
   const modalContent = (
     <AnimatePresence>

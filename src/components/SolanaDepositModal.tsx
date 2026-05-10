@@ -63,7 +63,6 @@ export default function SolanaDepositModal({
   const [txSignature, setTxSignature] = useState<string | null>(null)
 
   const { address: walletAddress, isConnected: isWalletConnected, balance } = useSolanaWallet()
-  const { solana } = useMultiChainStore()
 
   useEffect(() => {
     setMounted(true)

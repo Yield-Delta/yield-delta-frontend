@@ -7,7 +7,6 @@
 
 import { useState, useCallback } from 'react'
 import { useSolanaWallet } from './useSolanaWallet'
-import { useMultiChainStore } from '@/stores/multiChainStore'
 
 export interface SolanaVaultInfo {
   address: string
