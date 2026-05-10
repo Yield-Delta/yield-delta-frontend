@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, ArrowRight, Info, Shield, TrendingUp, Coins, Zap, CheckCircle2 } from 'lucide-react'
+import { Loader2, ArrowRight, Info, Shield, Coins, CheckCircle2 } from 'lucide-react'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
 import { useMultiChainStore } from '@/stores/multiChainStore'
-import { ChainId, ChainType } from '@/types/chain'
 
 interface SolanaVaultData {
   address: string
@@ -98,7 +97,7 @@ export default function SolanaDepositModal({
       setTransactionStatus('success')
       setShowSuccess(true)
       onSuccess(mockSignature)
-    } catch (err) {
+    } catch {
       setTransactionStatus('error')
       setErrorMessage('Transaction failed. Please try again.')
     }

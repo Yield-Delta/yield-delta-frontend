@@ -575,7 +575,7 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
             <div className="h-3 w-[1px] bg-black/20" />
             <div className="flex items-center gap-4 text-[10px] font-bold tracking-tight">
               <span className="opacity-80">NODE: SEI_ATLANTIC_2</span>
-              <span className="opacity-40">//</span>
+              <span className="opacity-40">{"//"}</span>
               <span className="opacity-80">MODE: TEST_TOKENS_ONLY</span>
             </div>
           </div>

@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useRef, CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, TrendingUp, Shield, Target, BarChart3, Loader2, Coins, Zap } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Shield, Target, Loader2, Coins } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
-  ResponsiveContainer, Tooltip,
+  ResponsiveContainer,
 } from 'recharts';
 import Navigation from '@/components/Navigation';
 import DepositModal from '@/components/DepositModal';

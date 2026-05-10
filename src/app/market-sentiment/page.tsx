@@ -248,7 +248,7 @@ const MarketSentimentPage = () => {
         {/* Minimalist Filter Navigation */}
         <section className="mb-16 flex flex-col lg:flex-row justify-between items-start lg:items-center py-6 border-y border-[#1A1C1E]/10 gap-8">
           <div className="flex items-center gap-6 flex-wrap">
-            <span className="heritage-caps text-[#6C7278]">Timeframe //</span>
+            <span className="heritage-caps text-[#6C7278]">Timeframe {"//"}</span>
             {['1h', '24h', '7d', '30d'].map((tf) => (
               <button
                 key={tf}
@@ -265,7 +265,7 @@ const MarketSentimentPage = () => {
           </div>
           
           <div className="flex items-center gap-6 flex-wrap">
-            <span className="heritage-caps text-[#6C7278]">Category //</span>
+            <span className="heritage-caps text-[#6C7278]">Category {"//"}</span>
             {[
               { value: 'all', label: 'All_Metrics' },
               { value: 'technical', label: 'Technical' },
@@ -391,7 +391,7 @@ const MarketSentimentPage = () => {
             </div>
             <div className="flex items-center gap-6">
               <span>Verified_By_Yield_Delta_AI</span>
-              <span className="text-[#1A1C1E]/20">//</span>
+              <span className="text-[#1A1C1E]/20">{"//"}</span>
               <span>All_Signals_Normal</span>
             </div>
           </div>

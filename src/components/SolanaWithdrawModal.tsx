@@ -97,7 +97,7 @@ export default function SolanaWithdrawModal({
       setTransactionStatus('success')
       setShowSuccess(true)
       onSuccess(mockSignature)
-    } catch (err) {
+    } catch {
       setTransactionStatus('error')
       setErrorMessage('Transaction failed. Please try again.')
     }

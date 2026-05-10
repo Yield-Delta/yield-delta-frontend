@@ -2,9 +2,9 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronDown, Check, Wallet, AlertCircle } from 'lucide-react'
+import { ChevronDown, Check } from 'lucide-react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
-import { ChainId, ChainType, WalletState, WalletStatus } from '@/types/chain'
+import { ChainId, ChainType, WalletState } from '@/types/chain'
 import { CHAIN_METADATA, getChainMetadata } from '@/lib/chainConfig'
 import { formatBalance } from '@/lib/chainUtils'
 

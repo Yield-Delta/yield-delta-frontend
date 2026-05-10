@@ -32,7 +32,6 @@ export interface UseSolanaVaultReturn {
 
 export function useSolanaVault(): UseSolanaVaultReturn {
   const { address: walletAddress, isConnected: isWalletConnected } = useSolanaWallet()
-  const { solana } = useMultiChainStore()
   
   const [isDepositing, setIsDepositing] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
@@ -99,7 +98,7 @@ export function useSolanaVault(): UseSolanaVaultReturn {
   }, [walletAddress, isWalletConnected])
 
   const getUserPosition = useCallback(async (
-    vaultAddress: string
+    _vaultAddress: string
   ): Promise<{ shares: string; value: string }> => {
     if (!walletAddress) {
       return { shares: '0', value: '0' }

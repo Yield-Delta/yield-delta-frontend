@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
 import GlassCard from '@/components/GlassCard';
-import CyberButton from '@/components/CyberButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './terminal.module.css';
 import {
@@ -765,7 +764,7 @@ const ChartsPage = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f5d4] opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00f5d4]"></span>
               </span>
-              <span>SECURE_DATA_STREAM // ACTIVE</span>
+              <span>SECURE_DATA_STREAM {"//"} ACTIVE</span>
             </div>
             
             <div className="relative group">

@@ -75,7 +75,7 @@ export function SolanaWalletModal({
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
     if (isOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   const handleConnect = async (walletType: SolanaWalletType) => {
     try {

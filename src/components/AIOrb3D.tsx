@@ -224,6 +224,8 @@ export default function AIOrb3D({
 
         window.addEventListener('resize', handleResize);
 
+        const currentContainer = containerRef.current;
+
         // Cleanup
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -232,10 +234,8 @@ export default function AIOrb3D({
                 cancelAnimationFrame(animationFrameRef.current);
             }
 
-            // Store ref in variable to avoid stale closure warning
-            const container = containerRef.current;
-            if (container && renderer.domElement) {
-                container.removeChild(renderer.domElement);
+            if (currentContainer && renderer.domElement) {
+                currentContainer.removeChild(renderer.domElement);
             }
 
             // Dispose of Three.js objects
