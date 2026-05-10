@@ -543,23 +543,49 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
 
   return (
     <>
-      {/* Testnet Banner - Integrated with Navigation */}
+      {/* Testnet Banner - Integrated with Navigation - UPGRADED with Premium Animation */}
       {isTestnet && (
         <div
-          className="fixed top-0 left-0 right-0 z-[100000] bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 h-8 flex items-center justify-center border-b border-orange-600/20"
+          className="fixed top-0 left-0 right-0 z-[100000] h-8 flex items-center justify-center overflow-hidden"
           style={{
-            boxShadow: '0 2px 10px rgba(251, 146, 60, 0.3)',
+            background: 'linear-gradient(90deg, #f59e0b 0%, #d97706 50%, #f59e0b 100%)',
+            boxShadow: '0 2px 20px rgba(245, 158, 11, 0.2)',
             backdropFilter: 'blur(8px)'
           }}
         >
-          <div className="flex items-center gap-2 text-white">
-            <AlertTriangle className="h-4 w-4 animate-pulse" />
-            <span className="font-bold text-sm tracking-wide">TESTNET MODE</span>
-            <span className="text-white/80 mx-1">|</span>
-            <span className="text-white/90 text-xs">SEI Atlantic-2</span>
-            <span className="text-white/80 mx-1">•</span>
-            <span className="text-white/90 text-xs font-medium">Test Tokens Only</span>
+          {/* Animated Hazard Stripes Background */}
+          <div 
+            className="absolute inset-0 opacity-20 pointer-events-none"
+            style={{
+              backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)',
+              backgroundSize: '20px 20px',
+              animation: 'hazardMove 2s linear infinite'
+            }}
+          />
+          
+          {/* Top and Bottom highlights */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/30" />
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-black/20" />
+
+          <div className="relative flex items-center gap-3 text-black font-mono">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-black/10 rounded-sm">
+              <AlertTriangle className="h-3.5 w-3.5 animate-pulse" />
+              <span className="font-black text-[10px] tracking-[0.2em]">TESTNET_ACTIVE</span>
+            </div>
+            <div className="h-3 w-[1px] bg-black/20" />
+            <div className="flex items-center gap-4 text-[10px] font-bold tracking-tight">
+              <span className="opacity-80">NODE: SEI_ATLANTIC_2</span>
+              <span className="opacity-40">//</span>
+              <span className="opacity-80">MODE: TEST_TOKENS_ONLY</span>
+            </div>
           </div>
+          
+          <style jsx>{`
+            @keyframes hazardMove {
+              from { background-position: 0 0; }
+              to { background-position: 40px 0; }
+            }
+          `}</style>
         </div>
       )}
 

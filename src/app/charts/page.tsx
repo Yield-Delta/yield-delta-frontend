@@ -698,28 +698,42 @@ const ChartsPage = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#020617] text-slate-50 font-sans selection:bg-[#00f5d4] selection:text-black overflow-x-hidden">
-      {/* Background Effects */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#00f5d4]/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-[#9b5de5]/5 blur-[150px] rounded-full" />
+    <div className="min-h-[100dvh] bg-[#020617] text-slate-50 font-sans selection:bg-[#00f5d4] selection:text-black overflow-x-hidden relative">
+      {/* Premium Atmospheric Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Dynamic Mesh Gradients */}
         <div 
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute top-[-10%] left-[-10%] w-[70%] h-[70%] bg-[#00f5d4]/10 blur-[120px] rounded-full animate-pulse" 
+          style={{ animationDuration: '8s' }}
+        />
+        <div 
+          className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-[#9b5de5]/10 blur-[150px] rounded-full animate-pulse" 
+          style={{ animationDuration: '12s', animationDelay: '2s' }}
+        />
+        <div 
+          className="absolute top-[30%] right-[10%] w-[40%] h-[40%] bg-[#ff206e]/5 blur-[100px] rounded-full animate-pulse" 
+          style={{ animationDuration: '15s', animationDelay: '5s' }}
+        />
+        
+        {/* Animated Grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `
               linear-gradient(to right, #ffffff 1px, transparent 1px),
               linear-gradient(to bottom, #ffffff 1px, transparent 1px)
             `,
-            backgroundSize: '60px 60px'
+            backgroundSize: '80px 80px',
+            maskImage: 'radial-gradient(circle at center, black, transparent 80%)'
           }}
         />
       </div>
       
-      {/* Noise and Terminal Overlays */}
+      {/* High-Fidelity Grain Overlay */}
       <div 
-        className="fixed inset-0 pointer-events-none opacity-[0.03] z-0 mix-blend-overlay"
+        className="fixed inset-0 pointer-events-none opacity-[0.05] z-[1] mix-blend-overlay"
         style={{
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")'
+          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")'
         }}
       />
       <div className={styles.terminalOverlay} />
@@ -993,12 +1007,18 @@ const ChartsPage = () => {
                   >
                     <div className="absolute -top-3 -right-3 w-6 h-6 border-t-2 border-r-2 border-[#00f5d4]/30 z-20 pointer-events-none" />
                     <GlassCard className="!p-0 overflow-hidden border-2 border-slate-800/50 rounded-sm">
-                       <div className="px-6 py-4 border-b border-slate-800/50 bg-[#0a0f1e]/40 flex justify-between items-center">
+                       <div className="px-6 py-4 border-b border-slate-800/50 bg-[#0a0f1e]/40 flex justify-between items-center relative overflow-hidden group/header">
+                        {/* Header Scanline */}
+                        <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00f5d4]/30 group-hover/header:translate-y-10 transition-transform duration-1000" />
+                        
                         <div className="text-[10px] font-mono text-[#00f5d4] uppercase tracking-[0.2em] flex items-center gap-3 font-bold">
-                          <Layers className="w-3.5 h-3.5" />
-                          Convergence_Node
+                          <div className="relative">
+                            <Layers className="w-3.5 h-3.5" />
+                            <div className="absolute inset-0 bg-[#00f5d4]/20 blur-sm animate-pulse" />
+                          </div>
+                          <span className={styles.glitchText}>Convergence_Node</span>
                         </div>
-                        <span className="text-[10px] font-mono text-slate-500 tracking-tighter">SIG: 12, 26, 9</span>
+                        <span className="text-[10px] font-mono text-slate-500 tracking-tighter opacity-50 group-hover/header:opacity-100 transition-opacity">SIG: 12, 26, 9</span>
                       </div>
                       <div className="p-5">
                         <div ref={macdContainerRef} className="w-full h-[180px]" />
@@ -1019,13 +1039,22 @@ const ChartsPage = () => {
             <div className={styles.asymmetricRule} />
             {/* Market Data Panel */}
             <motion.div variants={itemVariants}>
-              <GlassCard className="!p-0 overflow-hidden border-2 border-slate-800/50 rounded-sm">
-                <div className="bg-[#0a0f1e]/60 px-6 py-5 border-b border-slate-800/50">
+              <GlassCard className="!p-0 overflow-hidden border-2 border-slate-800/50 rounded-sm relative group/card">
+                <div className="bg-[#0a0f1e]/60 px-6 py-5 border-b border-slate-800/50 flex justify-between items-center relative overflow-hidden group/header">
+                  {/* Header Scanline */}
+                  <div className="absolute top-0 left-0 w-full h-[1px] bg-slate-400/20 group-hover/header:translate-y-12 transition-transform duration-1000" />
+                  
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-sm bg-slate-800 border border-slate-700 shadow-xl">
+                    <div className="p-2 rounded-sm bg-slate-800 border border-slate-700 shadow-xl relative overflow-hidden">
                       <Activity className="w-4 h-4 text-slate-200" />
+                      <div className="absolute inset-0 bg-white/5 animate-pulse" />
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-200">Terminal_Intel</span>
+                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-200 font-display">Terminal_Intel</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className="w-1 h-3 bg-slate-800" />
+                    <div className="w-1 h-3 bg-slate-700" />
+                    <div className="w-1 h-3 bg-slate-600" />
                   </div>
                 </div>
                 <div className="p-8 space-y-8 font-mono">
@@ -1067,15 +1096,22 @@ const ChartsPage = () => {
 
             {/* Analysis Panel */}
             <motion.div variants={itemVariants}>
-              <GlassCard className="!p-0 overflow-hidden border-2 border-slate-800/50 rounded-sm">
-                 <div className="bg-[#0a0f1e]/60 px-6 py-5 border-b border-slate-800/50 flex justify-between items-center">
+              <GlassCard className="!p-0 overflow-hidden border-2 border-slate-800/50 rounded-sm relative group/card">
+                 <div className="bg-[#0a0f1e]/60 px-6 py-5 border-b border-slate-800/50 flex justify-between items-center relative overflow-hidden group/header">
+                  {/* Header Scanline */}
+                  <div className="absolute top-0 left-0 w-full h-[1px] bg-[#00f5d4]/20 group-hover/header:translate-y-12 transition-transform duration-1000" />
+                  
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-sm bg-slate-800 border border-slate-700">
+                    <div className="p-2 rounded-sm bg-slate-800 border border-slate-700 relative overflow-hidden">
                       <Zap className="w-4 h-4 text-[#00f5d4]" />
+                      <div className="absolute inset-0 bg-[#00f5d4]/10 animate-pulse" />
                     </div>
-                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-200">Neural_Log</span>
+                    <span className="text-sm font-bold uppercase tracking-[0.2em] text-slate-200 font-display">Neural_Log</span>
                   </div>
-                  <div className="animate-pulse w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_12px_#10b981]" />
+                  <div className="flex items-center gap-3">
+                    <span className="text-[8px] font-mono text-[#10b981] opacity-50">SYNC_OK</span>
+                    <div className="animate-pulse w-2 h-2 rounded-full bg-[#10b981] shadow-[0_0_12px_#10b981]" />
+                  </div>
                 </div>
                 <div className="p-8 space-y-8 font-mono text-sm">
                   
@@ -1130,9 +1166,9 @@ const ChartsPage = () => {
               </GlassCard>
             </motion.div>
 
-            {/* Refresh Button */}
+            {/* Upgraded Action Button with Scanning Effect */}
             <motion.div variants={itemVariants}>
-              <CyberButton
+              <button
                 onClick={async () => {
                   setIsLoading(true);
                   try {
@@ -1145,15 +1181,45 @@ const ChartsPage = () => {
                     setIsLoading(false);
                   }
                 }}
-                className="w-full !py-5 rounded-sm group overflow-hidden relative shadow-2xl border-2 border-[#00f5d4]/20 hover:border-[#00f5d4]/50 transition-all"
+                className="w-full py-6 rounded-sm group overflow-hidden relative shadow-[0_0_30px_rgba(0,245,212,0.15)] border-2 border-[#00f5d4]/20 hover:border-[#00f5d4]/50 transition-all active:scale-[0.98]"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00f5d4]/30 to-[#9b5de5]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="relative flex items-center justify-center gap-4">
-                  <RefreshCw className={`w-6 h-6 ${isLoading ? 'animate-spin text-white' : 'text-white/80 group-hover:text-white'}`} />
-                  <span className="font-mono font-bold tracking-[0.4em] text-sm">{isLoading ? 'RECALIBRATING...' : 'SYNC_NODE_DATA'}</span>
+                {/* Background Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00f5d4]/20 via-[#9b5de5]/20 to-[#00f5d4]/20 bg-[length:200%_100%] group-hover:animate-gradientShift" />
+                
+                {/* Scanning Beam Effect */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  <div className="absolute top-0 left-[-100%] w-[50%] h-full bg-gradient-to-r from-transparent via-[#00f5d4]/40 to-transparent skew-x-[-25deg] group-hover:animate-scanBeam" />
                 </div>
-              </CyberButton>
+                
+                {/* Button Content */}
+                <div className="relative flex items-center justify-center gap-4">
+                  <RefreshCw className={`w-5 h-5 text-[#00f5d4] ${isLoading ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                  <span className="text-sm font-black uppercase tracking-[0.4em] text-white group-hover:text-[#00f5d4] transition-colors">
+                    {isLoading ? 'RECALIBRATING...' : 'SYNC_NODE_DATA'}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-1 h-1 rounded-full bg-[#00f5d4] animate-ping" />
+                    <div className="w-1 h-1 rounded-full bg-[#00f5d4]" />
+                  </div>
+                </div>
+
+                {/* Corner Accents */}
+                <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-[#00f5d4] opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-[#00f5d4] opacity-0 group-hover:opacity-100 transition-opacity" />
+              </button>
             </motion.div>
+
+            {/* Global Keyframes for the button */}
+            <style jsx global>{`
+              @keyframes scanBeam {
+                0% { left: -100%; }
+                100% { left: 200%; }
+              }
+              @keyframes gradientShift {
+                0% { background-position: 0% 50%; }
+                100% { background-position: 200% 50%; }
+              }
+            `}</style>
 
             {/* Quick Links */}
             <motion.div variants={itemVariants} className="grid grid-cols-3 gap-6">
