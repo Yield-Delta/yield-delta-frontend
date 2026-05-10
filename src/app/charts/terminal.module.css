@@ -1,0 +1,120 @@
+.terminalOverlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  ),
+  linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.02),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.02)
+  );
+  background-size: 100% 3px, 3px 100%;
+  opacity: 0.3;
+}
+
+.scanline {
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 245, 212, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 51;
+  pointer-events: none;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { top: -2%; }
+  100% { top: 100%; }
+}
+
+.glitchText:hover {
+  animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.cornerBracket {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(0, 245, 212, 0.4);
+}
+
+.topLeft { top: -2px; left: -2px; border-top: 2px solid; border-left: 2px solid; }
+.topRight { top: -2px; right: -2px; border-top: 2px solid; border-right: 2px solid; }
+.bottomLeft { bottom: -2px; left: -2px; border-bottom: 2px solid; border-left: 2px solid; }
+.bottomRight { bottom: -2px; right: -2px; border-bottom: 2px solid; border-right: 2px solid; }
+
+.hudLabel {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(0, 245, 212, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.logContainer {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(0, 245, 212, 0.7);
+  background: rgba(10, 15, 30, 0.4);
+  border-left: 1px solid rgba(0, 245, 212, 0.2);
+  padding: 12px;
+  height: 120px;
+  overflow-y: hidden;
+  position: relative;
+}
+
+.logEntry {
+  margin-bottom: 4px;
+  opacity: 0.8;
+  display: flex;
+  gap: 8px;
+}
+
+.logTimestamp {
+  color: rgba(155, 93, 229, 0.6);
+}
+
+.decorativeLine {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, rgba(0, 245, 212, 0.2), transparent);
+  height: 1px;
+  width: 100%;
+}
+
+.glowPulse {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(0, 245, 212, 0.2)); }
+  50% { filter: drop-shadow(0 0 8px rgba(0, 245, 212, 0.5)); }
+}
+
+.asymmetricRule {
+  position: absolute;
+  top: 0;
+  right: -20px;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(155, 93, 229, 0.3), transparent);
+  transform: skewY(-45deg);
+}
