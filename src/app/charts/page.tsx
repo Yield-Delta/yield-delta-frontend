@@ -698,7 +698,7 @@ const ChartsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-50 font-sans selection:bg-[#00f5d4] selection:text-black overflow-x-hidden">
+    <div className="min-h-[100dvh] bg-[#020617] text-slate-50 font-sans selection:bg-[#00f5d4] selection:text-black overflow-x-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#00f5d4]/5 blur-[120px] rounded-full" />
