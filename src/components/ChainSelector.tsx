@@ -462,9 +462,3 @@ function ChainRow({
     </motion.button>
   )
 }
- </motion.span>
-        )}
-      </div>
-    </motion.button>
-  )
-}

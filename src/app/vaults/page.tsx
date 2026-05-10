@@ -455,10 +455,3 @@ export default function VaultsPage() {
     </div>
   )
 }
-     }} />
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
