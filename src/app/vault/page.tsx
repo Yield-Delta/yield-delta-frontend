@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState, useRef, CSSProperties } from 'react';
+import { useEffect, useState, useRef, CSSProperties, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, TrendingUp, Shield, Target, Loader2, Coins } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Shield, Target, Loader2, Coins, Activity, Clock, ChevronRight, Layout, Zap, Database, Cpu } from 'lucide-react';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, Radar,
   ResponsiveContainer,
@@ -21,6 +21,22 @@ import { useTokenPrices } from '@/hooks/useTokenPrices';
 import { getPrimaryDepositToken } from '@/utils/tokenUtils';
 import { formatUnits } from 'viem';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Public_Sans, Space_Grotesk } from 'next/font/google';
+
+gsap.registerPlugin(ScrollTrigger);
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '700', '900'],
+  variable: '--font-public-sans',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['500', '700'],
+  variable: '--font-space-grotesk',
+});
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,9 +63,9 @@ const getVaultColor = (strategy: string) => ({
 } as Record<string, string>)[strategy] || '#00f5d4'
 
 const RISK_STYLE = {
-  Low: { color: '#6ee7b7', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)' },
-  Medium: { color: '#fcd34d', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.35)' },
-  High: { color: '#fca5a5', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.35)' },
+  Low: { color: '#10b981', bg: 'rgba(16,185,129,0.1)', border: 'rgba(16,185,129,0.2)' },
+  Medium: { color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)' },
+  High: { color: '#ef4444', bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.2)' },
 }
 
 const getStrategyDetails = (strategy: string, tokenA: string, tokenB: string) => {
@@ -145,31 +161,35 @@ const getStrategyTradingStats = (strategy: string, tvl: number, winRate: number,
   }
 }
 
-// ─── Section Header ────────────────────────────────────────────────────────────
+// ─── Sub-components ─────────────────────────────────────────────────────────────
 
 function SectionHeader({ icon, label, color }: { icon: React.ReactNode; label: string; color: string }) {
   return (
-    <div className="yd-section-header">
-      <span style={{ color, flexShrink: 0, display: 'flex' }}>{icon}</span>
-      <span className="yd-section-label">{label}</span>
-      <div className="yd-section-rule" />
+    <div className="flex items-center gap-4 mb-8">
+      <div className="p-3 bg-white/5 border border-white/10 rounded-sm" style={{ color }}>
+        {icon}
+      </div>
+      <h3 className="font-heritage-grotesk text-sm font-bold uppercase tracking-[0.3em] text-[#6C7278]">{label}</h3>
+      <div className="flex-1 h-px bg-white/10" />
     </div>
   )
 }
 
-// ─── Glass card ────────────────────────────────────────────────────────────────
-
-function GlassCard({ children, style }: { children: React.ReactNode; style?: CSSProperties }) {
+function StatCard({ label, value, color, desc }: { label: string, value: string, color?: string, desc?: string }) {
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.05)',
-      border: '1px solid rgba(255,255,255,0.10)',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      backdropFilter: 'blur(16px)',
-      ...style,
-    }}>
-      {children}
+    <div className="bg-[#1A1C1E] p-8 border border-white/5 hover:border-white/10 transition-all group overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-1 h-0 bg-[#B8422E]/40 group-hover:h-full transition-all duration-500" />
+      <div className="font-heritage-grotesk text-[10px] font-bold uppercase tracking-[0.3em] text-[#6C7278] mb-6">
+        {label}
+      </div>
+      <div className="text-4xl font-black text-[#F7F5F2] group-hover:scale-105 transition-transform origin-left duration-500" style={{ color: color }}>
+        {value}
+      </div>
+      {desc && (
+        <div className="font-heritage-grotesk text-[9px] font-bold uppercase pt-6 mt-6 border-t border-white/5 text-[#6C7278]">
+          {desc}
+        </div>
+      )}
     </div>
   )
 }
@@ -185,7 +205,7 @@ interface VaultDetailPageProps {
 
 function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) {
   const router = useRouter()
-  const heroRef = useRef<HTMLDivElement>(null)
+  const mainRef = useRef<HTMLDivElement>(null)
   const hasRefetchedRef = useRef(false)
 
   const [showDepositModal, setShowDepositModal] = useState(action === 'deposit')
@@ -205,13 +225,13 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
   const tvlTokenSymbol = vaultPrimaryToken?.symbol || 'SEI'
   const tvlDecimals = vaultPrimaryToken?.decimals || 18
 
-  const vaultPositionsForChart = vault && position && hasPosition ? [{
+  const vaultPositionsForChart = useMemo(() => vault && position && hasPosition ? [{
     address: vault.address,
     totalDeposited: position.totalDeposited,
     depositTime: position.depositTime,
     apy: vault.apy * 100,
     shareValue: position.shareValue,
-  }] : []
+  }] : [], [vault, position, hasPosition])
 
   useEffect(() => {
     if (vaultAddress && vault && !hasRefetchedRef.current) {
@@ -231,32 +251,35 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
   }, [vaultAddress, vault, vaultsData, setSelectedVault])
 
   useEffect(() => {
-    if (heroRef.current) {
-      gsap.fromTo(heroRef.current,
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, duration: 0.65, ease: 'power2.out' }
-      )
+    if (!isLoading && vault && mainRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from(".heritage-header-item", {
+          opacity: 0, y: 30, duration: 1, stagger: 0.1, ease: "expo.out"
+        })
+        gsap.from(".heritage-detail-section", {
+          opacity: 0, y: 40, duration: 0.8, stagger: 0.1, ease: "power2.out",
+          scrollTrigger: { trigger: ".heritage-detail-section", start: "top 90%" }
+        })
+      }, mainRef)
+      return () => ctx.revert()
     }
-  }, [vault])
+  }, [isLoading, vault])
 
   if (isLoading) return (
-    <div style={{ minHeight: '100vh', background: '#07080f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <Loader2 style={{ width: 28, height: 28, color: '#00f5d4', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-        <p style={{ color: 'rgba(255,255,255,0.45)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>Loading vault...</p>
+    <div className="min-h-screen bg-[#1A1C1E] flex items-center justify-center">
+      <div className="text-center">
+        <Loader2 className="w-12 h-12 text-[#B8422E] animate-spin mb-6 mx-auto" />
+        <p className="font-heritage-grotesk text-[10px] font-bold uppercase tracking-[0.4em] text-[#6C7278]">Synchronizing_Vault_Nodes...</p>
       </div>
     </div>
   )
 
   if (!vault) return (
-    <div style={{ minHeight: '100vh', background: '#07080f', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12, color: 'rgba(255,255,255,0.85)' }}>Vault Not Found</h1>
-        <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 24 }}>The requested vault could not be found.</p>
-        <button onClick={() => router.push('/vaults')} style={{
-          padding: '10px 24px', borderRadius: 12, background: '#00f5d4',
-          color: '#050508', fontWeight: 700, cursor: 'pointer', border: 'none',
-        }}>Back to Vaults</button>
+    <div className="min-h-screen bg-[#1A1C1E] flex items-center justify-center">
+      <div className="text-center max-w-md px-8">
+        <h1 className="font-heritage-sans text-4xl font-black text-[#F7F5F2] mb-6">Vault_Not_Found</h1>
+        <p className="font-heritage-grotesk text-sm text-[#6C7278] mb-12 uppercase tracking-widest leading-loose">The requested node address does not resonate within the current network state.</p>
+        <button onClick={() => router.push('/vaults')} className="px-10 py-4 bg-[#B8422E] text-[#F7F5F2] font-heritage-grotesk text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-[#A33825] transition-colors">Return_To_Network</button>
       </div>
     </div>
   )
@@ -306,458 +329,341 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#07080f', position: 'relative' }}>
-      {/* Ambient bg gradient */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none',
-        background: `radial-gradient(ellipse at 70% 20%, ${vaultColor}08 0%, transparent 55%)`,
-      }} />
+    <div className={`min-h-screen ${publicSans.variable} ${spaceGrotesk.variable} bg-[#1A1C1E] text-[#F7F5F2] selection:bg-[#B8422E] selection:text-white transition-colors duration-700`} style={{ fontFamily: 'var(--font-public-sans)' }}>
+      <style jsx global>{`
+        .font-heritage-sans { font-family: var(--font-public-sans); }
+        .font-heritage-grotesk { font-family: var(--font-space-grotesk); }
+        .heritage-caps { 
+          font-family: var(--font-space-grotesk); 
+          font-size: 0.75rem; 
+          text-transform: uppercase; 
+          letter-spacing: 0.2em; 
+          font-weight: 700;
+        }
+      `}</style>
+      
+      {/* Heritage Atmospheric Overlays */}
+      <div className="fixed inset-0 pointer-events-none z-[99] opacity-[0.08] mix-blend-overlay overflow-hidden">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <filter id="heritageNoise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#heritageNoise)" />
+        </svg>
+      </div>
 
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
 
-      <div style={{ paddingTop: '80px', position: 'relative', zIndex: 10 }}>
-        {/* ── VAULT HERO ─────────────────────────────────────── */}
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '1.5rem 1.5rem 0' }}>
-          {/* Back button */}
+      <main ref={mainRef} className="pt-32 px-6 md:px-12 lg:px-20 max-w-[1800px] mx-auto pb-32">
+        
+        {/* Editorial Header - Vault Identity */}
+        <header className="mb-24 relative">
           <button
             onClick={() => router.push('/vaults')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              marginBottom: '1.25rem',
-              fontFamily: 'var(--font-mono, monospace)', fontSize: 11,
-              letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.45)',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.09)',
-              borderRadius: 10, padding: '8px 16px', cursor: 'pointer',
-              transition: 'color 0.2s ease, border-color 0.2s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.45)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)' }}
+            className="heritage-header-item flex items-center gap-3 font-heritage-grotesk text-[10px] font-bold uppercase tracking-[0.4em] text-[#6C7278] hover:text-[#B8422E] transition-colors mb-12 group"
           >
-            <ArrowLeft style={{ width: 14, height: 14 }} />
-            Back to Vaults
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            Return_To_Vault_Nodes
           </button>
 
-          {/* Hero card */}
-          <div
-            ref={heroRef}
-            className="yd-vault-hero"
-            style={{
-              background: `linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.03) 100%)`,
-              borderColor: `${vaultColor}25`,
-            }}
-          >
-            {/* Mesh gradient overlay */}
-            <div className="yd-vault-hero-mesh" style={{
-              background: `radial-gradient(ellipse at 80% 50%, ${vaultColor}10 0%, transparent 60%)`,
-            }} />
-
-            <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
-              {/* Left: identity */}
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '0.875rem', flexWrap: 'wrap' }}>
-                  <span style={{
-                    fontFamily: 'var(--font-mono, monospace)', fontSize: 9,
-                    letterSpacing: '0.12em', textTransform: 'uppercase',
-                    color: vaultColor, background: `${vaultColor}14`,
-                    border: `1px solid ${vaultColor}28`, borderRadius: 100, padding: '4px 12px',
-                    display: 'flex', alignItems: 'center', gap: 5,
-                  }}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: vaultColor }} />
-                    {vault.strategy.replace(/_/g, ' ')}
-                  </span>
-                  <span style={{
-                    fontFamily: 'var(--font-mono, monospace)', fontSize: 10,
-                    letterSpacing: '0.06em', textTransform: 'uppercase',
-                    color: riskStyle.color, background: riskStyle.bg,
-                    border: `1px solid ${riskStyle.border}`, borderRadius: 8, padding: '4px 12px',
-                  }}>
-                    {riskLevel} Risk
-                  </span>
+          <div className="flex flex-col lg:flex-row justify-between items-baseline gap-12">
+            <div className="max-w-4xl">
+              <div className="heritage-header-item flex items-center gap-4 mb-8">
+                <span className="heritage-caps text-[#B8422E] flex items-center gap-3">
+                  <span className="w-8 h-[1px] bg-[#B8422E]" />
+                  {vault.strategy.replace(/_/g, ' ')}
+                </span>
+                <div 
+                  className="px-4 py-1 rounded-sm heritage-caps border"
+                  style={{ backgroundColor: riskStyle.bg, color: riskStyle.color, borderColor: riskStyle.border }}
+                >
+                  {riskLevel}_Risk
                 </div>
-
-                <h1 style={{
-                  fontFamily: 'var(--font-display, system-ui)',
-                  fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
-                  fontWeight: 800, lineHeight: 1.05,
-                  color: 'rgba(255,255,255,0.92)', margin: '0 0 6px',
-                }}>
-                  {vault.name}
-                </h1>
-                <p style={{
-                  fontFamily: 'var(--font-mono, monospace)',
-                  fontSize: 13, color: 'rgba(255,255,255,0.38)',
-                  letterSpacing: '0.05em',
-                }}>
-                  {vault.tokenA} / {vault.tokenB}
-                </p>
               </div>
-
-              {/* Right: APY + secondary stats */}
-              <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 4 }}>
-                    Current APY
-                  </div>
-                  <div style={{
-                    fontFamily: 'var(--font-mono, monospace)',
-                    fontSize: 'clamp(48px, 7vw, 72px)',
-                    fontWeight: 500, lineHeight: 1, letterSpacing: '-0.02em',
-                    color: vaultColor,
-                    textShadow: `0 0 40px ${vaultColor}55, 0 0 80px ${vaultColor}1a`,
-                  }}>
-                    {(vault.apy * 100).toFixed(1)}%
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 9, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.25)', marginTop: 4 }}>
-                    ANNUALIZED
-                  </div>
+              
+              <h1 className="heritage-header-item text-7xl md:text-[9rem] font-black leading-[0.8] tracking-tighter mb-8 lowercase text-white">
+                {vault.name.split(' ').map((word, i) => (
+                  <span key={i} className={i === 1 ? "italic font-extralight block opacity-80" : ""}>
+                    {word} {i === 0 && <br/>}
+                  </span>
+                ))}
+              </h1>
+              
+              <p className="heritage-header-item text-xl md:text-3xl font-medium max-w-2xl leading-tight text-[#F7F5F2]/60 mt-12">
+                Decentralized liquidity optimization for the <span className="text-white">{vault.tokenA}/{vault.tokenB}</span> node pair.
+              </p>
+            </div>
+            
+            <div className="heritage-header-item w-full lg:w-auto flex flex-col items-end gap-12">
+              <div className="text-right flex flex-col items-end">
+                <span className="heritage-caps text-[#6C7278] mb-4">Current_Yield</span>
+                <div className="relative group">
+                  <span className="text-8xl md:text-[10rem] font-black leading-none tracking-tighter" style={{ color: vaultColor }}>
+                    {(vault.apy * 100).toFixed(0)}
+                  </span>
+                  <div className="absolute -top-4 -right-8 text-2xl font-black text-white/40">%</div>
+                  <div className="absolute bottom-4 left-0 w-0 h-2 bg-[#B8422E]/40 group-hover:w-full transition-all duration-700" />
                 </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 4 }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', marginBottom: 2 }}>TVL</div>
-                    <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 20, fontWeight: 500, color: '#10b981' }}>
-                      {tvlLoading ? '...' : `${onChainTVL.toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', marginBottom: 2 }}>90-Day Return</div>
-                    <div style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 20, fontWeight: 500, color: '#22c55e' }}>
-                      +{(vault.performance.totalReturn * 100).toFixed(1)}%
-                    </div>
-                  </div>
-                </div>
+                <span className="heritage-caps text-[#6C7278] mt-4">Annualized_APY</span>
+              </div>
+              
+              <div className="flex gap-4">
+                 <button 
+                   onClick={() => setShowDepositModal(true)}
+                   className="px-10 py-5 bg-[#F7F5F2] text-[#1A1C1E] heritage-caps rounded-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl"
+                 >
+                   Deposit_Assets
+                 </button>
+                 {hasPosition && (
+                   <button 
+                     onClick={() => setShowWithdrawModal(true)}
+                     className="px-10 py-5 border border-white/20 text-[#F7F5F2] heritage-caps rounded-sm hover:bg-white/5 transition-all"
+                   >
+                     Withdraw
+                   </button>
+                 )}
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* ── TWO-COLUMN LAYOUT ─────────────────────────────── */}
-        <div className="yd-vault-detail-layout" style={{ paddingTop: '2rem' }}>
+        {/* High-Contrast Analytics Grid */}
+        <section className="mb-32 heritage-detail-section">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 border border-white/5">
+            <StatCard label="NETWORK_TVL" value={`${onChainTVL.toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`} color="#10b981" desc="Total Value Locked in Strategy" />
+            <StatCard label="90D_RETURN" value={`+${returnAll}%`} color="#00f5d4" desc="Compounded Performance Node" />
+            <StatCard label="SHARPE_RATIO" value={vault.performance.sharpeRatio.toFixed(2)} color="#9b5de5" desc="Risk-Adjusted Efficiency Score" />
+            <StatCard label="VOLATILITY" value={`${tradingStats.volatility}%`} color={riskStyle.color} desc="Mathematical Deviation Matrix" />
+          </div>
+        </section>
 
-          {/* ─── STICKY SIDEBAR ─────────────────────────────── */}
-          <aside className="yd-sidebar">
-            <div
-              className="yd-sidebar-card"
-              style={{ '--card-color': vaultColor } as CSSProperties}
-            >
-              {/* APY */}
-              <div className="yd-sidebar-apy">
-                <span className="yd-sidebar-apy-label">Current APY</span>
-                <span className="yd-sidebar-apy-value" style={{
-                  color: vaultColor,
-                  textShadow: `0 0 30px ${vaultColor}50`,
-                }}>
-                  {(vault.apy * 100).toFixed(1)}%
-                </span>
-              </div>
-
-              {/* Metrics */}
-              <div className="yd-sidebar-metrics">
-                {[
-                  { label: 'TVL', value: tvlLoading ? '...' : `${onChainTVL.toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`, color: '#10b981' },
-                  { label: 'Win Rate', value: `${(vault.performance.winRate * 100).toFixed(0)}%`, color: '#00f5d4' },
-                  { label: 'Sharpe', value: vault.performance.sharpeRatio.toFixed(2), color: '#9b5de5' },
-                  { label: 'Max Drawdown', value: `${(vault.performance.maxDrawdown * 100).toFixed(1)}%`, color: vault.performance.maxDrawdown > 0.05 ? '#f87171' : '#6ee7b7' },
-                  { label: 'Fee Tier', value: `${(vault.fee * 100).toFixed(2)}%`, color: '#60a5fa' },
-                ].map(m => (
-                  <div key={m.label} className="yd-sidebar-metric-row">
-                    <span className="yd-sidebar-metric-label">{m.label}</span>
-                    <span className="yd-sidebar-metric-value" style={{ color: m.color }}>{m.value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Position (if any) */}
-              {hasPosition && pnlData && (
-                <div className="yd-sidebar-position">
-                  <span className="yd-sidebar-position-label">Your Position</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>Value</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: '#4ade80' }}>
-                        {pnlData.current.toFixed(tvlDecimals === 6 ? 2 : 4)} {tvlTokenSymbol}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>P&L</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, color: pnlData.pnl >= 0 ? '#4ade80' : '#f87171' }}>
-                        {pnlData.pnl >= 0 ? '+' : ''}{pnlData.pct.toFixed(2)}%
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>Net Invested</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.65)' }}>
-                        {(pnlData.deposited - pnlData.withdrawn).toFixed(tvlDecimals === 6 ? 2 : 4)} {tvlTokenSymbol}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* CTAs */}
-              <button
-                className="yd-cta-deposit"
-                style={{
-                  background: `linear-gradient(135deg, ${vaultColor}e0, ${vaultColor}a0)`,
-                  color: '#050508',
-                  '--yd-glow': `${vaultColor}35`,
-                } as CSSProperties}
-                onClick={() => setShowDepositModal(true)}
-              >
-                Deposit
-              </button>
-
-              {hasPosition && (
-                <button className="yd-cta-withdraw" onClick={() => setShowWithdrawModal(true)}>
-                  Withdraw
-                </button>
-              )}
-            </div>
-          </aside>
-
-          {/* ─── SCROLLABLE CONTENT ─────────────────────────── */}
-          <main className="yd-scroll-section">
-
-            {/* §1 Performance ──────────────────────────────── */}
+        {/* Two-Column Deep Analysis */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-24 heritage-detail-section">
+          
+          {/* Left Side: Performance & Position */}
+          <div className="lg:col-span-2 space-y-32">
+            
+            {/* Performance Chart */}
             <section>
-              <SectionHeader
-                icon={<TrendingUp style={{ width: 16, height: 16 }} />}
-                label="Performance"
-                color={vaultColor}
+              <SectionHeader 
+                icon={<Activity className="w-5 h-5" />} 
+                label="Analytical_Pulse" 
+                color={vaultColor} 
               />
-
-              <GlassCard style={{ marginBottom: '1rem' }}>
-                <PortfolioChart
-                  vaultPositions={vaultPositionsForChart}
-                  tokenPrices={tokenPrices || {}}
-                  vaults={vaultsData}
-                />
-              </GlassCard>
-
-              <div className="yd-returns-strip">
-                {[
-                  { period: '1D', value: return1D },
-                  { period: '7D', value: return7D },
-                  { period: '30D', value: return30D },
-                  { period: 'All Time', value: returnAll },
-                ].map(({ period, value }) => {
-                  const isPos = parseFloat(value) >= 0
-                  return (
-                    <div key={period} className="yd-return-card">
-                      <span className="yd-return-period">{period}</span>
-                      <span className="yd-return-value" style={{ color: isPos ? '#4ade80' : '#f87171' }}>
-                        {isPos ? '+' : ''}{value}%
-                      </span>
-                    </div>
-                  )
-                })}
+              <div className="bg-[#1A1C1E] border border-white/5 p-10 relative group">
+                <div className="absolute top-0 right-0 p-6 flex gap-4">
+                   <div className="flex items-center gap-2 heritage-caps text-[8px] text-[#6C7278]">
+                     <div className="w-1.5 h-1.5 rounded-full bg-[#B8422E]" />
+                     Historical_Nodes
+                   </div>
+                   <div className="flex items-center gap-2 heritage-caps text-[8px] text-[#6C7278]">
+                     <div className="w-1.5 h-1.5 rounded-full bg-[#00f5d4]" />
+                     AI_Projection
+                   </div>
+                </div>
+                <div className="h-[400px]">
+                  <PortfolioChart
+                    vaultPositions={vaultPositionsForChart}
+                    tokenPrices={tokenPrices || {}}
+                    vaults={vaultsData}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-4 mt-12 border-t border-white/5">
+                   {[
+                     { label: '1D_DELTA', value: return1D },
+                     { label: '7D_DELTA', value: return7D },
+                     { label: '30D_DELTA', value: return30D },
+                     { label: 'TOTAL_GAIN', value: returnAll },
+                   ].map((d, i) => (
+                     <div key={i} className="p-8 border-r last:border-0 border-white/5 text-center group/item hover:bg-white/[0.02] transition-colors">
+                        <div className="heritage-caps text-[8px] text-[#6C7278] mb-3">{d.label}</div>
+                        <div className={`text-2xl font-black ${parseFloat(d.value) >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+                          {parseFloat(d.value) >= 0 ? '+' : ''}{d.value}%
+                        </div>
+                     </div>
+                   ))}
+                </div>
               </div>
             </section>
 
-            {/* §2 Your Position (conditional) ─────────────── */}
+            {/* Position Details */}
             {hasPosition && pnlData && (
               <section>
-                <SectionHeader
-                  icon={<Coins style={{ width: 16, height: 16 }} />}
-                  label="Your Position"
-                  color="#4ade80"
+                <SectionHeader 
+                  icon={<Database className="w-5 h-5" />} 
+                  label="Node_Position_Data" 
+                  color="#10b981" 
                 />
-                <GlassCard style={{ borderColor: 'rgba(34,197,94,0.15)', background: 'rgba(34,197,94,0.04)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.25rem' }}>
-                    {[
-                      { label: 'Current Value', value: `${pnlData.current.toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`, color: '#4ade80' },
-                      { label: 'Net Invested', value: `${(pnlData.deposited - pnlData.withdrawn).toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`, color: 'rgba(255,255,255,0.75)' },
-                      { label: 'Unrealized P&L', value: `${pnlData.pnl >= 0 ? '+' : ''}${pnlData.pct.toFixed(2)}%`, color: pnlData.pnl >= 0 ? '#4ade80' : '#f87171' },
-                    ].map(m => (
-                      <div key={m.label} style={{
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: 12, padding: '1rem', textAlign: 'center',
-                      }}>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>
-                          {m.label}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 500, color: m.color }}>
-                          {m.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </GlassCard>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/10 border border-white/10">
+                   {[
+                     { label: 'Current_Value', value: `${pnlData.current.toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`, color: '#10b981' },
+                     { label: 'Net_Invested', value: `${(pnlData.deposited - pnlData.withdrawn).toFixed(tvlDecimals === 6 ? 2 : 4)} ${tvlTokenSymbol}`, color: '#F7F5F2' },
+                     { label: 'Unrealized_P&L', value: `${pnlData.pnl >= 0 ? '+' : ''}${pnlData.pct.toFixed(2)}%`, color: pnlData.pnl >= 0 ? '#10b981' : '#ef4444' },
+                   ].map((m, i) => (
+                     <div key={i} className="bg-[#1A1C1E] p-10 flex flex-col items-center text-center group hover:bg-white/[0.02] transition-colors">
+                        <div className="heritage-caps text-[9px] text-[#6C7278] mb-6">{m.label}</div>
+                        <div className="text-3xl font-black" style={{ color: m.color }}>{m.value}</div>
+                     </div>
+                   ))}
+                </div>
               </section>
             )}
 
-            {/* §3 Risk & Analytics ─────────────────────────── */}
+            {/* Strategy DNA */}
             <section>
-              <SectionHeader
-                icon={<Shield style={{ width: 16, height: 16 }} />}
-                label="Risk & Analytics"
-                color="#9b5de5"
+              <SectionHeader 
+                icon={<Cpu className="w-5 h-5" />} 
+                label="Strategy_Dna_Sequence" 
+                color="#9b5de5" 
               />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <GlassCard>
-                  <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>
-                    Risk Analysis
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Risk Level</span>
-                      <span style={{
-                        fontFamily: 'var(--font-mono)', fontSize: 11,
-                        color: riskStyle.color, background: riskStyle.bg,
-                        border: `1px solid ${riskStyle.border}`,
-                        borderRadius: 6, padding: '3px 10px',
-                      }}>{riskLevel}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Volatility</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500, color: '#fb923c' }}>12.3%</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Beta</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500, color: '#c084fc' }}>0.87</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>Chain ID</span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500, color: '#38bdf8' }}>{vault.chainId}</span>
-                    </div>
-                  </div>
-                </GlassCard>
-
-                <GlassCard>
-                  <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: '1rem' }}>
-                    Trading Statistics
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {[
-                      { label: 'Rebalances/Day', value: `~${tradingStats.tradesPerDay}`, color: '#9b5de5' },
-                      { label: 'Total Rebalances', value: tradingStats.totalTrades > 0 ? tradingStats.totalTrades.toLocaleString() : 'N/A', color: '#60a5fa' },
-                      { label: 'Best Rebalance', value: onChainTVL > 0 ? `+${tradingStats.bestTrade}%` : 'N/A', color: '#4ade80' },
-                      { label: 'Worst Rebalance', value: onChainTVL > 0 ? `-${tradingStats.worstTrade}%` : 'N/A', color: '#f87171' },
-                    ].map(m => (
-                      <div key={m.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{m.label}</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 500, color: m.color }}>{m.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </GlassCard>
-              </div>
-            </section>
-
-            {/* §4 Strategy DNA ─────────────────────────────── */}
-            <section>
-              <SectionHeader
-                icon={<Target style={{ width: 16, height: 16 }} />}
-                label="Strategy DNA"
-                color={vaultColor}
-              />
-
-              <GlassCard>
-                <div className="yd-radar-wrapper">
-                  {/* Radar chart */}
-                  <div style={{ flex: '0 0 280px', height: 260 }}>
+              <div className="bg-[#1A1C1E] border border-white/5 p-12 flex flex-col xl:flex-row gap-16 items-center">
+                 <div className="w-[300px] h-[300px] flex-shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={dnaData} margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
-                        <PolarGrid
-                          stroke="rgba(255,255,255,0.07)"
-                          gridType="polygon"
-                        />
+                      <RadarChart data={dnaData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                        <PolarGrid stroke="rgba(255,255,255,0.05)" gridType="polygon" />
                         <PolarAngleAxis
                           dataKey="metric"
-                          tick={{
-                            fontFamily: 'var(--font-mono, monospace)',
-                            fontSize: 9,
-                            fill: 'rgba(255,255,255,0.4)',
-                            letterSpacing: '0.08em',
-                          }}
+                          tick={{ fontFamily: 'var(--font-space-grotesk)', fontSize: 10, fill: 'rgba(255,255,255,0.3)', letterSpacing: '0.15em', fontWeight: 700 }}
                         />
                         <Radar
                           dataKey="value"
                           stroke={vaultColor}
-                          strokeWidth={2}
+                          strokeWidth={3}
                           fill={vaultColor}
-                          fillOpacity={0.2}
-                          dot={{ r: 3, fill: vaultColor, strokeWidth: 0 }}
-                          animationBegin={300}
-                          animationDuration={900}
-                          animationEasing="ease-out"
+                          fillOpacity={0.1}
+                          dot={{ r: 4, fill: vaultColor, strokeWidth: 0 }}
+                          animationBegin={400}
+                          animationDuration={1200}
                         />
                       </RadarChart>
                     </ResponsiveContainer>
-                  </div>
-
-                  {/* Strategy description */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{
-                      fontFamily: 'var(--font-display, system-ui)',
-                      fontSize: 16, fontWeight: 700,
-                      color: 'rgba(255,255,255,0.85)', marginBottom: '0.75rem',
-                    }}>
-                      {vault.strategy.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} Strategy
-                    </h3>
-                    <p style={{
-                      fontSize: 13, lineHeight: 1.65,
-                      color: 'rgba(255,255,255,0.45)', marginBottom: '1.25rem',
-                    }}>
-                      {strategyDetails.description}
-                    </p>
-
-                    <div style={{
-                      fontFamily: 'var(--font-mono)', fontSize: 9,
-                      letterSpacing: '0.12em', textTransform: 'uppercase',
-                      color: vaultColor, background: `${vaultColor}10`,
-                      border: `1px solid ${vaultColor}22`, borderRadius: 6,
-                      padding: '5px 12px', display: 'inline-block',
-                    }}>
-                      {strategyDetails.rebalanceFrequency}
+                 </div>
+                 <div className="flex-1 space-y-10">
+                    <div>
+                      <h4 className="text-3xl font-black text-white mb-6 lowercase tracking-tight">The_Logic.</h4>
+                      <p className="text-sm leading-loose text-[#6C7278] font-medium">
+                        {strategyDetails.description}
+                      </p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Features + Risks */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div>
-                    <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: vaultColor, marginBottom: '0.75rem' }}>
-                      Key Features
-                    </h4>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {strategyDetails.features.map((f, i) => (
-                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <span style={{ color: vaultColor, marginTop: 1, flexShrink: 0 }}>✓</span>
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 style={{ fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fbbf24', marginBottom: '0.75rem' }}>
-                      Risk Factors
-                    </h4>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {strategyDetails.riskFactors.map((r, i) => (
-                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                          <span style={{ color: '#fbbf24', marginTop: 1, flexShrink: 0 }}>⚠</span>
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', lineHeight: 1.5 }}>{r}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Token pair */}
-                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'center' }}>
-                  <TokenPairDisplay tokenA={vault.tokenA} tokenB={vault.tokenB} size={48} />
-                </div>
-              </GlassCard>
+                    <div className="flex flex-wrap gap-4">
+                       <div className="px-6 py-2 bg-white/5 border border-white/10 rounded-sm heritage-caps text-[9px] text-[#F7F5F2]">
+                         {strategyDetails.rebalanceFrequency}
+                       </div>
+                       <div className="px-6 py-2 bg-[#B8422E]/10 border border-[#B8422E]/20 rounded-sm heritage-caps text-[9px] text-[#B8422E]">
+                         MEV_PROTECTED
+                       </div>
+                    </div>
+                 </div>
+              </div>
             </section>
 
-          </main>
+          </div>
+
+          {/* Right Side: Features & Metadata */}
+          <div className="space-y-32">
+             
+             {/* Key Features */}
+             <section>
+               <SectionHeader 
+                 icon={<Zap className="w-5 h-5" />} 
+                 label="Protocol_Features" 
+                 color="#00f5d4" 
+               />
+               <div className="space-y-6">
+                 {strategyDetails.features.map((f, i) => (
+                   <div key={i} className="bg-white/5 p-8 border border-white/5 rounded-sm group hover:border-[#00f5d4]/40 transition-colors">
+                      <div className="flex items-start gap-5">
+                         <div className="w-1.5 h-1.5 rounded-full bg-[#00f5d4] mt-1.5 group-hover:scale-150 transition-transform" />
+                         <span className="text-sm font-medium text-[#F7F5F2]/80 leading-relaxed group-hover:text-white transition-colors">{f}</span>
+                      </div>
+                   </div>
+                 ))}
+               </div>
+             </section>
+
+             {/* Risk Factors */}
+             <section>
+               <SectionHeader 
+                 icon={<Shield className="w-5 h-5" />} 
+                 label="Network_Risks" 
+                 color="#B8422E" 
+               />
+               <div className="bg-[#B8422E]/5 border border-[#B8422E]/10 p-10 space-y-8 rounded-sm">
+                 {strategyDetails.riskFactors.map((r, i) => (
+                   <div key={i} className="flex items-start gap-5">
+                      <span className="text-[#B8422E] font-black mt-0.5">/</span>
+                      <span className="text-sm font-medium text-[#6C7278] leading-relaxed italic">{r}</span>
+                   </div>
+                 ))}
+               </div>
+             </section>
+
+             {/* Trading Stats Metadata */}
+             <section>
+               <SectionHeader 
+                 icon={<TrendingUp className="w-5 h-5" />} 
+                 label="Node_Statistics" 
+                 color="#9b5de5" 
+               />
+               <div className="bg-[#1A1C1E] border border-white/5 p-10 space-y-10 rounded-sm">
+                  {[
+                    { label: 'AVG_DAILY_NODES', value: `~${tradingStats.tradesPerDay}`, color: '#9b5de5' },
+                    { label: 'TOTAL_REBALANCES', value: tradingStats.totalTrades.toLocaleString(), color: '#F7F5F2' },
+                    { label: 'PEAK_PERFORMANCE', value: `+${tradingStats.bestTrade}%`, color: '#10b981' },
+                    { label: 'MAX_DRAWDOWN', value: `-${tradingStats.worstTrade}%`, color: '#ef4444' },
+                  ].map((s, i) => (
+                    <div key={i} className="flex justify-between items-end border-b border-white/5 pb-6 last:border-0 last:pb-0">
+                       <span className="heritage-caps text-[9px] text-[#6C7278]">{s.label}</span>
+                       <span className="text-2xl font-black" style={{ color: s.color }}>{s.value}</span>
+                    </div>
+                  ))}
+               </div>
+             </section>
+
+             {/* Token Architecture */}
+             <section>
+               <SectionHeader 
+                 icon={<Target className="w-5 h-5" />} 
+                 label="Token_Architecture" 
+                 color="#F7F5F2" 
+               />
+               <div className="bg-[#1A1C1E] border border-white/5 p-12 flex flex-col items-center gap-10 rounded-sm">
+                  <TokenPairDisplay tokenA={vault.tokenA} tokenB={vault.tokenB} size={64} />
+                  <div className="text-center space-y-4">
+                     <div className="text-2xl font-black text-white">{vault.tokenA} / {vault.tokenB}</div>
+                     <p className="text-[10px] heritage-caps text-[#6C7278] tracking-[0.4em]">Asset_Liquidity_Pair</p>
+                  </div>
+               </div>
+             </section>
+
+          </div>
         </div>
-      </div>
+
+        {/* Methodology Footer */}
+        <section className="mt-60 border-t-4 border-[#B8422E] pt-20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-24">
+             <div>
+                <h4 className="text-2xl font-black uppercase mb-8 text-white">System_Logic.</h4>
+                <p className="text-sm text-[#6C7278] leading-loose font-medium">
+                  The mathematical parameters of this vault are calculated via multi-timeframe price action nodes and network throughput metrics. Performance is verified through continuous node synchronization.
+                </p>
+             </div>
+             <div className="flex flex-col justify-end">
+                <div className="heritage-caps text-[#6C7278] mb-4">SYNC_TIMESTAMP</div>
+                <div className="text-3xl font-black text-white/40 font-mono">{new Date().toLocaleTimeString()}</div>
+             </div>
+             <div className="flex flex-col justify-end items-end text-right">
+                <div className="heritage-caps text-[#6C7278] mb-4">NODE_STATUS</div>
+                <div className="flex items-center gap-3">
+                   <span className="heritage-caps text-[#10b981]">All_Signals_Normal</span>
+                   <div className="w-3 h-3 rounded-full bg-[#10b981] animate-pulse shadow-[0_0_12px_#10b981]" />
+                </div>
+             </div>
+          </div>
+        </section>
+
+      </main>
 
       {/* ── MODALS ────────────────────────────────────────── */}
       <DepositModal

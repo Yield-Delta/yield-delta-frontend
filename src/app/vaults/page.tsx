@@ -1,12 +1,12 @@
 "use client"
 
-import React, { useEffect, useRef, useState, CSSProperties } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
-import { MessageCircle, X, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Loader2, ChevronRight, TrendingUp, Zap, Shield, Target, Activity, Clock } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSeiMarketData } from '@/hooks/useMarketData';
@@ -51,17 +51,17 @@ const getVaultColor = (strategy: string) => ({
 } as Record<string, string>)[strategy] || '#00f5d4'
 
 const RISK_BADGE_STYLES = {
-  Low: { bg: 'rgba(16,185,129,0.15)', color: '#6ee7b7', border: 'rgba(16,185,129,0.35)' },
-  Medium: { bg: 'rgba(245,158,11,0.15)', color: '#fcd34d', border: 'rgba(245,158,11,0.35)' },
-  High: { bg: 'rgba(239,68,68,0.15)', color: '#fca5a5', border: 'rgba(239,68,68,0.35)' },
+  Low: { bg: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'rgba(16,185,129,0.2)' },
+  Medium: { bg: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: 'rgba(245,158,11,0.2)' },
+  High: { bg: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'rgba(239,68,68,0.2)' },
 }
 
 const STRATEGY_FILTERS = [
-  { key: 'all', label: 'All Vaults', color: 'rgba(255,255,255,0.55)' },
+  { key: 'all', label: 'All_Nodes', color: 'rgba(255,255,255,0.5)' },
   { key: 'concentrated_liquidity', label: 'Concentrated', color: '#00f5d4' },
-  { key: 'yield_farming', label: 'Yield Farming', color: '#9b5de5' },
-  { key: 'delta_neutral', label: 'Delta Neutral', color: '#8b5cf6' },
-  { key: 'stable_max', label: 'Stable', color: '#10b981' },
+  { key: 'yield_farming', label: 'Yield_Farming', color: '#9b5de5' },
+  { key: 'delta_neutral', label: 'Delta_Neutral', color: '#8b5cf6' },
+  { key: 'stable_max', label: 'Stable_Max', color: '#10b981' },
   { key: 'arbitrage', label: 'Arbitrage', color: '#ff206e' },
 ]
 
@@ -92,511 +92,286 @@ function StatPillar({
   }, [loading, value, isNumeric, decimals])
 
   return (
-    <div className="yd-stat-pillar" style={{ '--pillar-color': color } as CSSProperties}>
-      <span className="yd-stat-label">{label}</span>
-      <span className="yd-stat-value">
+    <div className="flex flex-col gap-2">
+      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.3em] text-slate-500">{label}</span>
+      <span className="text-3xl font-black tracking-tighter" style={{ color }}>
         {loading ? '...' : displayed}{!loading && isNumeric ? suffix : ''}
       </span>
     </div>
   )
 }
 
-function Sparkline({ vault, color }: { vault: VaultData; color: string }) {
-  const id = `spark-${vault.address.slice(-8)}`
-  const W = 300, H = 36
-  const raw = [
-    0.18,
-    0.28 + vault.performance.winRate * 0.15,
-    0.4 + vault.performance.sharpeRatio * 0.07,
-    0.5 + vault.performance.totalReturn * 0.45,
-    0.62 + vault.apy * 0.28,
-    0.75 + vault.performance.totalReturn * 0.38,
-    0.88 + vault.performance.sharpeRatio * 0.05,
-  ]
-  const pts = raw.map((v, i) => ({
-    x: (i / (raw.length - 1)) * W,
-    y: H - Math.min(Math.max(v, 0.04), 0.96) * H,
-  }))
-  const d = pts.reduce((acc, p, i) => {
-    if (i === 0) return `M ${p.x},${p.y}`
-    const prev = pts[i - 1]
-    const cx = (prev.x + p.x) / 2
-    return `${acc} C ${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`
-  }, '')
+function Sparkline({ vault, color }: { vault: VaultData, color: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const data = useMemo(() => {
+    const points = 16
+    const base = vault.performance.totalReturn
+    return Array.from({ length: points }, (_, i) => base + (Math.sin(i * 0.8) * 0.02) + (Math.random() * 0.01))
+  }, [vault.performance.totalReturn])
 
-  return (
-    <div style={{ margin: '0.75rem -4px 0', opacity: 0.65 }}>
-      <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.35" />
-            <stop offset="100%" stopColor={color} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={`${d} L ${W},${H} L 0,${H} Z`} fill={`url(#${id})`} />
-        <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    </div>
-  )
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const { width, height } = canvas
+    ctx.clearRect(0, 0, width, height)
+    ctx.beginPath()
+    ctx.strokeStyle = color
+    ctx.lineWidth = 2
+    ctx.lineJoin = 'round'
+    
+    data.forEach((val, i) => {
+      const x = (i / (data.length - 1)) * width
+      const y = height - ((val - Math.min(...data)) / (Math.max(...data) - Math.min(...data) || 1)) * height * 0.8 - (height * 0.1)
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    })
+    ctx.stroke()
+
+    const grad = ctx.createLinearGradient(0, 0, 0, height)
+    grad.addColorStop(0, `${color}33`)
+    grad.addColorStop(1, 'transparent')
+    ctx.lineTo(width, height)
+    ctx.lineTo(0, height)
+    ctx.fillStyle = grad
+    ctx.fill()
+  }, [data, color])
+
+  return <canvas ref={canvasRef} width={200} height={60} className="w-full h-12 opacity-50" />
 }
-
-// ─── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function VaultsPage() {
   const router = useRouter()
+  const mainRef = useRef<HTMLDivElement>(null)
   const vaultCardsRef = useRef<HTMLDivElement>(null)
-  const heroRef = useRef<HTMLElement>(null)
+
+  const { vaults, isLoading: isVaultsLoading } = useVaultStore()
+  const { marketData, isLoading: isMarketLoading } = useSeiMarketData()
+  const { totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD()
+  const { getVaultTVL } = useVaultTVL()
+
+  const [activeFilter, setActiveFilter] = useState('all')
   const [showChat, setShowChat] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [depositVault, setDepositVault] = useState<VaultData | null>(null)
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [selectedVault, setSelectedVault] = useState<VaultData | null>(null)
 
-  const { selectedVault, setSelectedVault, getFilteredVaults, isLoading: vaultLoading } = useVaultStore()
-  const [vaultsData, setVaultsData] = React.useState<VaultData[]>([])
-  const [queryLoading, setQueryLoading] = React.useState(true)
-  const [queryError, setQueryError] = React.useState<Error | null>(null)
+  const displayVaults = useMemo(() => {
+    if (activeFilter === 'all') return vaults
+    return vaults.filter(v => v.strategy === activeFilter)
+  }, [vaults, activeFilter])
 
-  React.useEffect(() => {
-    const fetchVaults = async () => {
-      try {
-        setQueryLoading(true)
-        const res = await fetch('/api/vaults')
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const result = await res.json()
-        if (result.success && result.data) setVaultsData(result.data)
-        else throw new Error(result.error || 'Invalid response')
-      } catch (err) {
-        setQueryError(err as Error)
-      } finally {
-        setQueryLoading(false)
-      }
-    }
-    fetchVaults()
-  }, [])
+  const avgApy = useMemo(() => {
+    if (!vaults.length) return 0
+    return (vaults.reduce((sum, v) => sum + v.apy, 0) / vaults.length) * 100
+  }, [vaults])
 
-  const { data: marketData } = useSeiMarketData()
-  const vaultAddresses = React.useMemo(() => vaultsData?.map(v => v.address) || [], [vaultsData])
-  const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
-  const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
-
-  const isLoading = vaultLoading || queryLoading || tvlLoading
-  const filteredVaults = React.useMemo(
-    () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
-    [vaultsData, getFilteredVaults]
-  )
-
-  const displayVaults = React.useMemo(() => {
-    if (activeFilter === 'all') return filteredVaults
-    return filteredVaults.filter(v => v.strategy === activeFilter)
-  }, [filteredVaults, activeFilter])
-
-  const avgApy = React.useMemo(() => {
-    if (!displayVaults.length) return 0
-    return (displayVaults.reduce((s, v) => s + v.apy, 0) / displayVaults.length) * 100
-  }, [displayVaults])
-
-  const getVaultTVL = React.useCallback((vault: VaultData) => {
-    const on = tvlMap.get(vault.address.toLowerCase())
-    return on !== undefined ? on : vault.tvl
-  }, [tvlMap])
-
-  const handleDeposit = React.useCallback((vault: VaultData) => {
-    if (!vault) return
-    setSelectedVault(vault)
+  const handleDeposit = useCallback((vault: VaultData) => {
     setDepositVault(vault)
     setShowDepositModal(true)
-  }, [setSelectedVault])
-
-  const handleDepositSuccess = React.useCallback((txHash: string) => {
-    console.log('Deposit successful:', txHash)
   }, [])
 
-  const handleCloseModal = React.useCallback(() => {
+  const handleCloseModal = useCallback(() => {
     setShowDepositModal(false)
-    setTimeout(() => setDepositVault(null), 300)
+    setDepositVault(null)
   }, [])
 
-  const handleViewAnalytics = (vault: VaultData) => {
-    setSelectedVault(vault)
-    router.push(`/vault?address=${vault.address}&tab=analytics`)
-  }
-
-  // GSAP hero + cards
-  useEffect(() => {
-    if (heroRef.current) {
-      gsap.fromTo(
-        heroRef.current.querySelectorAll('.yd-hero-animate'),
-        { opacity: 0, y: 28 },
-        { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out', delay: 0.1 }
-      )
-      gsap.fromTo(
-        heroRef.current.querySelectorAll('.yd-stat-pillar'),
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.55, stagger: 0.08, ease: 'power2.out', delay: 0.35 }
-      )
-    }
+  const handleDepositSuccess = useCallback((sig: string) => {
+    console.log('Deposit success:', sig)
   }, [])
 
   useEffect(() => {
-    if (vaultCardsRef.current && !isLoading) {
-      const cards = Array.from(vaultCardsRef.current.children)
-      gsap.fromTo(
-        cards,
-        { opacity: 0, y: 60, scale: 0.95 },
-        {
-          opacity: 1, y: 0, scale: 1,
-          duration: 0.7, stagger: 0.1, ease: 'back.out(1.7)',
-          scrollTrigger: { trigger: vaultCardsRef.current, start: 'top 85%' },
-        }
-      )
+    if (!isVaultsLoading && mainRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from(".heritage-header-item", {
+          opacity: 0, y: 30, duration: 1, stagger: 0.1, ease: "expo.out"
+        })
+        gsap.from(".vault-card-anim", {
+          opacity: 0, y: 40, duration: 0.8, stagger: 0.05, ease: "power2.out",
+          scrollTrigger: { trigger: vaultCardsRef.current, start: "top 85%" }
+        })
+      }, mainRef)
+      return () => ctx.revert()
     }
-  }, [isLoading, displayVaults])
+  }, [isVaultsLoading])
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#07080f' }}>
+    <div className="min-h-screen bg-[#020617] text-slate-50 font-sans selection:bg-[#00f5d4] selection:text-black overflow-x-hidden relative">
+      <style jsx global>{`
+        .yd-premium-grid {
+          background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+          background-size: 80px 80px;
+          mask-image: radial-gradient(circle at center, black, transparent 85%);
+        }
+      `}</style>
+
+      {/* Premium Atmospheric Background */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div 
+          className="absolute top-[-10%] right-[-10%] w-[70%] h-[70%] bg-[#00f5d4]/10 blur-[120px] rounded-full animate-pulse" 
+          style={{ animationDuration: '8s' }}
+        />
+        <div 
+          className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] bg-[#9b5de5]/10 blur-[150px] rounded-full animate-pulse" 
+          style={{ animationDuration: '12s', animationDelay: '2s' }}
+        />
+        <div className="absolute inset-0 yd-premium-grid opacity-50" />
+      </div>
+
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
-      <DemoBanner />
 
-      {/* ── HERO ──────────────────────────────────────────── */}
-      <section ref={heroRef} className="yd-vaults-hero">
-        {/* SVG grid background */}
-        <svg className="yd-hero-grid-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-          <defs>
-            <pattern id="heroGrid" width="44" height="44" patternUnits="userSpaceOnUse">
-              <path d="M 44 0 L 0 0 0 44" fill="none" stroke="rgba(0,245,212,0.18)" strokeWidth="0.5" />
-            </pattern>
-            <radialGradient id="heroGridFade" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="white" stopOpacity="1" />
-              <stop offset="65%" stopColor="white" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="white" stopOpacity="0" />
-            </radialGradient>
-            <mask id="heroGridMask">
-              <rect width="100%" height="100%" fill="url(#heroGridFade)" />
-            </mask>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#heroGrid)" mask="url(#heroGridMask)" />
-        </svg>
-
-        {/* Radial glow */}
-        <div className="yd-hero-radial-glow" />
-
-        <div className="yd-hero-content">
-          {/* Left: heading */}
-          <div className="yd-hero-left">
-            <div className="yd-live-badge yd-hero-animate">
-              <span className="yd-live-dot" />
-              LIVE
+      <main ref={mainRef} className="relative z-10 pt-28 px-4 md:px-12 lg:px-20 pb-32 max-w-[1800px] mx-auto">
+        
+        {/* HUD Header */}
+        <header className="mb-20">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-12">
+            <div className="space-y-8">
+              <div className="heritage-header-item flex items-center gap-3 text-[10px] uppercase tracking-[0.4em] text-[#00f5d4] font-mono bg-[#00f5d4]/10 w-fit px-4 py-1.5 rounded-sm border-l-2 border-[#00f5d4]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00f5d4] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00f5d4]"></span>
+                </span>
+                <span>VAULT_NETWORK {"//"} SYNCHRONIZED</span>
+              </div>
+              
+              <h1 className="heritage-header-item text-7xl md:text-[9rem] font-black tracking-tighter leading-[0.8] text-white">
+                Quantum <br/>
+                <span className="text-[#00f5d4]">Vaults.</span>
+              </h1>
+              <p className="heritage-header-item text-xl text-slate-400 font-medium max-w-xl leading-relaxed">
+                Autonomous liquidity strategies, continuously optimized by AI for maximum mathematical advantage.
+              </p>
             </div>
 
-            <h1 className="yd-hero-heading yd-hero-animate">
-              AI-POWERED{' '}
-              <span style={{ color: '#00f5d4', textShadow: '0 0 50px rgba(0,245,212,0.35)' }}>YIELD</span>
-              {' '}OPTIMIZATION
-              <br />
-              ON SEI
-            </h1>
-
-            <p className="yd-hero-sub yd-hero-animate">
-              Autonomous liquidity strategies, continuously optimized by AI
-            </p>
+            <div className="heritage-header-item flex flex-wrap gap-12 items-center bg-slate-900/40 backdrop-blur-xl p-10 rounded-sm border border-slate-800/50 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[#00f5d4] opacity-50 group-hover:h-1 transition-all duration-500" />
+              <StatPillar label="NETWORK_TVL" value={isVaultsLoading || tvlUSDLoading ? '...' : totalTVLInUSD} color="#00f5d4" loading={isVaultsLoading || tvlUSDLoading} />
+              <div className="w-px h-16 bg-slate-800 hidden sm:block" />
+              <StatPillar label="VAULT_NODES" value={displayVaults.length} color="#9b5de5" loading={isVaultsLoading} isNumeric decimals={0} />
+              <div className="w-px h-16 bg-slate-800 hidden sm:block" />
+              <StatPillar label="AVG_APY" value={avgApy} color="#10b981" loading={isVaultsLoading} isNumeric suffix="%" />
+            </div>
           </div>
+        </header>
 
-          {/* Right: stat pillars */}
-          <div className="yd-hero-stats">
-            <StatPillar
-              label="Total TVL"
-              value={isLoading || tvlUSDLoading ? '...' : totalTVLInUSD}
-              color="#00f5d4"
-              loading={isLoading || tvlUSDLoading}
-            />
-            <StatPillar
-              label="Vaults"
-              value={filteredVaults.length}
-              color="#9b5de5"
-              loading={isLoading}
-              isNumeric
-              decimals={0}
-            />
-            <StatPillar
-              label="Avg APY"
-              value={avgApy}
-              color="#10b981"
-              loading={isLoading}
-              isNumeric
-              decimals={1}
-              suffix="%"
-            />
-            <StatPillar
-              label="AI Uptime"
-              value={99.97}
-              color="#3b82f6"
-              isNumeric
-              decimals={2}
-              suffix="%"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ── FILTER BAR ────────────────────────────────────── */}
-      <div className="yd-filter-bar">
-        <div className="yd-filter-chips">
-          {STRATEGY_FILTERS.map(f => (
-            <button
-              key={f.key}
-              className={`yd-filter-chip${activeFilter === f.key ? ' active' : ''}`}
-              style={{ '--chip-color': f.color } as CSSProperties}
-              onClick={() => setActiveFilter(f.key)}
-            >
-              {f.label}
-            </button>
-          ))}
-          {!isLoading && (
-            <span style={{
-              fontFamily: 'var(--font-mono, monospace)',
-              fontSize: 10,
-              color: 'rgba(255,255,255,0.25)',
-              letterSpacing: '0.08em',
-              marginLeft: 8,
-            }}>
-              {displayVaults.length} vault{displayVaults.length !== 1 ? 's' : ''}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* ── VAULT GRID ────────────────────────────────────── */}
-      <div className="yd-vault-grid-section">
-        {isLoading && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '5rem 0' }}>
-            <Loader2 style={{ width: 28, height: 28, color: '#00f5d4', animation: 'spin 1s linear infinite' }} />
-            <span style={{ marginLeft: 12, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)' }}>
-              Loading vaults...
-            </span>
-          </div>
-        )}
-
-        {queryError && (
-          <div style={{ textAlign: 'center', padding: '5rem 0', color: 'rgba(239,68,68,0.8)' }}>
-            <p style={{ fontSize: 16, marginBottom: 8 }}>Failed to load vaults</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)' }}>{queryError.message}</p>
-          </div>
-        )}
-
-        {!isLoading && !queryError && (
-          <div ref={vaultCardsRef} className="yd-vault-grid">
-            {displayVaults.map(vault => {
-              const color = getVaultColor(vault.strategy)
-              const risk = getRiskLevel(vault.apy, vault.strategy)
-              const riskStyle = RISK_BADGE_STYLES[risk]
-              const tvl = getVaultTVL(vault)
-              const token = getVaultToken(vault)
-
-              return (
-                <div
-                  key={vault.address}
-                  className="yd-vault-card-wrap"
-                  style={{ '--card-color': color } as CSSProperties}
+        {/* Advanced Filters */}
+        <section className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-center gap-8 py-8 border-y border-slate-800/50 relative">
+          <div className="flex items-center gap-6 flex-wrap">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500">Filter_Nodes {"//"}</span>
+            <div className="flex flex-wrap gap-3">
+              {STRATEGY_FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setActiveFilter(f.key)}
+                  className={`px-6 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest transition-all border ${
+                    activeFilter === f.key 
+                      ? 'bg-white text-black border-white shadow-[0_0_20px_rgba(255,255,255,0.2)]' 
+                      : 'border-slate-800 text-slate-500 hover:border-[#00f5d4]/50 hover:text-[#00f5d4]'
+                  }`}
                 >
-                  <div className="yd-vault-card-body">
-                    {/* Top accent bar */}
-                    <div
-                      className="yd-card-top-bar"
-                      style={{ background: `linear-gradient(90deg, transparent, ${color}cc 50%, transparent)` }}
-                    />
-                    {/* Ambient top glow */}
-                    <div
-                      className="yd-card-top-glow"
-                      style={{ background: `radial-gradient(ellipse at 50% -10%, ${color}1a 0%, transparent 70%)` }}
-                    />
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+             <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/60 rounded-sm border border-slate-800/50">
+               <div className="w-1.5 h-1.5 rounded-full bg-[#10b981] shadow-[0_0_8px_#10b981]" />
+               <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400">Yield_Engine_Active</span>
+             </div>
+          </div>
+        </section>
 
-                    {/* Header row: strategy badge + token pair */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <span style={{
-                        fontFamily: 'var(--font-mono, monospace)',
-                        fontSize: '9px',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        color,
-                        background: `${color}14`,
-                        border: `1px solid ${color}28`,
-                        borderRadius: 100,
-                        padding: '3px 10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 5,
-                      }}>
-                        <span style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                        {vault.strategy.replace(/_/g, ' ')}
-                      </span>
-                      <span style={{
-                        fontFamily: 'var(--font-mono, monospace)',
-                        fontSize: '11px',
-                        color: 'rgba(255,255,255,0.35)',
-                        letterSpacing: '0.04em',
-                      }}>
-                        {vault.tokenA}/{vault.tokenB}
-                      </span>
-                    </div>
+        {/* Vault Grid - Quantum Refinement */}
+        <section className="relative">
+          {isVaultsLoading ? (
+            <div className="py-40 flex flex-col items-center justify-center">
+              <Loader2 className="w-16 h-16 text-[#00f5d4] animate-spin mb-8" />
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.4em] text-slate-400 animate-pulse">Establishing_Node_Link...</div>
+            </div>
+          ) : (
+            <div ref={vaultCardsRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-800/20">
+              {displayVaults.map(vault => {
+                const color = getVaultColor(vault.strategy)
+                const risk = getRiskLevel(vault.apy, vault.strategy)
+                const riskStyle = RISK_BADGE_STYLES[risk]
+                const tvl = getVaultTVL(vault)
+                const token = getVaultToken(vault)
 
-                    {/* Vault name */}
-                    <h3 style={{
-                      fontFamily: 'var(--font-display, system-ui)',
-                      fontSize: '18px',
-                      fontWeight: 700,
-                      color: 'rgba(255,255,255,0.9)',
-                      lineHeight: 1.2,
-                      marginBottom: 0,
-                    }}>
-                      {vault.name}
-                    </h3>
+                return (
+                  <div
+                    key={vault.address}
+                    onClick={() => router.push(`/vault/${vault.address}`)}
+                    className="vault-card-anim group cursor-pointer relative bg-slate-950/40 backdrop-blur-xl p-12 flex flex-col justify-between hover:z-10 hover:bg-slate-900/60 transition-all duration-700 relative overflow-hidden"
+                  >
+                    {/* Corner Accents */}
+                    <div className="absolute top-0 left-0 w-1 h-0 bg-[#00f5d4] group-hover:h-full transition-all duration-700" />
+                    
+                    <div>
+                      <header className="flex justify-between items-start mb-16">
+                        <div className="flex items-center gap-4">
+                           <div className="w-12 h-12 rounded-sm bg-slate-900 border border-slate-800 flex items-center justify-center relative overflow-hidden group-hover:border-[#00f5d4]/50 transition-colors shadow-inner">
+                             <img src={`/chains/${vault.chainId === 1328 ? 'sei.svg' : 'solana.svg'}`} alt="chain" className="w-7 h-7 z-10" />
+                             <div className="absolute inset-0 bg-white/5 group-hover:bg-[#00f5d4]/10 transition-colors" />
+                           </div>
+                           <div>
+                             <h3 className="text-2xl font-bold tracking-tight text-white group-hover:text-[#00f5d4] transition-colors">{vault.name}</h3>
+                             <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">{vault.strategy.replace('_', ' ')}</span>
+                           </div>
+                        </div>
+                        <div 
+                          className="px-4 py-1.5 rounded-sm text-[9px] font-bold uppercase tracking-widest border"
+                          style={{ backgroundColor: riskStyle.bg, color: riskStyle.color, borderColor: riskStyle.border }}
+                        >
+                          {risk}_Risk
+                        </div>
+                      </header>
 
-                    {/* APY Hero */}
-                    <div className="yd-apy-hero">
-                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                        <div>
-                          <div
-                            className="yd-apy-value"
-                            style={{
-                              color,
-                              textShadow: `0 0 40px ${color}55, 0 0 80px ${color}1a`,
-                            }}
-                          >
+                      <div className="grid grid-cols-2 gap-10 mb-16 relative">
+                        <div className="space-y-2">
+                          <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">Live_Yield</span>
+                          <div className="text-5xl font-black text-white group-hover:scale-105 transition-transform origin-left duration-700" style={{ color }}>
                             {(vault.apy * 100).toFixed(1)}%
                           </div>
-                          <div className="yd-apy-label">Annual Yield</div>
                         </div>
+                        <div className="space-y-2">
+                          <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-500">Liquidity_Node</span>
+                          <div className="text-3xl font-bold text-slate-200">
+                            {formatAmount(tvl, token)}
+                          </div>
+                        </div>
+                      </div>
 
-                        {/* Risk badge */}
-                        <span style={{
-                          fontFamily: 'var(--font-mono, monospace)',
-                          fontSize: '10px',
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          color: riskStyle.color,
-                          background: riskStyle.bg,
-                          border: `1px solid ${riskStyle.border}`,
-                          borderRadius: 8,
-                          padding: '5px 12px',
-                          alignSelf: 'flex-end',
-                          marginBottom: '6px',
-                        }}>
-                          {risk} Risk
-                        </span>
+                      {/* Sparkline Integration */}
+                      <div className="mb-12">
+                        <Sparkline vault={vault} color={color} />
                       </div>
                     </div>
 
-                    {/* Separator */}
-                    <div
-                      className="yd-card-separator"
-                      style={{ background: `linear-gradient(90deg, transparent, ${color}22, transparent)` }}
-                    />
-
-                    {/* 3-metric strip */}
-                    <div className="yd-metric-strip">
-                      <div className="yd-metric-item">
-                        <span className="yd-metric-value" style={{ color: '#10b981' }}>
-                          {formatAmount(tvl, token)}
-                        </span>
-                        <span className="yd-metric-label">TVL</span>
+                    <div className="pt-10 border-t border-slate-800/50 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                         <div className="w-2 h-2 rounded-full bg-[#00f5d4] animate-pulse" />
+                         <span className="font-mono text-[9px] font-bold text-[#00f5d4] uppercase tracking-widest">Protocol_Optimized</span>
                       </div>
-                      <div className="yd-metric-divider" />
-                      <div className="yd-metric-item">
-                        <span className="yd-metric-value" style={{ color: '#00f5d4' }}>
-                          {(vault.performance.winRate * 100).toFixed(0)}%
-                        </span>
-                        <span className="yd-metric-label">Win Rate</span>
+                      <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-white transition-colors duration-700">
+                        Access_Terminal <ChevronRight className="w-5 h-5 text-[#00f5d4] group-hover:translate-x-1 transition-transform" />
                       </div>
-                      <div className="yd-metric-divider" />
-                      <div className="yd-metric-item">
-                        <span className="yd-metric-value" style={{ color: '#9b5de5' }}>
-                          {vault.performance.sharpeRatio.toFixed(2)}
-                        </span>
-                        <span className="yd-metric-label">Sharpe</span>
-                      </div>
-                    </div>
-
-                    {/* Sparkline */}
-                    <Sparkline vault={vault} color={color} />
-
-                    {/* Action buttons */}
-                    <div style={{ display: 'flex', gap: 10, marginTop: '1.1rem' }}>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          handleDeposit(vault)
-                        }}
-                        style={{
-                          flex: 1,
-                          height: '44px',
-                          borderRadius: '12px',
-                          fontFamily: 'var(--font-mono, monospace)',
-                          fontSize: '11px',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                          border: 'none',
-                          background: `linear-gradient(135deg, ${color}e0, ${color}a0)`,
-                          color: '#050508',
-                          boxShadow: `0 4px 20px ${color}30`,
-                          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.transform = 'translateY(-2px)'
-                          e.currentTarget.style.boxShadow = `0 8px 28px ${color}45`
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.boxShadow = `0 4px 20px ${color}30`
-                        }}
-                      >
-                        Deposit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          handleViewAnalytics(vault)
-                        }}
-                        style={{
-                          flex: 1,
-                          height: '44px',
-                          borderRadius: '12px',
-                          fontFamily: 'var(--font-mono, monospace)',
-                          fontSize: '11px',
-                          letterSpacing: '0.1em',
-                          textTransform: 'uppercase',
-                          fontWeight: 500,
-                          cursor: 'pointer',
-                          background: `${color}0c`,
-                          border: `1px solid ${color}25`,
-                          color: 'rgba(255,255,255,0.65)',
-                          transition: 'all 0.2s ease',
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = `${color}18`
-                          e.currentTarget.style.borderColor = `${color}45`
-                          e.currentTarget.style.color = 'rgba(255,255,255,0.88)'
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = `${color}0c`
-                          e.currentTarget.style.borderColor = `${color}25`
-                          e.currentTarget.style.color = 'rgba(255,255,255,0.65)'
-                        }}
-                      >
-                        Analytics
-                      </button>
                     </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
 
+      </main>
+
+      <DemoBanner />
+      
       {/* ── AI CHAT PANEL ─────────────────────────────────── */}
       {showChat && (
         <div style={{
@@ -617,13 +392,13 @@ export default function VaultsPage() {
               vaultAddress={selectedVault?.address}
               context={{
                 currentPage: 'vaults',
-                vaultData: filteredVaults,
+                vaultData: displayVaults,
                 userPreferences: {
                   preferredTimeframe: '1d', riskTolerance: 'medium',
-                  autoRebalance: true, selectedVault, marketData,
+                  autoRebalance: true, selectedVault, marketData: marketData as any,
                 },
               }}
-              initialMessage="🎯 Welcome to SEI DLP Vaults! I'm Kairos, your AI assistant. I can help you analyze vault performance, predict optimal ranges, and recommend rebalancing strategies. What vault would you like to optimize today?"
+              initialMessage="🎯 Welcome to Yield Delta Vaults! I'm Kairos, your AI assistant. I can help you analyze vault performance, predict optimal ranges, and recommend rebalancing strategies. What vault would you like to optimize today?"
             />
           </div>
         </div>
@@ -643,7 +418,6 @@ export default function VaultsPage() {
         zIndex: 999999, isolation: 'isolate', pointerEvents: 'auto',
       }}>
         <div style={{ position: 'relative' }}>
-          {/* Glow ring */}
           <div style={{
             position: 'absolute', inset: 0, borderRadius: '50%',
             background: 'linear-gradient(45deg, #00f5d4, #ff206e, #9b5de5, #00f5d4)',

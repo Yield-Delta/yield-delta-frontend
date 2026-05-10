@@ -770,39 +770,49 @@ const ChartsPage = () => {
             <div className="relative group">
               <button
                 onClick={() => setShowTokenDropdown(!showTokenDropdown)}
-                className="flex items-center gap-6 hover:opacity-80 transition-all"
+                className="flex items-center gap-8 group/trigger transition-all active:scale-[0.98]"
               >
                 <div className="flex flex-col">
-                  <div className="flex items-baseline gap-3">
-                    <h1 className={`text-6xl md:text-8xl font-black tracking-tighter leading-none font-display ${styles.glitchText}`} style={{ color: selectedToken.color }}>
+                  <div className="flex items-baseline gap-4">
+                    <h1 className={`text-6xl md:text-[8.5rem] font-black tracking-tighter leading-none font-display ${styles.glitchText}`} style={{ color: selectedToken.color }}>
                       {selectedToken.symbol}
                     </h1>
-                    <span className="text-3xl md:text-4xl text-slate-500 font-bold font-display">/USD</span>
+                    <span className="text-4xl md:text-5xl text-slate-600 font-black font-display opacity-50">/USD</span>
                   </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <div className="h-px w-8 bg-slate-700" />
-                    <span className="text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em]">{selectedToken.name}</span>
+                  <div className="flex items-center gap-4 mt-6">
+                    <div className="h-[2px] w-12 bg-gradient-to-r from-[#00f5d4] to-transparent opacity-60" />
+                    <span className="text-[11px] font-mono font-black text-[#00f5d4] uppercase tracking-[0.5em]">{selectedToken.name}</span>
                   </div>
                 </div>
-                <div className="bg-slate-900/80 p-3 rounded-sm border border-slate-700/50 group-hover:border-[#00f5d4]/50 transition-colors shadow-xl">
-                  <ChevronDown className={`w-6 h-6 text-slate-400 transition-transform duration-300 ${showTokenDropdown ? 'rotate-180 text-[#00f5d4]' : ''}`} />
+                
+                {/* Advanced Tech Dropdown Trigger */}
+                <div className="relative p-5 rounded-sm border-2 border-slate-800 bg-[#0a0f1e]/90 shadow-[0_0_30px_rgba(0,0,0,0.6)] group-hover/trigger:border-[#00f5d4]/50 transition-all duration-300">
+                  <div className="absolute inset-0 bg-[#00f5d4]/5 opacity-0 group-hover/trigger:opacity-100 transition-opacity" />
+                  <ChevronDown className={`w-8 h-8 text-slate-400 transition-all duration-500 ${showTokenDropdown ? 'rotate-180 text-[#00f5d4]' : 'group-hover:text-white'}`} />
+                  
+                  {/* Technical frame corners */}
+                  <div className="absolute -top-[2px] -left-[2px] w-3 h-3 border-t-2 border-l-2 border-[#00f5d4] opacity-0 group-hover/trigger:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute -bottom-[2px] -right-[2px] w-3 h-3 border-b-2 border-r-2 border-[#00f5d4] opacity-0 group-hover/trigger:opacity-100 transition-opacity duration-500" />
                 </div>
               </button>
 
               <AnimatePresence>
                 {showTokenDropdown && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    initial={{ opacity: 0, y: 15, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                    className="absolute top-full left-0 mt-4 w-80 bg-[#0a0f1e]/95 backdrop-blur-2xl border-2 border-slate-800 rounded-sm p-3 z-50 shadow-2xl overflow-hidden"
+                    exit={{ opacity: 0, y: 15, scale: 0.96 }}
+                    className="absolute top-full left-0 mt-8 w-[24rem] bg-[#0a1428]/98 backdrop-blur-3xl border-2 border-slate-700 p-5 z-50 shadow-[0_40px_120px_rgba(0,0,0,0.9)] overflow-hidden"
                   >
                     <CornerBrackets />
-                    <div className="px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-mono border-b border-slate-800/50 mb-2 flex justify-between">
-                      <span>Select_Quantum_Node</span>
-                      <span>v2.0.4</span>
+                    <div className="px-5 py-3 text-[11px] uppercase tracking-[0.3em] text-[#00f5d4] font-mono border-b border-slate-700/50 mb-5 flex justify-between items-center bg-[#00f5d4]/5 rounded-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-[#00f5d4] animate-pulse shadow-[0_0_8px_#00f5d4]" />
+                        <span className="font-black">QUANTUM_NODE_LINK</span>
+                      </div>
+                      <span className="opacity-40 font-black">V2.8.4</span>
                     </div>
-                    <div className="grid gap-1">
+                    <div className="grid gap-2">
                       {TOKENS.map(token => (
                         <button
                           key={token.symbol}
@@ -810,22 +820,28 @@ const ChartsPage = () => {
                             setSelectedToken(token);
                             setShowTokenDropdown(false);
                           }}
-                          className={`w-full text-left px-4 py-3 rounded-sm transition-all flex justify-between items-center group/item ${
-                            selectedToken.symbol === token.symbol ? 'bg-slate-800/80' : 'hover:bg-slate-800/40'
+                          className={`w-full text-left px-6 py-5 rounded-sm transition-all flex justify-between items-center group/item relative overflow-hidden border-2 ${
+                            selectedToken.symbol === token.symbol 
+                              ? 'bg-[#00f5d4]/10 border-[#00f5d4]/40 shadow-[inset_0_0_20px_rgba(0,245,212,0.05)]' 
+                              : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/10'
                           }`}
                         >
-                          <div className="flex flex-col">
-                            <span className="font-bold text-xl font-display tracking-tight" style={{ color: token.color }}>{token.symbol}</span>
-                            <span className="text-[9px] text-slate-500 font-mono uppercase">{token.name}</span>
+                          <div className="flex flex-col relative z-10">
+                            <span className="font-black text-3xl font-display tracking-tighter" style={{ color: token.color }}>{token.symbol}</span>
+                            <span className="text-[11px] text-slate-500 font-mono font-black uppercase tracking-widest">{token.name}</span>
                           </div>
                           {selectedToken.symbol === token.symbol && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[8px] font-mono text-[#00f5d4]">ACTIVE</span>
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#00f5d4] shadow-[0_0_8px_#00f5d4]" />
+                            <div className="relative z-10 flex items-center gap-4">
+                              <span className="text-[10px] font-mono font-black text-[#00f5d4] tracking-[0.2em]">CONNECTED</span>
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#00f5d4] shadow-[0_0_15px_#00f5d4]" />
                             </div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-[100%] group-hover/item:translate-x-[200%] transition-transform duration-1000 ease-in-out" />
                         </button>
                       ))}
+                    </div>
+                    <div className="mt-5 pt-4 border-t border-slate-800 flex justify-center">
+                       <span className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] font-black">ENCRYPTED_DYNAMIC_CHANNEL</span>
                     </div>
                   </motion.div>
                 )}
@@ -834,27 +850,27 @@ const ChartsPage = () => {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-4 bg-gradient-to-r from-[#00f5d4]/10 to-[#9b5de5]/10 blur-xl opacity-50" />
-            <GlassCard className="!p-0 border-2 border-slate-800/50 bg-[#0a0f1e]/60 backdrop-blur-xl relative overflow-hidden group">
+            <div className="absolute -inset-4 bg-gradient-to-r from-[#00f5d4]/15 to-[#9b5de5]/15 blur-2xl opacity-60" />
+            <GlassCard className="!p-0 border-2 border-slate-800 bg-[#0a0f1e]/90 backdrop-blur-2xl relative overflow-hidden group shadow-2xl">
               <CornerBrackets />
-              <div className="flex items-center p-8 gap-10">
-                <div className="flex flex-col items-start gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1 h-3 bg-[#00f5d4]" />
-                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em]">Price_Ticker</div>
+              <div className="flex items-center p-12 gap-16">
+                <div className="flex flex-col items-start gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-1.5 h-5 bg-[#00f5d4]" />
+                    <div className="text-[11px] text-slate-400 font-mono font-black uppercase tracking-[0.4em]">Price_Ticker</div>
                   </div>
-                  <div className="text-5xl md:text-6xl font-mono font-bold tracking-tighter text-white group-hover:text-[#00f5d4] transition-colors">
-                    <span className="text-slate-500">$</span>{currentPrice.toFixed(4)}
+                  <div className="text-6xl md:text-8xl font-mono font-black tracking-tighter text-white group-hover:text-[#00f5d4] transition-colors duration-500">
+                    <span className="text-slate-600">$</span>{currentPrice.toFixed(4)}
                   </div>
                 </div>
-                <div className="h-16 w-px bg-slate-800" />
-                <div className="flex flex-col items-start gap-2">
-                  <div className="text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em]">Volatility_Index</div>
-                  <div className={`flex items-center gap-3 text-3xl font-mono font-bold ${priceChange >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
-                    <div className={`p-1.5 rounded-sm border ${priceChange >= 0 ? 'bg-[#10b981]/10 border-[#10b981]/30' : 'bg-[#ef4444]/10 border-[#ef4444]/30'}`}>
-                      {priceChange >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingUp className="w-6 h-6 rotate-180" />}
+                <div className="h-24 w-[2px] bg-slate-800/80" />
+                <div className="flex flex-col items-start gap-4">
+                  <div className="text-[11px] text-slate-400 font-mono font-black uppercase tracking-[0.4em]">Volatility_Index</div>
+                  <div className={`flex items-center gap-5 text-4xl font-mono font-black ${priceChange >= 0 ? 'text-[#10b981]' : 'text-[#ef4444]'}`}>
+                    <div className={`p-3 rounded-sm border-2 ${priceChange >= 0 ? 'bg-[#10b981]/15 border-[#10b981]/40' : 'bg-[#ef4444]/15 border-[#ef4444]/40'} shadow-xl`}>
+                      {priceChange >= 0 ? <TrendingUp className="w-8 h-8" /> : <TrendingUp className="w-8 h-8 rotate-180" />}
                     </div>
-                    {Math.abs(priceChangePercent).toFixed(2)}%
+                    <span className="text-5xl">{Math.abs(priceChangePercent).toFixed(2)}%</span>
                   </div>
                 </div>
               </div>
@@ -863,72 +879,102 @@ const ChartsPage = () => {
         </motion.header>
 
         {/* Action Bar */}
-        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          {/* Timeframe Selector */}
-          <div className="flex p-1 bg-slate-900/80 backdrop-blur-md rounded-sm border-2 border-slate-800/50 shadow-2xl relative">
-            <div className="absolute -top-2 left-4 px-2 bg-[#020617] text-[8px] font-mono text-slate-500 uppercase">T_Interval</div>
+        <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10 mb-16">
+          {/* Timeframe Selector - Tactile Terminal Design */}
+          <div className="flex p-2 bg-[#0a0f1e]/80 backdrop-blur-2xl rounded-sm border-2 border-slate-800 shadow-[0_15px_50px_rgba(0,0,0,0.5)] relative">
+            <div className="absolute -top-[12px] left-8 px-4 bg-[#020617] border border-slate-800 text-[10px] font-mono font-black text-slate-500 uppercase tracking-widest rounded-sm shadow-xl">T_Interval_Matrix</div>
             {TIMEFRAMES.map(tf => (
               <button
                 key={tf.value}
                 onClick={() => setSelectedTimeframe(tf)}
-                className={`px-6 py-2 rounded-sm text-xs font-mono font-bold transition-all relative overflow-hidden group ${
+                className={`px-10 py-3 rounded-sm text-[13px] font-mono font-black transition-all relative overflow-hidden group/tf ${
                   selectedTimeframe.value === tf.value
                     ? 'text-black'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-500 hover:text-[#00f5d4]'
                 }`}
               >
                 {selectedTimeframe.value === tf.value && (
                   <motion.div 
                     layoutId="tf-bg"
-                    className="absolute inset-0 bg-[#00f5d4]"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    className="absolute inset-0 bg-[#00f5d4] shadow-[0_0_25px_rgba(0,245,212,0.5)]"
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.5 }}
                   />
                 )}
                 <span className="relative z-10">{tf.label}</span>
+                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-[#00f5d4]/20 opacity-0 group-hover/tf:opacity-100 transition-opacity" />
               </button>
             ))}
           </div>
 
-          {/* Indicators & Toggles */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 border border-slate-800 rounded-sm">
-              <Settings2 className="w-3.5 h-3.5 text-slate-500" />
-              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.2em]">Terminal_Config</span>
+          {/* Indicators & Toggles - Tactile Switch Design */}
+          <div className="flex flex-wrap items-center gap-8">
+            <div className="flex items-center gap-4 px-5 py-2.5 bg-slate-900/90 border-l-4 border-[#00f5d4] rounded-sm shadow-2xl">
+              <div className="relative">
+                <Settings2 className="w-5 h-5 text-[#00f5d4]" />
+                <div className="absolute inset-0 bg-[#00f5d4]/20 blur-md animate-pulse" />
+              </div>
+              <span className="text-[11px] font-mono font-black text-slate-400 uppercase tracking-[0.4em]">Terminal_Config</span>
             </div>
-            <div className="flex flex-wrap gap-2">
+            
+            <div className="flex flex-wrap gap-3">
               {indicators.map(indicator => (
                 <button
                   key={indicator.name}
                   onClick={() => toggleIndicator(indicator.name)}
-                  className={`px-4 py-2 text-[10px] font-mono rounded-sm border transition-all flex items-center gap-2 relative group overflow-hidden ${
+                  className={`px-5 py-3 rounded-sm text-[11px] font-mono font-black uppercase tracking-[0.2em] transition-all border-2 relative overflow-hidden group/ind ${
                     indicator.enabled
-                      ? 'bg-slate-800/80 text-white border-slate-600'
-                      : 'border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-400'
+                      ? 'text-white shadow-[0_0_25px_rgba(255,255,255,0.05)]'
+                      : 'bg-slate-900/40 text-slate-600 border-slate-800 hover:border-slate-700 hover:text-slate-400'
                   }`}
+                  style={{ 
+                    borderColor: indicator.enabled ? `${indicator.color}60` : undefined,
+                    backgroundColor: indicator.enabled ? `${indicator.color}15` : undefined
+                  }}
                 >
-                  <div className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full bg-[#00f5d4] transition-all duration-300" style={{ backgroundColor: indicator.color }} />
-                  <div className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)]" style={{ backgroundColor: indicator.enabled ? indicator.color : '#334155' }} />
-                  {indicator.name}
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className="w-2 h-2 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(255,255,255,0.2)]" style={{ 
+                      backgroundColor: indicator.enabled ? indicator.color : '#334155',
+                      boxShadow: indicator.enabled ? `0 0 15px ${indicator.color}` : 'none'
+                    }} />
+                    {indicator.name}
+                  </div>
+                  
+                  {/* Subtle active state detail */}
+                  {indicator.enabled && (
+                    <div className="absolute top-0 right-0 w-2 h-2 rounded-bl-sm" style={{ backgroundColor: indicator.color }} />
+                  )}
+                  
+                  {/* Hover effect light */}
+                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/ind:opacity-100 transition-opacity" />
                 </button>
               ))}
-              <div className="w-px h-8 bg-slate-800 mx-1" />
+              
+              <div className="w-[2px] h-10 bg-slate-800/80 mx-2" />
+              
               <button
                 onClick={() => setShowRSI(!showRSI)}
-                className={`px-4 py-2 text-[10px] font-mono rounded-sm border transition-all relative overflow-hidden ${
-                  showRSI ? 'border-[#9b5de5]/50 text-[#9b5de5] bg-[#9b5de5]/10' : 'border-slate-800 text-slate-500'
+                className={`px-5 py-3 text-[11px] font-mono font-black uppercase tracking-[0.2em] rounded-sm border-2 transition-all relative overflow-hidden group/rsi ${
+                  showRSI ? 'border-[#9b5de5]/60 text-[#9b5de5] bg-[#9b5de5]/15 shadow-[0_0_20px_rgba(155,93,229,0.15)]' : 'border-slate-800 text-slate-600 bg-slate-900/40'
                 }`}
               >
-                {showRSI && <div className="absolute top-0 right-0 w-1 h-1 bg-[#9b5de5] animate-pulse" />}
-                RSI_INDEX
+                <div className="relative z-10 flex items-center gap-3">
+                   {showRSI && <div className="w-1.5 h-1.5 rounded-full bg-[#9b5de5] shadow-[0_0_10px_#9b5de5] animate-pulse" />}
+                   RSI_INDEX
+                </div>
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/rsi:opacity-100 transition-opacity" />
               </button>
+              
               <button
                 onClick={() => setShowMACD(!showMACD)}
-                className={`px-4 py-2 text-[10px] font-mono rounded-sm border transition-all relative overflow-hidden ${
-                  showMACD ? 'border-[#00f5d4]/50 text-[#00f5d4] bg-[#00f5d4]/10' : 'border-slate-800 text-slate-500'
+                className={`px-5 py-3 text-[11px] font-mono font-black uppercase tracking-[0.2em] rounded-sm border-2 transition-all relative overflow-hidden group/macd ${
+                  showMACD ? 'border-[#00f5d4]/60 text-[#00f5d4] bg-[#00f5d4]/15 shadow-[0_0_20px_rgba(0,245,212,0.15)]' : 'border-slate-800 text-slate-600 bg-slate-900/40'
                 }`}
               >
-                {showMACD && <div className="absolute top-0 right-0 w-1 h-1 bg-[#00f5d4] animate-pulse" />}
-                MACD_FLOW
+                <div className="relative z-10 flex items-center gap-3">
+                   {showMACD && <div className="w-1.5 h-1.5 rounded-full bg-[#00f5d4] shadow-[0_0_10px_#00f5d4] animate-pulse" />}
+                   MACD_FLOW
+                </div>
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/macd:opacity-100 transition-opacity" />
               </button>
             </div>
           </div>
