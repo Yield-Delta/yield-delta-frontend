@@ -133,6 +133,7 @@ export function ChainSelector({
             display: 'block',
             border: '1px solid rgba(255,255,255,0.12)',
           }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={activeMetadata.iconUrl}
               alt=""
@@ -380,6 +381,7 @@ function ChainRow({
           flexShrink: 0,
           border: `1px solid ${isActive ? 'rgba(0,245,212,0.25)' : 'rgba(255,255,255,0.07)'}`,
         }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={chain.iconUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </div>
       ) : (

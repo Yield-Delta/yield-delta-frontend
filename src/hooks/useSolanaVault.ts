@@ -97,6 +97,7 @@ export function useSolanaVault(): UseSolanaVaultReturn {
   }, [walletAddress, isWalletConnected])
 
   const getUserPosition = useCallback(async (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _vaultAddress: string
   ): Promise<{ shares: string; value: string }> => {
     if (!walletAddress) {

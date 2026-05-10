@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Loader2, ArrowRight, Info, Shield, Coins, CheckCircle2 } from 'lucide-react'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
-import { useMultiChainStore } from '@/stores/multiChainStore'
 
 interface SolanaVaultData {
   address: string
