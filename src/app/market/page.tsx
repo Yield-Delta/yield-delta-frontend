@@ -141,7 +141,7 @@ const MarketPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.25, duration: 0.35, ease: [0.22, 1, 0.36, 1] as const }}
           style={{
             background: 'rgba(255,255,255,0.025)',
             border: '1px solid rgba(255,255,255,0.07)',

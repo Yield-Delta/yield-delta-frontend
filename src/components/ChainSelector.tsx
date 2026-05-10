@@ -174,7 +174,7 @@ export function ChainSelector({
         {/* Chevron */}
         <motion.span
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }}
           style={{ display: 'flex', alignItems: 'center' }}
         >
           <ChevronDown
