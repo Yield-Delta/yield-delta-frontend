@@ -555,6 +555,11 @@ export function useEnhancedVaultDeposit(vaultData: {
     isPending,
     isSuccess,
     isError,
+    isConfirming,
+    isConfirmed,
+    isReceiptError,
+    receiptError,
+    receipt,
 
     // Balance info
     userBalance,

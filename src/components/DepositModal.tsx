@@ -98,6 +98,23 @@ const getVaultColor = (strategy: string) => {
   return colors[strategy as keyof typeof colors] || '#00f5d4'
 }
 
+const restoreBodyScroll = () => {
+  const scrollY = document.body.dataset.scrollY;
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  delete document.body.dataset.scrollY;
+
+  if (!scrollY) return;
+
+  try {
+    window.scrollTo(0, parseInt(scrollY, 10));
+  } catch (error) {
+    console.warn('[DepositModal] Unable to restore scroll position:', error);
+  }
+}
+
 export default function DepositModal({ vault, isOpen, onClose, onSuccess }: DepositModalProps) {
   const [depositAmount, setDepositAmount] = useState('');
   const [transactionStatus, setTransactionStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
@@ -248,18 +265,18 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
 
   // Watch for transaction pending state
   useEffect(() => {
-    if (depositMutation.isPending && transactionStatus !== 'pending') {
+    if ((depositMutation.isPending || depositMutation.isConfirming) && transactionStatus !== 'pending') {
       console.log('[DepositModal] Transaction pending...');
       setTransactionStatus('pending');
       setTransactionHash(null);
       setErrorMessage(null);
     }
-  }, [depositMutation.isPending, transactionStatus]);
+  }, [depositMutation.isPending, depositMutation.isConfirming, transactionStatus]);
 
-  // Watch for transaction success
+  // Watch for confirmed transaction success
   useEffect(() => {
-    if (depositMutation.isSuccess && depositMutation.hash && transactionStatus !== 'success') {
-      console.log('[DepositModal] Transaction successful:', depositMutation.hash);
+    if (depositMutation.isConfirmed && depositMutation.hash && transactionStatus !== 'success') {
+      console.log('[DepositModal] Transaction confirmed:', depositMutation.hash);
       setTransactionHash(depositMutation.hash);
       setTransactionStatus('success');
 
@@ -293,15 +310,26 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
         handleClose();
       }, 3000);
     }
-  }, [depositMutation, transactionStatus, vault, router, onSuccess, handleClose]);
+  }, [
+    depositMutation.isConfirmed,
+    depositMutation.hash,
+    depositMutation.invalidateQueries,
+    depositMutation.userBalance,
+    transactionStatus,
+    vault,
+    router,
+    onSuccess,
+    handleClose,
+  ]);
 
   // Watch for transaction errors
   useEffect(() => {
-    if (depositMutation.isError && depositMutation.error && transactionStatus !== 'error') {
-      console.error('[DepositModal] Transaction failed:', depositMutation.error);
+    const activeError = depositMutation.isError ? depositMutation.error : depositMutation.receiptError;
+    if ((depositMutation.isError || depositMutation.isReceiptError) && activeError && transactionStatus !== 'error') {
+      console.error('[DepositModal] Transaction failed:', activeError);
 
       // Handle specific error cases
-      const error = depositMutation.error;
+      const error = activeError;
       let errorMessage = 'Unknown error occurred';
 
       if (error.message.includes('user rejected transaction')) {
@@ -319,7 +347,13 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       setErrorMessage(errorMessage);
       setTransactionStatus('error');
     }
-  }, [depositMutation.isError, depositMutation.error, transactionStatus]);
+  }, [
+    depositMutation.isError,
+    depositMutation.isReceiptError,
+    depositMutation.error,
+    depositMutation.receiptError,
+    transactionStatus,
+  ]);
 
   // Add effect to track when the modal should be opening + handle body scroll
   useEffect(() => {
@@ -339,27 +373,12 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       }
     } else {
       console.log('🛑 [DepositModal] Modal closed');
-      // Unlock body scroll and restore position
-      const scrollY = document.body.dataset.scrollY;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY));
-      }
+      restoreBodyScroll();
     }
 
     // Cleanup on unmount
     return () => {
-      const scrollY = document.body.dataset.scrollY;
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY));
-      }
+      restoreBodyScroll();
     };
   }, [isOpen, vault]);
 
@@ -535,7 +554,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   
   const tokenSymbol = selectedToken || primaryToken?.symbol || 'SEI';
   const projectedDaily = isValidAmount ? (parseFloat(depositAmount) * vault.apy / 365) : 0;
-  const actionDisabled = !isValidAmount || depositMutation.isPending || transactionStatus === 'pending' || (needsApproval && !isApprovalConfirmed);
+  const actionDisabled = !isValidAmount || depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending' || (needsApproval && !isApprovalConfirmed);
 
   return (
     <div
@@ -623,7 +642,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
 
             <button
               onClick={handleClose}
-              disabled={depositMutation.isPending || transactionStatus === 'pending'}
+              disabled={depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending'}
               aria-label="Close deposit modal"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -730,7 +749,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
               {transactionStatus === 'pending' && (
                 <div className="flex items-center gap-3 text-sm font-semibold text-white">
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>{isApproving || isApprovalConfirming ? 'Approval is being processed...' : 'Transaction is being processed...'}</span>
+                  <span>{isApproving || isApprovalConfirming ? 'Approval is being processed...' : depositMutation.isConfirming ? 'Waiting for confirmation...' : 'Transaction is being processed...'}</span>
                 </div>
               )}
 
@@ -759,7 +778,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleClose}
-              disabled={depositMutation.isPending || transactionStatus === 'pending'}
+              disabled={depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending'}
               className="min-h-12 rounded-2xl border border-white/12 bg-white/[0.05] font-bold text-white/72 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               {transactionStatus === 'success' ? 'Close' : 'Cancel'}
@@ -790,10 +809,10 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
                 className="flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
                 style={{ background: `linear-gradient(135deg, ${vaultColor}, #10b981)`, boxShadow: `0 16px 40px ${vaultColor}32` }}
               >
-                {depositMutation.isPending || transactionStatus === 'pending' ? (
+                {depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending' ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Processing...
+                    {depositMutation.isConfirming ? 'Confirming...' : 'Processing...'}
                   </>
                 ) : transactionStatus === 'success' ? (
                   <>
