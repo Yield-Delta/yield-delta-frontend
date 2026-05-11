@@ -149,15 +149,22 @@ export default function VaultsPage() {
   const vaultCardsRef = useRef<HTMLDivElement>(null)
 
   const { vaults, isLoading: isVaultsLoading } = useVaultStore()
-  const { data: marketData, isLoading: isMarketLoading } = useSeiMarketData()
-  const { totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD()
-  const { getVaultTVL } = useVaultTVL()
+  const { data: marketData } = useSeiMarketData()
+  
+  const vaultAddresses = useMemo(() => vaults.map(v => v.address), [vaults])
+  const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
+  const { formattedUSD: totalTVLInUSD, isLoading: pricesLoading } = useTotalTVLInUSD(vaults, tvlMap)
+  const tvlUSDLoading = tvlLoading || pricesLoading
+
+  const getVaultTVL = useCallback((vault: VaultData) => {
+    return tvlMap.get(vault.address.toLowerCase()) || 0
+  }, [tvlMap])
 
   const [activeFilter, setActiveFilter] = useState('all')
   const [showChat, setShowChat] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [depositVault, setDepositVault] = useState<VaultData | null>(null)
-  const [selectedVault, setSelectedVault] = useState<VaultData | null>(null)
+  const [selectedVault] = useState<VaultData | null>(null)
 
   const displayVaults = useMemo(() => {
     if (activeFilter === 'all') return vaults
