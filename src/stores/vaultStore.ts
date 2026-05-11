@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { devtools, subscribeWithSelector } from 'zustand/middleware'
+import { ChainId } from '@/types/chain'
 
 export interface VaultData {
   address: string
@@ -11,7 +12,7 @@ export interface VaultData {
   tickSpacing: number
   tvl: number
   apy: number
-  chainId: number
+  chainId: number | ChainId
   active: boolean
   performance: {
     totalReturn: number
