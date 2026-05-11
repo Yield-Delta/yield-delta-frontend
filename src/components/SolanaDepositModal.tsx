@@ -1,11 +1,20 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, ArrowRight, Info, Shield, TrendingUp, Coins, Zap, CheckCircle2 } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  Coins,
+  Loader2,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+  X,
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
-import { useMultiChainStore } from '@/stores/multiChainStore'
-import { ChainId, ChainType } from '@/types/chain'
 
 interface SolanaVaultData {
   address: string
@@ -25,11 +34,20 @@ interface SolanaDepositModalProps {
   onSuccess: (txSignature: string) => void
 }
 
+const SOL_PRICE_USD = 100
+const QUICK_AMOUNTS = [0.25, 0.5, 0.75, 1]
+
 const formatCurrency = (amount: number) => {
   if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`
   if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K`
   return `${amount.toFixed(0)}`
 }
+
+const formatStrategy = (strategy: string) => (
+  strategy
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+)
 
 const getRiskLevel = (apy: number): 'Low' | 'Medium' | 'High' => {
   const apyPercentage = apy * 100
@@ -46,6 +64,13 @@ const getVaultColor = (strategy: string) => {
     margin: '#ff6b6b',
     leveraged: '#ffd93d',
     staked_sol: '#8b5cf6',
+    stablecoin_lending: '#00d4ff',
+    sol_staking: '#14f195',
+    lp_auto_compound: '#9945ff',
+    volatility_rebalancing: '#f59e0b',
+    delta_neutral: '#22d3ee',
+    ai_meta_vault: '#ff206e',
+    experimental_sandbox: '#ff6b6b',
   }
   return colors[strategy] || '#9945ff'
 }
@@ -64,11 +89,31 @@ export default function SolanaDepositModal({
   const [txSignature, setTxSignature] = useState<string | null>(null)
 
   const { address: walletAddress, isConnected: isWalletConnected, balance } = useSolanaWallet()
-  const { solana } = useMultiChainStore()
+
+  const vaultColor = vault ? getVaultColor(vault.strategy) : '#9945ff'
+  const riskLevel = vault ? getRiskLevel(vault.apy) : 'Medium'
+  const depositToken = vault?.depositToken || 'SOL'
+  const numericBalance = Number.parseFloat(balance || '0')
+  const numericAmount = Number.parseFloat(depositAmount || '0')
+  const maxAmount = Math.max(0, numericBalance - 0.01)
+  const isValidAmount = Number.isFinite(numericAmount) && numericAmount > 0
+  const exceedsBalance = isWalletConnected && isValidAmount && numericAmount > maxAmount
+  const canDeposit = isValidAmount && !exceedsBalance && transactionStatus !== 'pending' && isWalletConnected
+
+  const projectedValue = useMemo(() => numericAmount * SOL_PRICE_USD, [numericAmount])
+  const projectedDailyYield = useMemo(() => {
+    if (!vault || !isValidAmount) return 0
+    return (projectedValue * vault.apy) / 365
+  }, [isValidAmount, projectedValue, vault])
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
 
   useEffect(() => {
     if (isOpen) {
@@ -80,12 +125,8 @@ export default function SolanaDepositModal({
     }
   }, [isOpen])
 
-  const isValidAmount = depositAmount && parseFloat(depositAmount) > 0
-  const vaultColor = vault ? getVaultColor(vault.strategy) : '#9945ff'
-  const riskLevel = vault ? getRiskLevel(vault.apy) : 'Medium'
-
   const handleDeposit = async () => {
-    if (!isValidAmount || !walletAddress || !vault) return
+    if (!canDeposit || !walletAddress || !vault) return
 
     setTransactionStatus('pending')
     setErrorMessage(null)
@@ -98,233 +139,255 @@ export default function SolanaDepositModal({
       setTransactionStatus('success')
       setShowSuccess(true)
       onSuccess(mockSignature)
-    } catch (err) {
+    } catch {
       setTransactionStatus('error')
       setErrorMessage('Transaction failed. Please try again.')
     }
   }
 
-  const handleMax = () => {
-    if (balance) {
-      const maxAmount = Math.max(0, parseFloat(balance) - 0.01)
-      setDepositAmount(maxAmount.toFixed(4))
-    }
+  const setAmountFromRatio = (ratio: number) => {
+    if (!Number.isFinite(maxAmount) || maxAmount <= 0) return
+    setDepositAmount((maxAmount * ratio).toFixed(4))
   }
 
-  if (!mounted || !isOpen) return null
+  if (!mounted) return null
 
   const modalContent = (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div 
-        className="absolute inset-0 bg-black/70 backdrop-blur-md"
-        onClick={onClose}
-      />
-      
-      <div 
-        className="relative w-full max-w-lg mx-4 rounded-3xl overflow-hidden"
-        style={{
-          background: 'linear-gradient(145deg, rgba(20, 10, 40, 0.95), rgba(30, 15, 50, 0.98))',
-          border: '1px solid rgba(153, 69, 255, 0.3)',
-          boxShadow: `0 0 60px rgba(153, 69, 255, 0.2), 0 25px 50px rgba(0, 0, 0, 0.5)`,
-        }}
-      >
-        <div 
-          className="absolute top-0 left-0 right-0 h-1"
-          style={{
-            background: `linear-gradient(90deg, ${vaultColor}, #14f195)`,
-          }}
-        />
-        
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${vaultColor}40, ${vaultColor}20)`,
-                  border: `1px solid ${vaultColor}50`,
-                }}
-              >
-                <Coins className="w-6 h-6" style={{ color: vaultColor }} />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
-                  Deposit to {vault?.name || 'Vault'}
-                </h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span 
-                    className="px-2 py-0.5 text-xs font-medium rounded-full"
-                    style={{ 
-                      background: `${vaultColor}20`, 
-                      color: vaultColor,
-                      border: `1px solid ${vaultColor}30`
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[999999] flex items-end justify-center px-0 sm:items-center sm:px-4">
+          <motion.div
+            className="absolute inset-0 bg-[#02030a]/85 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+          />
+
+          <motion.div
+            className="relative w-full max-h-[94dvh] overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] shadow-[0_-24px_80px_rgba(0,0,0,0.7)] sm:max-w-[560px] sm:rounded-[28px] sm:shadow-[0_32px_120px_rgba(0,0,0,0.82)]"
+            initial={{ opacity: 0, y: 44, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 28, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 32, mass: 0.9 }}
+            style={{
+              boxShadow: `0 0 0 1px ${vaultColor}24, 0 30px 120px rgba(0,0,0,0.86), 0 0 70px ${vaultColor}24`,
+            }}
+          >
+            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${vaultColor}, #14f195, transparent)` }} />
+            <div className="absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full blur-3xl" style={{ background: `${vaultColor}28` }} />
+            <div className="absolute inset-0 pointer-events-none opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
+
+            <div className="relative max-h-[94dvh] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:py-6">
+              <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-white/20 sm:hidden" />
+
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
+                    style={{
+                      background: `linear-gradient(135deg, ${vaultColor}2e, rgba(20,241,149,0.08))`,
+                      borderColor: `${vaultColor}45`,
+                      boxShadow: `0 16px 38px ${vaultColor}20`,
                     }}
                   >
-                    Solana
-                  </span>
-                  <span 
-                    className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                      riskLevel === 'Low' ? 'bg-green-500/20 text-green-400' :
-                      riskLevel === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-red-500/20 text-red-400'
-                    }`}
-                  >
-                    {riskLevel} Risk
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 transition-all flex items-center justify-center text-white/60 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-
-          {vault && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div 
-                className="p-4 rounded-2xl"
-                style={{ background: 'rgba(153, 69, 255, 0.1)', border: '1px solid rgba(153, 69, 255, 0.2)' }}
-              >
-                <p className="text-xs text-white/50 mb-1">APY</p>
-                <p className="text-lg font-bold" style={{ color: vaultColor }}>
-                  {(vault.apy * 100).toFixed(1)}%
-                </p>
-              </div>
-              <div 
-                className="p-4 rounded-2xl"
-                style={{ background: 'rgba(20, 241, 149, 0.1)', border: '1px solid rgba(20, 241, 149, 0.2)' }}
-              >
-                <p className="text-xs text-white/50 mb-1">TVL</p>
-                <p className="text-lg font-bold text-white">
-                  ${formatCurrency(vault.tvl)}
-                </p>
-              </div>
-              <div 
-                className="p-4 rounded-2xl"
-                style={{ background: 'rgba(0, 212, 255, 0.1)', border: '1px solid rgba(0, 212, 255, 0.2)' }}
-              >
-                <p className="text-xs text-white/50 mb-1">Strategy</p>
-                <p className="text-sm font-medium text-white capitalize">
-                  {vault.strategy.replace('_', ' ')}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {!isWalletConnected ? (
-            <div 
-              className="p-6 rounded-2xl text-center mb-6"
-              style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.2)' }}
-            >
-              <Shield className="w-12 h-12 mx-auto mb-3 text-red-400" />
-              <p className="text-white font-medium mb-2">Wallet Not Connected</p>
-              <p className="text-white/60 text-sm">Please connect your Solana wallet to deposit</p>
-            </div>
-          ) : (
-            <>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-white/70 mb-2">
-                  Deposit Amount (SOL)
-                </label>
-                <div 
-                  className="relative rounded-2xl overflow-hidden"
-                  style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
-                >
-                  <input
-                    type="number"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full px-4 py-4 bg-transparent text-white text-xl font-medium placeholder-white/30 focus:outline-none"
-                    disabled={transactionStatus === 'pending'}
-                  />
-                  <button
-                    onClick={handleMax}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 text-sm font-medium rounded-lg transition-all"
-                    style={{ 
-                      background: `${vaultColor}20`, 
-                      color: vaultColor,
-                      border: `1px solid ${vaultColor}30`
-                    }}
-                  >
-                    MAX
-                  </button>
-                </div>
-                <div className="flex justify-between mt-2 text-sm">
-                  <span className="text-white/50">Balance: {balance || '0'} SOL</span>
-                  <span className="text-white/50">
-                    ≈ ${(parseFloat(depositAmount || '0') * 100).toFixed(2)} USD
-                  </span>
-                </div>
-              </div>
-
-              {errorMessage && (
-                <div 
-                  className="p-4 rounded-2xl mb-4 flex items-center gap-3"
-                  style={{ background: 'rgba(255, 107, 107, 0.1)', border: '1px solid rgba(255, 107, 107, 0.2)' }}
-                >
-                  <Info className="w-5 h-5 text-red-400 flex-shrink-0" />
-                  <p className="text-red-400 text-sm">{errorMessage}</p>
-                </div>
-              )}
-
-              {showSuccess && txSignature && (
-                <div 
-                  className="p-4 rounded-2xl mb-4 flex items-center gap-3"
-                  style={{ background: 'rgba(20, 241, 149, 0.1)', border: '1px solid rgba(20, 241, 149, 0.2)' }}
-                >
-                  <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-green-400 text-sm font-medium">Deposit Successful!</p>
-                    <p className="text-white/50 text-xs mt-0.5 truncate">{txSignature}</p>
+                    <Coins className="h-6 w-6" style={{ color: vaultColor }} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                        Solana Devnet
+                      </span>
+                      <span
+                        className="rounded-full border px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em]"
+                        style={{ borderColor: `${vaultColor}38`, color: vaultColor, background: `${vaultColor}16` }}
+                      >
+                        {riskLevel} Risk
+                      </span>
+                    </div>
+                    <h2 className="text-balance text-xl font-bold leading-tight text-white sm:text-2xl" style={{ fontFamily: 'var(--font-display)' }}>
+                      Deposit to {vault?.name || 'Solana Vault'}
+                    </h2>
+                    <p className="mt-1 text-sm text-white/45">
+                      {vault ? formatStrategy(vault.strategy) : 'AI routed Solana strategy'}
+                    </p>
                   </div>
                 </div>
+
+                <button
+                  onClick={onClose}
+                  aria-label="Close deposit modal"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:bg-white/10 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {vault && (
+                <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+                  <Metric label="APY" value={`${(vault.apy * 100).toFixed(1)}%`} color={vaultColor} />
+                  <Metric label="TVL" value={`$${formatCurrency(vault.tvl)}`} />
+                  <Metric label="Token" value={depositToken} />
+                </div>
               )}
 
-              <button
-                onClick={handleDeposit}
-                disabled={!isValidAmount || transactionStatus === 'pending' || !isWalletConnected}
-                className="w-full py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2"
-                style={{
-                  background: !isValidAmount || !isWalletConnected || transactionStatus === 'pending'
-                    ? 'rgba(153, 69, 255, 0.3)'
-                    : `linear-gradient(135deg, ${vaultColor}, #14f195)`,
-                  color: !isValidAmount || !isWalletConnected || transactionStatus === 'pending' ? 'white/50' : 'white',
-                  cursor: !isValidAmount || !isWalletConnected || transactionStatus === 'pending' ? 'not-allowed' : 'pointer',
-                  opacity: !isValidAmount || !isWalletConnected || transactionStatus === 'pending' ? 0.5 : 1,
-                }}
-              >
-                {transactionStatus === 'pending' ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Confirming...
-                  </>
-                ) : (
-                  <>
-                    {isWalletConnected ? 'Deposit Now' : 'Connect Wallet First'}
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </>
-          )}
+              {!isWalletConnected ? (
+                <div className="rounded-3xl border border-red-400/20 bg-red-500/10 p-5 text-center">
+                  <Wallet className="mx-auto mb-3 h-10 w-10 text-red-300" />
+                  <p className="font-semibold text-white">Wallet not connected</p>
+                  <p className="mt-1 text-sm text-white/55">Connect Phantom first, then come back to fund this vault.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3 text-sm">
+                      <span className="font-medium text-white/60">Amount</span>
+                      <span className="truncate text-right text-white/45">
+                        Balance {balance || '0'} {depositToken}
+                      </span>
+                    </div>
 
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-white/40 flex-shrink-0 mt-0.5" />
-              <p className="text-xs text-white/40">
-                Deposits will start earning yield immediately. 
-                View your positions in the dashboard.
-              </p>
+                    <div className="flex items-end gap-3">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="any"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="min-w-0 flex-1 bg-transparent text-4xl font-bold leading-none text-white outline-none placeholder:text-white/18 sm:text-5xl"
+                        style={{ fontFamily: 'var(--font-display)' }}
+                        disabled={transactionStatus === 'pending'}
+                      />
+                      <span
+                        className="mb-1 rounded-2xl border px-3 py-2 text-sm font-bold"
+                        style={{ borderColor: `${vaultColor}38`, background: `${vaultColor}16`, color: vaultColor }}
+                      >
+                        {depositToken}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-4 gap-2">
+                      {QUICK_AMOUNTS.map((ratio) => (
+                        <button
+                          key={ratio}
+                          type="button"
+                          onClick={() => setAmountFromRatio(ratio)}
+                          disabled={transactionStatus === 'pending' || maxAmount <= 0}
+                          className="min-h-10 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-white/65 transition hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {ratio === 1 ? 'MAX' : `${Math.round(ratio * 100)}%`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                    <Detail icon={<Sparkles className="h-4 w-4" />} label="USD Est." value={`$${projectedValue.toFixed(2)}`} />
+                    <Detail icon={<ShieldCheck className="h-4 w-4" />} label="Daily Yield" value={`$${projectedDailyYield.toFixed(2)}`} />
+                  </div>
+
+                  {exceedsBalance && (
+                    <Status tone="error" icon={<AlertCircle className="h-5 w-5" />} title="Amount exceeds balance" description="Keep 0.01 SOL reserved for devnet transaction fees." />
+                  )}
+
+                  {errorMessage && (
+                    <Status tone="error" icon={<AlertCircle className="h-5 w-5" />} title="Deposit failed" description={errorMessage} />
+                  )}
+
+                  {showSuccess && txSignature && (
+                    <Status tone="success" icon={<CheckCircle2 className="h-5 w-5" />} title="Deposit successful" description={txSignature} />
+                  )}
+
+                  <button
+                    onClick={handleDeposit}
+                    disabled={!canDeposit}
+                    className="group flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-base font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+                    style={{
+                      background: canDeposit
+                        ? `linear-gradient(135deg, ${vaultColor}, #14f195)`
+                        : 'rgba(255,255,255,0.09)',
+                      boxShadow: canDeposit ? `0 18px 44px ${vaultColor}30` : 'none',
+                    }}
+                  >
+                    {transactionStatus === 'pending' ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Confirming Deposit
+                      </>
+                    ) : (
+                      <>
+                        Deposit {depositToken}
+                        <ArrowRight className="h-5 w-5 transition group-hover:translate-x-0.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
+                <div className="flex items-start gap-2 text-xs leading-relaxed text-white/42">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300/70" />
+                  <p>Deposits are simulated on devnet for strategy testing. Keep a small SOL buffer for fees and review vault risk before funding.</p>
+                </div>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
+      )}
+    </AnimatePresence>
+  )
+
+  return createPortal(modalContent, document.body)
+}
+
+function Metric({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.045] p-3">
+      <p className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/35">{label}</p>
+      <p className="truncate text-base font-bold text-white" style={color ? { color } : undefined}>{value}</p>
+    </div>
+  )
+}
+
+function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-emerald-300">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-white/38">{label}</p>
+        <p className="truncate text-sm font-semibold text-white">{value}</p>
       </div>
     </div>
   )
+}
 
-  return mounted ? createPortal(modalContent, document.body) : null
+function Status({
+  tone,
+  icon,
+  title,
+  description,
+}: {
+  tone: 'error' | 'success'
+  icon: React.ReactNode
+  title: string
+  description: string
+}) {
+  const styles = tone === 'success'
+    ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
+    : 'border-red-400/20 bg-red-500/10 text-red-300'
+
+  return (
+    <div className={`flex items-start gap-3 rounded-2xl border p-3 ${styles}`}>
+      <div className="shrink-0">{icon}</div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{title}</p>
+        <p className="mt-0.5 truncate text-xs opacity-75">{description}</p>
+      </div>
+    </div>
+  )
 }

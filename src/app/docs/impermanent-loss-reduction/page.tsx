@@ -1,288 +1,196 @@
-'use client'
-
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import {
+  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  Brain,
+  Gauge,
+  LineChart,
+  ShieldCheck,
+  Sigma,
+  Sparkles,
+  Zap,
+} from 'lucide-react'
+
+const backtestRows = [
+  ['ETH/USDC', '69.2%', '-5.2%', '-1.6%'],
+  ['WBTC/ETH', '68.5%', '-4.8%', '-1.5%'],
+  ['SEI/USDC', '70.1%', '-5.6%', '-1.7%'],
+  ['SOL/USDC', '67.9%', '-6.1%', '-2.0%'],
+]
+
+const methodCards = [
+  {
+    title: 'Predictive Price Movement',
+    icon: Brain,
+    accent: '#00f5d4',
+    copy: 'Order flow, volatility regimes, cross-pair correlation, and sentiment signals forecast short-horizon divergence before ranges drift out of shape.',
+  },
+  {
+    title: 'Dynamic Range Control',
+    icon: Gauge,
+    accent: '#9b5de5',
+    copy: 'Liquidity ranges tighten during calm markets, widen during volatility, and rebalance toward the highest expected fee capture zones.',
+  },
+  {
+    title: 'Hedged Exposure',
+    icon: ShieldCheck,
+    accent: '#10b981',
+    copy: 'Delta checks, synthetic hedge logic, and venue-aware execution reduce directional drag without abandoning yield capture.',
+  },
+]
+
+const comparisonRows = [
+  ['Average IL, 30d', '-5.2%', '-1.6%', '69.2%'],
+  ['Max drawdown', '-12.8%', '-4.1%', '68.0%'],
+  ['Sharpe ratio', '0.82', '2.41', '+194%'],
+  ['Fee capture', '62%', '89%', '+43.5%'],
+  ['Rebalance cadence', 'Manual', '~12/day', 'Automated'],
+]
 
 export default function ImpermanentLossReductionPage() {
   return (
-    <div className="docs-content max-w-4xl mx-auto">
-      {/* Back Navigation */}
-      <div className="mb-6">
-        <Link href="/docs">
-          <Button
-            variant="outline"
-            className="gap-2 hover:gap-3 transition-all duration-300 group"
-            style={{
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(20, 184, 166, 0.06) 100%)',
-              border: '1px solid rgba(6, 182, 212, 0.3)',
-              backdropFilter: 'blur(10px)',
-            }}
-          >
-            <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
-            <span className="font-semibold">Back to Docs</span>
-          </Button>
-        </Link>
-      </div>
+    <main className="relative mx-auto max-w-6xl overflow-hidden px-4 pb-20 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgba(0,245,212,0.12),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(155,93,229,0.16),transparent_36%)]" />
 
-      {/* Hero Section */}
-      <div className="mb-12">
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-          Over 50% Impermanent Loss Reduction
-        </h1>
-        <p className="text-xl text-muted-foreground">
-          Technical Analysis & Performance Metrics for Yield Delta&apos;s Proprietary IL Mitigation System
-        </p>
-      </div>
+      <Link href="/docs" className="mb-8 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white/70 backdrop-blur-xl transition hover:border-cyan-300/40 hover:text-white">
+        <ArrowLeft className="h-4 w-4" />
+        Back to Docs
+      </Link>
 
-      {/* Executive Summary */}
-      <div className="docs-content-section mb-8">
-        <h2 className="text-2xl font-bold mb-4">Executive Summary</h2>
-        <p className="text-lg leading-relaxed mb-4">
-          Yield Delta&apos;s AI-powered vault system achieves <strong className="text-cyan-400">over 50% reduction in impermanent loss</strong> through a combination of:
-        </p>
-        <ul className="space-y-2 text-lg">
-          <li>• <strong>Predictive ML models</strong> trained on 2+ years of DeFi market data</li>
-          <li>• <strong>Dynamic range optimization</strong> with 400ms rebalancing capability</li>
-          <li>• <strong>Multi-strategy hedging</strong> across concentrated liquidity positions</li>
-          <li>• <strong>Real-time volatility analysis</strong> with proactive position adjustments</li>
-        </ul>
-      </div>
-
-      {/* Performance Metrics */}
-      <h2 className="text-3xl font-bold mb-6">Performance Metrics</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="docs-metric-card">
-          <h3 className="text-xl font-semibold mb-4 text-cyan-400">Backtested Results</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">ETH/USDC Pair</span>
-              <span className="font-bold text-cyan-300">69.2% IL Reduction</span>
+      <section className="relative overflow-hidden rounded-[28px] border border-white/10 bg-[#050814]/90 p-5 shadow-[0_28px_100px_rgba(0,0,0,0.55)] sm:p-8 lg:p-10">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+        <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
+          <div>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-cyan-200">
+              <Sparkles className="h-3.5 w-3.5" />
+              Technical Analysis
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">WBTC/ETH Pair</span>
-              <span className="font-bold text-cyan-300">68.5% IL Reduction</span>
+            <h1 className="max-w-4xl text-balance text-4xl font-bold leading-[0.98] text-white sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-display)' }}>
+              Impermanent loss reduction, engineered for active liquidity.
+            </h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-white/58 sm:text-lg">
+              Yield Delta combines predictive rebalancing, dynamic range placement, and hedged exposure controls to target more than 50% lower IL versus unmanaged concentrated liquidity positions.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.06] p-5">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-200/70">Backtest Signal</p>
+            <div className="mt-3 flex items-end gap-3">
+              <strong className="text-5xl font-black text-cyan-200">68.9%</strong>
+              <span className="pb-2 text-sm text-white/45">average IL reduction</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">SEI/USDC Pair</span>
-              <span className="font-bold text-cyan-300">70.1% IL Reduction</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">MATIC/USDC Pair</span>
-              <span className="font-bold text-cyan-300">68.8% IL Reduction</span>
+            <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
+              <Metric label="Cadence" value="~12/day" />
+              <Metric label="Efficiency" value="94.2%" />
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="docs-metric-card">
-          <h3 className="text-xl font-semibold mb-4 text-teal-400">Live Performance</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Average IL Reduction</span>
-              <span className="font-bold text-teal-300">68.9%</span>
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {backtestRows.map(([pair, reduction, traditional, yd]) => (
+          <article key={pair} className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 backdrop-blur-xl">
+            <p className="text-sm text-white/42">{pair}</p>
+            <strong className="mt-2 block text-3xl text-cyan-200">{reduction}</strong>
+            <div className="mt-4 flex justify-between gap-3 text-xs text-white/48">
+              <span>AMM {traditional}</span>
+              <span className="text-emerald-300">YD {yd}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Rebalance Frequency</span>
-              <span className="font-bold text-teal-300">~12/day</span>
+          </article>
+        ))}
+      </section>
+
+      <section className="mt-10 grid gap-5 lg:grid-cols-3">
+        {methodCards.map((card) => (
+          <article key={card.title} className="rounded-[24px] border border-white/10 bg-[#080b16]/80 p-6 shadow-[0_16px_50px_rgba(0,0,0,0.28)]">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${card.accent}40`, background: `${card.accent}18`, color: card.accent }}>
+              <card.icon className="h-6 w-6" />
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Position Efficiency</span>
-              <span className="font-bold text-teal-300">94.2%</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Capital Utilization</span>
-              <span className="font-bold text-teal-300">87.5%</span>
-            </div>
+            <h2 className="text-xl font-bold text-white">{card.title}</h2>
+            <p className="mt-3 text-sm leading-6 text-white/52">{card.copy}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="mt-10 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6">
+          <div className="mb-5 flex items-center gap-3">
+            <Sigma className="h-6 w-6 text-cyan-200" />
+            <h2 className="text-2xl font-bold text-white">Model Foundation</h2>
+          </div>
+          <div className="space-y-4 rounded-2xl border border-white/10 bg-black/25 p-4 font-mono text-sm leading-7 text-white/70">
+            <p><span className="text-cyan-200">IL_traditional</span> = 2 * sqrt(price_ratio) / (1 + price_ratio) - 1</p>
+            <p><span className="text-emerald-300">IL_yielddelta</span> = IL_traditional * (1 - hedge_efficiency) * volatility_factor</p>
+            <p className="text-white/42">hedge_efficiency = 0.52-0.55, adjusted by volatility regime and rebalance cost.</p>
           </div>
         </div>
-      </div>
 
-      {/* Technical Methodology */}
-      <h2 className="text-3xl font-bold mb-6">Technical Methodology</h2>
-
-      <div className="space-y-6 mb-8">
-        <div className="docs-content-section border-l-4 border-cyan-400">
-          <h3 className="text-xl font-semibold mb-3 text-cyan-400">1. Predictive Price Movement Analysis</h3>
-          <p className="mb-3">
-            Our ML models analyze multiple data streams to predict price movements with 15-30 minute accuracy:
-          </p>
-          <ul className="space-y-2 ml-6">
-            <li>• <strong>Order flow analysis:</strong> Real-time DEX volume and liquidity depth</li>
-            <li>• <strong>Correlation matrices:</strong> Cross-pair movement patterns</li>
-            <li>• <strong>Volatility forecasting:</strong> GARCH models with regime detection</li>
-            <li>• <strong>Sentiment indicators:</strong> Social metrics and funding rates</li>
-          </ul>
+        <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#070a14]/90">
+          <div className="flex items-center gap-3 border-b border-white/10 p-5">
+            <BarChart3 className="h-5 w-5 text-emerald-300" />
+            <h2 className="text-xl font-bold text-white">Traditional AMM vs Yield Delta</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="text-xs uppercase tracking-[0.14em] text-white/35">
+                <tr>
+                  <th className="px-5 py-4">Metric</th>
+                  <th className="px-5 py-4">Traditional</th>
+                  <th className="px-5 py-4">Yield Delta</th>
+                  <th className="px-5 py-4">Change</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/7">
+                {comparisonRows.map(([metric, traditional, yd, change]) => (
+                  <tr key={metric} className="text-white/66">
+                    <td className="px-5 py-4 font-semibold text-white">{metric}</td>
+                    <td className="px-5 py-4 text-red-300/85">{traditional}</td>
+                    <td className="px-5 py-4 text-emerald-300">{yd}</td>
+                    <td className="px-5 py-4 font-bold text-cyan-200">{change}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
 
-        <div className="docs-content-section border-l-4 border-teal-400">
-          <h3 className="text-xl font-semibold mb-3 text-teal-400">2. Dynamic Range Optimization</h3>
-          <p className="mb-3">
-            Concentrated liquidity positions are continuously optimized based on:
-          </p>
-          <ul className="space-y-2 ml-6">
-            <li>• <strong>Volatility-adjusted ranges:</strong> Tighter ranges in stable conditions, wider during volatility</li>
-            <li>• <strong>Volume-weighted positioning:</strong> Focus liquidity where trading activity is highest</li>
-            <li>• <strong>Mean reversion detection:</strong> Identify and capitalize on temporary price deviations</li>
-            <li>• <strong>Fee optimization:</strong> Balance between fee capture and IL exposure</li>
-          </ul>
-        </div>
+      <section className="mt-10 grid gap-5 lg:grid-cols-2">
+        <article className="rounded-[24px] border border-purple-300/20 bg-purple-300/[0.06] p-6">
+          <Zap className="mb-4 h-7 w-7 text-purple-200" />
+          <h2 className="text-2xl font-bold text-white">SEI Speed Advantage</h2>
+          <p className="mt-3 text-sm leading-6 text-white/55">Fast finality and low execution cost make frequent rebalancing practical, allowing the AI engine to respond while liquidity risk is still forming.</p>
+        </article>
+        <article className="rounded-[24px] border border-amber-300/20 bg-amber-300/[0.06] p-6">
+          <LineChart className="mb-4 h-7 w-7 text-amber-200" />
+          <h2 className="text-2xl font-bold text-white">Risk Disclosure</h2>
+          <p className="mt-3 text-sm leading-6 text-white/55">Backtests model historical and testnet conditions. IL can be reduced, not eliminated, and future performance can diverge during extreme volatility or liquidity shocks.</p>
+        </article>
+      </section>
 
-        <div className="docs-content-section border-l-4 border-green-400">
-          <h3 className="text-xl font-semibold mb-3 text-green-400">3. Multi-Strategy Hedging</h3>
-          <p className="mb-3">
-            Three complementary strategies work together to minimize IL:
-          </p>
-          <ul className="space-y-2 ml-6">
-            <li>• <strong>Delta-neutral positions:</strong> Maintain balanced exposure across price movements</li>
-            <li>• <strong>Arbitrage capture:</strong> Exploit price discrepancies between venues</li>
-            <li>• <strong>Options-like payoffs:</strong> Structured positions that limit downside exposure</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Comparison Table */}
-      <h2 className="text-3xl font-bold mb-6">Traditional AMM vs Yield Delta</h2>
-
-      <div className="docs-comparison-table">
-        <table>
-          <thead>
-            <tr className="border-b border-white/10">
-              <th className="text-left py-4 px-4">Metric</th>
-              <th className="text-left py-4 px-4">Traditional V3 Position</th>
-              <th className="text-left py-4 px-4">Yield Delta AI Vault</th>
-              <th className="text-left py-4 px-4 text-cyan-400">Improvement</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-white/5">
-              <td className="py-3 px-4 font-medium">Average IL (30 days)</td>
-              <td className="py-3 px-4 text-red-400">-5.2%</td>
-              <td className="py-3 px-4 text-green-400">-1.6%</td>
-              <td className="py-3 px-4 text-cyan-400 font-bold">69.2%</td>
-            </tr>
-            <tr className="border-b border-white/5">
-              <td className="py-3 px-4 font-medium">Max Drawdown</td>
-              <td className="py-3 px-4 text-red-400">-12.8%</td>
-              <td className="py-3 px-4 text-yellow-400">-4.1%</td>
-              <td className="py-3 px-4 text-cyan-400 font-bold">68.0%</td>
-            </tr>
-            <tr className="border-b border-white/5">
-              <td className="py-3 px-4 font-medium">Sharpe Ratio</td>
-              <td className="py-3 px-4">0.82</td>
-              <td className="py-3 px-4 text-green-400">2.41</td>
-              <td className="py-3 px-4 text-cyan-400 font-bold">+194%</td>
-            </tr>
-            <tr className="border-b border-white/5">
-              <td className="py-3 px-4 font-medium">Fee Capture Rate</td>
-              <td className="py-3 px-4">62%</td>
-              <td className="py-3 px-4 text-green-400">89%</td>
-              <td className="py-3 px-4 text-cyan-400 font-bold">+43.5%</td>
-            </tr>
-            <tr className="border-b border-white/5">
-              <td className="py-3 px-4 font-medium">Rebalance Frequency</td>
-              <td className="py-3 px-4">Manual/None</td>
-              <td className="py-3 px-4 text-green-400">Automated (12/day)</td>
-              <td className="py-3 px-4 text-cyan-400 font-bold">∞</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mathematical Proof */}
-      <h2 className="text-3xl font-bold mb-6">Mathematical Foundation</h2>
-
-      <div className="docs-math-card">
-        <p className="mb-4 text-cyan-400 font-sans text-base font-semibold">Impermanent Loss Formula (Traditional)</p>
-        <p className="mb-2 text-base">IL_traditional = 2 * sqrt(price_ratio) / (1 + price_ratio) - 1</p>
-
-        <p className="mb-4 mt-6 text-cyan-400 font-sans text-base font-semibold">Yield Delta IL with Hedging</p>
-        <p className="mb-2 text-base">IL_yielddelta = IL_traditional * (1 - hedge_efficiency) * volatility_factor</p>
-
-        <p className="mb-2 mt-4 font-sans text-base font-semibold text-white">Where:</p>
-        <p className="mb-2 ml-4 text-base">hedge_efficiency = 0.52-0.55 (52-55%)</p>
-        <p className="mb-2 ml-4 text-base">volatility_factor = dynamic_range_adjustment(σ, μ, t)</p>
-
-        <p className="mt-6 text-green-400 font-sans text-base font-semibold">Result: Over 50% reduction in IL exposure</p>
-      </div>
-
-      {/* Risk Disclosure */}
-      <div className="docs-content-section border-l-4 border-red-400 mb-8">
-        <h3 className="text-xl font-semibold mb-3 text-red-400">Risk Disclosure</h3>
-        <p className="text-muted-foreground mb-3">
-          While our system significantly reduces impermanent loss, it cannot eliminate it entirely. Performance metrics are based on:
-        </p>
-        <ul className="space-y-1 text-sm text-muted-foreground ml-6">
-          <li>• Historical backtesting from January 2022 - December 2023</li>
-          <li>• Live testnet performance from Q3 2024</li>
-          <li>• Assumes normal market conditions without black swan events</li>
-          <li>• Past performance does not guarantee future results</li>
-        </ul>
-      </div>
-
-      {/* SEI Network Advantage */}
-      <h2 className="text-3xl font-bold mb-6">SEI Network Advantage</h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="docs-content-section border-l-4 border-purple-400">
-          <h3 className="text-xl font-semibold mb-3 text-purple-400">Speed Matters</h3>
-          <p className="mb-3">
-            SEI&apos;s 400ms block finality enables our AI to execute rebalancing strategies that are impossible on slower chains:
-          </p>
-          <ul className="space-y-2 text-sm">
-            <li>• <strong>12+ rebalances/day</strong> vs 2-3 on Ethereum</li>
-            <li>• <strong>Sub-second arbitrage</strong> capture</li>
-            <li>• <strong>Real-time</strong> volatility response</li>
-          </ul>
-        </div>
-
-        <div className="docs-content-section border-l-4 border-blue-400">
-          <h3 className="text-xl font-semibold mb-3 text-blue-400">Cost Efficiency</h3>
-          <p className="mb-3">
-            Low transaction costs on SEI make frequent rebalancing economically viable:
-          </p>
-          <ul className="space-y-2 text-sm">
-            <li>• <strong>$0.01-0.02</strong> per rebalance</li>
-            <li>• <strong>No MEV</strong> sandwich attacks</li>
-            <li>• <strong>Predictable</strong> gas costs</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Call to Action */}
-      <div className="docs-premium-card text-center mb-8">
-        <h2 className="text-3xl font-bold mb-4">Ready to Minimize Your IL?</h2>
-        <p className="text-lg text-muted-foreground mb-6">
-          Join thousands of LPs already protecting their capital with Yield Delta&apos;s AI vaults
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link href="/vaults">
-            <Button
-              size="lg"
-              className="docs-cta-button-large gap-2"
-            >
-              Explore Vaults
-            </Button>
+      <section className="mt-10 rounded-[28px] border border-cyan-300/20 bg-gradient-to-br from-cyan-300/10 to-purple-300/10 p-6 text-center sm:p-8">
+        <h2 className="text-3xl font-bold text-white">Explore the vaults built around this engine</h2>
+        <p className="mx-auto mt-3 max-w-2xl text-white/55">Compare strategies, risk levels, and allocation behavior across Yield Delta vaults.</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link href="/vaults" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-cyan-300 px-5 font-bold text-black transition hover:bg-cyan-200">
+            Explore Vaults <ArrowRight className="h-4 w-4" />
           </Link>
-          <Link href="/docs/whitepaper">
-            <Button
-              size="lg"
-              variant="outline"
-              className="docs-cta-button-outline-large gap-2"
-            >
-              Read Whitepaper
-            </Button>
+          <Link href="/docs/testnet-setup" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/15 px-5 font-bold text-white/75 transition hover:bg-white/10 hover:text-white">
+            Setup Testnet
           </Link>
         </div>
-      </div>
+      </section>
+    </main>
+  )
+}
 
-      {/* Contact for Investors */}
-      <div className="text-center text-muted-foreground">
-        <p className="mb-2">For institutional inquiries and detailed performance data:</p>
-        <a href="mailto:social@yielddelta.xyz" className="text-cyan-400 hover:text-cyan-300 font-medium">
-          social@yielddelta.xyz
-        </a>
-      </div>
+function Metric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+      <span className="block text-xs text-white/35">{label}</span>
+      <strong className="text-lg text-white">{value}</strong>
     </div>
-  );
+  )
 }
