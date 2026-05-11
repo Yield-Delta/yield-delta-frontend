@@ -563,6 +563,12 @@ export default function VaultsPage() {
                     {/* Action buttons */}
                     <div style={{ display: 'flex', gap: 10, marginTop: '1.1rem' }}>
                       <button
+                        type="button"
+                        onTouchEnd={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleDeposit(vault)
+                        }}
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -596,6 +602,7 @@ export default function VaultsPage() {
                         Deposit
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()

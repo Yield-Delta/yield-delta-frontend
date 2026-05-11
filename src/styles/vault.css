@@ -424,13 +424,15 @@
     transition: opacity 0.35s ease;
   }
 
-  .yd-vault-card-wrap:hover {
-    transform: translateY(-6px);
-  }
+  @media (hover: hover) and (pointer: fine) {
+    .yd-vault-card-wrap:hover {
+      transform: translateY(-6px);
+    }
 
-  .yd-vault-card-wrap:hover::before {
-    opacity: 0.85;
-    animation: ydBorderSpin 3s linear infinite;
+    .yd-vault-card-wrap:hover::before {
+      opacity: 0.85;
+      animation: ydBorderSpin 3s linear infinite;
+    }
   }
 
   .yd-vault-card-body {
@@ -445,9 +447,11 @@
     transition: border-color 0.35s ease, box-shadow 0.35s ease;
   }
 
-  .yd-vault-card-wrap:hover .yd-vault-card-body {
-    border-color: transparent;
-    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8), 0 0 60px color-mix(in srgb, var(--card-color, #00f5d4) 15%, transparent);
+  @media (hover: hover) and (pointer: fine) {
+    .yd-vault-card-wrap:hover .yd-vault-card-body {
+      border-color: transparent;
+      box-shadow: 0 32px 64px rgba(0, 0, 0, 0.8), 0 0 60px color-mix(in srgb, var(--card-color, #00f5d4) 15%, transparent);
+    }
   }
 
   .yd-card-top-bar {
