@@ -48,6 +48,7 @@ interface VaultWithPosition {
 }
 
 const DashboardPage = () => {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const { address: userAddress } = useAccount();
   const { data: vaults, isLoading: vaultsLoading } = useVaults();
@@ -417,3 +418,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+DashboardPage;
