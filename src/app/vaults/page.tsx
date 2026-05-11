@@ -149,7 +149,7 @@ export default function VaultsPage() {
   const vaultCardsRef = useRef<HTMLDivElement>(null)
 
   const { vaults, isLoading: isVaultsLoading } = useVaultStore()
-  const { marketData, isLoading: isMarketLoading } = useSeiMarketData()
+  const { data: marketData, isLoading: isMarketLoading } = useSeiMarketData()
   const { totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD()
   const { getVaultTVL } = useVaultTVL()
 
