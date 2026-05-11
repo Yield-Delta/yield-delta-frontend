@@ -155,7 +155,7 @@ export default function SolanaDepositModal({
   const modalContent = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[999999] flex items-end justify-center px-0 sm:items-center sm:px-4">
+        <div className="fixed inset-0 z-[1000000] flex items-end justify-center px-0 sm:items-center sm:px-4">
           <motion.div
             className="absolute inset-0 bg-[#02030a]/85 backdrop-blur-xl"
             initial={{ opacity: 0 }}

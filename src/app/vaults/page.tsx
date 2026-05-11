@@ -690,7 +690,9 @@ export default function VaultsPage() {
       {/* ── FLOATING AI BUTTON ────────────────────────────── */}
       <div style={{
         position: 'fixed', bottom: '24px', right: '24px',
-        zIndex: 999999, isolation: 'isolate', pointerEvents: 'auto',
+        zIndex: 999999, isolation: 'isolate', pointerEvents: showDepositModal ? 'none' : 'auto',
+        opacity: showDepositModal ? 0 : 1,
+        transition: 'opacity 0.18s ease',
       }}>
         <div style={{ position: 'relative' }}>
           {/* Glow ring */}
