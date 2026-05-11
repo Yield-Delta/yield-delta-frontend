@@ -9,11 +9,12 @@ import {
 } from 'recharts';
 import Navigation from '@/components/Navigation';
 import DepositModal from '@/components/DepositModal';
+import SolanaDepositModal from '@/components/SolanaDepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import VaultClientWrapper from '@/components/VaultClientWrapper';
 import TokenPairDisplay from '@/components/TokenPairDisplay';
 import PortfolioChart from '@/components/PortfolioChart';
-import { useVaultStore } from '@/stores/vaultStore';
+import { useVaultStore, VaultData } from '@/stores/vaultStore';
 import { useVaults } from '@/hooks/useVaults';
 import { useVaultPosition } from '@/hooks/useVaultPosition';
 import { useVaultTVL } from '@/hooks/useVaultTVL';
@@ -21,6 +22,7 @@ import { useTokenPrices } from '@/hooks/useTokenPrices';
 import { getPrimaryDepositToken } from '@/utils/tokenUtils';
 import { formatUnits } from 'viem';
 import gsap from 'gsap';
+import { ChainId } from '@/types/chain';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +47,29 @@ const getVaultColor = (strategy: string) => ({
   blue_chip: '#3b82f6',
   delta_neutral: '#8b5cf6',
 } as Record<string, string>)[strategy] || '#00f5d4'
+
+const getSolanaDepositToken = (vault: VaultData) =>
+  vault.strategy === 'stable_max' || vault.tokenA.toUpperCase().includes('USDC')
+    ? vault.tokenA
+    : vault.tokenA.toUpperCase().includes('SOL')
+      ? vault.tokenA
+      : 'SOL'
+
+const toSolanaDepositVault = (vault: VaultData | null) => {
+  if (!vault) return null
+
+  const depositToken = getSolanaDepositToken(vault)
+
+  return {
+    address: vault.address,
+    name: vault.name,
+    apy: vault.apy,
+    tvl: vault.tvl,
+    strategy: vault.strategy,
+    depositToken,
+    tokenDecimals: depositToken.toUpperCase().includes('USDC') ? 6 : 9,
+  }
+}
 
 const RISK_STYLE = {
   Low: { color: '#6ee7b7', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.35)' },
@@ -196,6 +221,7 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
   const { data: tokenPrices } = useTokenPrices()
 
   const vault = selectedVault || (vaultAddress ? getVaultByAddress(vaultAddress) : null)
+  const isSolanaVault = vault?.chainId === ChainId.SOLANA_DEVNET || vault?.chainId === ChainId.SOLANA_MAINNET
 
   const { position, hasPosition, refetch: refetchPosition } = useVaultPosition(vaultAddress || '')
   const { tvlMap, isLoading: tvlLoading, refetch: refetchTVL } = useVaultTVL(vaultAddress ? [vaultAddress] : [])
@@ -760,12 +786,21 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
       </div>
 
       {/* ── MODALS ────────────────────────────────────────── */}
-      <DepositModal
-        vault={vault}
-        isOpen={showDepositModal}
-        onClose={() => setShowDepositModal(false)}
-        onSuccess={handleDepositSuccess}
-      />
+      {isSolanaVault ? (
+        <SolanaDepositModal
+          vault={toSolanaDepositVault(vault)}
+          isOpen={showDepositModal}
+          onClose={() => setShowDepositModal(false)}
+          onSuccess={handleDepositSuccess}
+        />
+      ) : (
+        <DepositModal
+          vault={vault}
+          isOpen={showDepositModal}
+          onClose={() => setShowDepositModal(false)}
+          onSuccess={handleDepositSuccess}
+        />
+      )}
       <WithdrawModal
         vault={vault}
         isOpen={showWithdrawModal}

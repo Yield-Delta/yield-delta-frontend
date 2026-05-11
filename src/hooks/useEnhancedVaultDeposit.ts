@@ -13,7 +13,8 @@ import {
   vaultAcceptsNativeSEI, 
   isNativeSEIVault,
   getPrimaryDepositToken,
-  hasInsufficientBalance
+  hasInsufficientBalance,
+  getCanonicalTokenSymbol
 } from '@/utils/tokenUtils';
 import { useTokenBalance } from './useTokenBalance';
 import SEIVault from '@/lib/abis/SEIVault';
@@ -276,9 +277,9 @@ export function useEnhancedVaultDeposit(vaultData: {
     }
 
     // Check if the token is supported by this vault
-    const tokenSymbol = params.tokenSymbol.toUpperCase();
-    const vaultTokenA = vaultData.tokenA.toUpperCase();
-    const vaultTokenB = vaultData.tokenB.toUpperCase();
+    const tokenSymbol = getCanonicalTokenSymbol(params.tokenSymbol);
+    const vaultTokenA = getCanonicalTokenSymbol(vaultData.tokenA);
+    const vaultTokenB = getCanonicalTokenSymbol(vaultData.tokenB);
     const isNativeVault = isNativeSEIVault(vaultData);
 
     console.log('🔍 [validateDeposit] Token validation:', {

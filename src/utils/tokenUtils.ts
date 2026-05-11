@@ -24,6 +24,8 @@ export interface VaultData {
   strategy: string;
 }
 
+const TESTNET_TOKEN_SUFFIX = /-TEST$/i;
+
 // SEI testnet token addresses (SEI Atlantic-2 Testnet)
 export const SEI_TESTNET_TOKENS: Record<string, TokenInfo> = {
   SEI: {
@@ -73,8 +75,30 @@ export const SEI_TESTNET_TOKENS: Record<string, TokenInfo> = {
     address: '0xD2D6BE5E318d5D4B3A03aFf4b7FfDA3d3f3a7a7a', // Mock DAI address for testnet
     decimals: 18,
     isNative: false
+  },
+  SOL: {
+    symbol: 'SOL',
+    name: 'Solana',
+    decimals: 9,
+    isNative: true
+  },
+  STSOL: {
+    symbol: 'stSOL',
+    name: 'Staked SOL',
+    decimals: 9,
+    isNative: false
+  },
+  'MULTI-STRATEGY': {
+    symbol: 'Multi-strategy',
+    name: 'Multi-strategy Allocator',
+    decimals: 6,
+    isNative: false
   }
 };
+
+export function getCanonicalTokenSymbol(symbol: string): string {
+  return symbol.trim().toUpperCase().replace(TESTNET_TOKEN_SUFFIX, '');
+}
 
 /**
  * Validate vault data structure and token symbols
@@ -141,7 +165,7 @@ export function getTokenInfo(symbol: string): TokenInfo | null {
     return null;
   }
   
-  const normalizedSymbol = symbol.trim().toUpperCase();
+  const normalizedSymbol = getCanonicalTokenSymbol(symbol);
   const tokenInfo = SEI_TESTNET_TOKENS[normalizedSymbol] || null;
   
   if (!tokenInfo) {
@@ -193,7 +217,8 @@ export function getVaultTokenRequirements(vaultData: {
   // may allow single-sided deposits that get converted
   const requiresBothTokens = ![
     'concentrated_liquidity',
-    'stable_max'
+    'stable_max',
+    'hedge'
   ].includes(vaultData.strategy);
 
   const requirements = {
@@ -221,8 +246,8 @@ export function vaultAcceptsNativeSEI(vaultData: {
     return false;
   }
   
-  const tokenAUpper = vaultData.tokenA.trim().toUpperCase();
-  const tokenBUpper = vaultData.tokenB.trim().toUpperCase();
+  const tokenAUpper = getCanonicalTokenSymbol(vaultData.tokenA);
+  const tokenBUpper = getCanonicalTokenSymbol(vaultData.tokenB);
   
   // Check if either token is SEI (native)
   const hasSEIToken = tokenAUpper === 'SEI' || tokenBUpper === 'SEI';
