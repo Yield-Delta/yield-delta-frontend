@@ -6,9 +6,7 @@ import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import Logo from './Logo';
 import { gsap } from 'gsap';
-import { Menu, X, Vault, TrendingUp, Target, PieChart, RefreshCw, BookOpen, Rocket, CandlestickChart, AlertTriangle } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import { isTestnetChain } from '@/lib/chainUtils';
+import { Menu, X, Vault, TrendingUp, Target, PieChart, RefreshCw, BookOpen, Rocket, CandlestickChart } from 'lucide-react';
 import GooeyNav  from './GooeyNavigation';
 
 // Multi-chain wallet button for Solana + SEI support
@@ -200,7 +198,7 @@ MobileMenuItem.displayName = 'MobileMenuItem';
 /**
  * Render the responsive top navigation bar with brand, center navigation (GooeyNav), wallet actions, and an animated premium mobile menu.
  *
- * The component animates the logo and mobile menu using GSAP, traps focus while the mobile menu is open, and disables body scrolling during menu open. When the connected chain is a testnet, a fixed testnet banner is displayed above the nav.
+ * The component animates the logo and mobile menu using GSAP, traps focus while the mobile menu is open, and disables body scrolling during menu open.
  *
  * @param variant - Visual style for the nav; one of `"light" | "dark" | "transparent"`.
  * @param className - Additional CSS classes to apply to the nav container.
@@ -220,10 +218,6 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
   // Viewport detection to prevent hamburger rendering at 900px+
   // CRITICAL: Initialize to null to prevent hydration mismatch
   const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
-
-  // Check if on testnet
-  const { chain } = useAccount();
-  const isTestnet = chain ? isTestnetChain(chain.id) : true;
 
   // Viewport detection effect - runs on mount and resize
   useEffect(() => {
@@ -543,26 +537,6 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
 
   return (
     <>
-      {/* Testnet Banner - Integrated with Navigation */}
-      {isTestnet && (
-        <div
-          className="fixed top-0 left-0 right-0 z-[100000] bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 h-8 flex items-center justify-center border-b border-orange-600/20"
-          style={{
-            boxShadow: '0 2px 10px rgba(251, 146, 60, 0.3)',
-            backdropFilter: 'blur(8px)'
-          }}
-        >
-          <div className="flex items-center gap-2 text-white">
-            <AlertTriangle className="h-4 w-4 animate-pulse" />
-            <span className="font-bold text-sm tracking-wide">TESTNET MODE</span>
-            <span className="text-white/80 mx-1">|</span>
-            <span className="text-white/90 text-xs">SEI Atlantic-2</span>
-            <span className="text-white/80 mx-1">•</span>
-            <span className="text-white/90 text-xs font-medium">Test Tokens Only</span>
-          </div>
-        </div>
-      )}
-
       <nav
         className={`${baseClasses} ${variantClasses[variant]} ${className}`}
         style={{
@@ -570,7 +544,7 @@ export function Navigation({ variant = 'transparent', className = '', showWallet
           height: '3.5rem',
           isolation: 'isolate',
           zIndex: 99999,
-          top: isTestnet ? '2rem' : '0'
+          top: 0
         }}
         role="navigation"
         aria-label="Main navigation"
