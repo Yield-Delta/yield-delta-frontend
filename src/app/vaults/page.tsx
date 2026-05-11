@@ -6,6 +6,7 @@ import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
+import SolanaDepositModal from '@/components/SolanaDepositModal';
 import { MessageCircle, X, Loader2, TrendingUp, Shield, Zap } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -34,6 +35,26 @@ const getVaultToken = (vault: VaultData) =>
     : vault.tokenA.toUpperCase().includes('SOL')
       ? 'SOL'
       : 'SEI'
+
+const toSolanaDepositVault = (vault: VaultData | null) => {
+  if (!vault) return null
+
+  const depositToken = vault.tokenA.toUpperCase().includes('USDC')
+    ? vault.tokenA
+    : vault.tokenA.toUpperCase().includes('SOL')
+      ? vault.tokenA
+      : getVaultToken(vault)
+
+  return {
+    address: vault.address,
+    name: vault.name,
+    apy: vault.apy,
+    tvl: vault.tvl,
+    strategy: vault.strategy,
+    depositToken,
+    tokenDecimals: depositToken.toUpperCase().includes('USDC') ? 6 : 9,
+  }
+}
 
 const getRiskLevel = (apy: number, strategy?: string): 'Low' | 'Medium' | 'High' => {
   const modifier: Record<string, number> = {
@@ -650,12 +671,21 @@ export default function VaultsPage() {
       )}
 
       {/* ── DEPOSIT MODAL ─────────────────────────────────── */}
-      <DepositModal
-        vault={depositVault}
-        isOpen={showDepositModal}
-        onClose={handleCloseModal}
-        onSuccess={handleDepositSuccess}
-      />
+      {isSolanaVaultChain ? (
+        <SolanaDepositModal
+          vault={toSolanaDepositVault(depositVault)}
+          isOpen={showDepositModal}
+          onClose={handleCloseModal}
+          onSuccess={handleDepositSuccess}
+        />
+      ) : (
+        <DepositModal
+          vault={depositVault}
+          isOpen={showDepositModal}
+          onClose={handleCloseModal}
+          onSuccess={handleDepositSuccess}
+        />
+      )}
 
       {/* ── FLOATING AI BUTTON ────────────────────────────── */}
       <div style={{
