@@ -174,6 +174,7 @@ export default function VaultsPage() {
   const router = useRouter()
   const vaultCardsRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLElement>(null)
+  const lastDepositOpenRef = useRef(0)
   const [showChat, setShowChat] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [depositVault, setDepositVault] = useState<VaultData | null>(null)
@@ -243,6 +244,7 @@ export default function VaultsPage() {
 
   const handleDeposit = React.useCallback((vault: VaultData) => {
     if (!vault) return
+    lastDepositOpenRef.current = Date.now()
     setSelectedVault(vault)
     setDepositVault(vault)
     setShowDepositModal(true)
@@ -438,6 +440,18 @@ export default function VaultsPage() {
                   key={vault.address}
                   className="yd-vault-card-wrap"
                   style={{ '--card-color': color } as CSSProperties}
+                  onPointerUpCapture={(e) => {
+                    if (e.pointerType !== 'touch') return
+
+                    const target = e.target as HTMLElement
+                    if (target.closest('[data-vault-action="analytics"]')) return
+
+                    if (target.closest('[data-vault-action="deposit"]') || window.matchMedia('(max-width: 680px)').matches) {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleDeposit(vault)
+                    }
+                  }}
                 >
                   <div className="yd-vault-card-body">
                     {/* Top accent bar */}
@@ -564,7 +578,9 @@ export default function VaultsPage() {
                     <div style={{ display: 'flex', gap: 10, marginTop: '1.1rem' }}>
                       <button
                         type="button"
-                        onTouchEnd={(e) => {
+                        data-vault-action="deposit"
+                        onPointerUp={(e) => {
+                          if (e.pointerType !== 'touch') return
                           e.preventDefault()
                           e.stopPropagation()
                           handleDeposit(vault)
@@ -572,6 +588,7 @@ export default function VaultsPage() {
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
+                          if (Date.now() - lastDepositOpenRef.current < 600) return
                           handleDeposit(vault)
                         }}
                         style={{
@@ -603,6 +620,7 @@ export default function VaultsPage() {
                       </button>
                       <button
                         type="button"
+                        data-vault-action="analytics"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()

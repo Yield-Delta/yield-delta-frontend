@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, ArrowRight, Info, Shield, TrendingUp, Vault, DollarSign, CheckCircle2, Zap, X } from 'lucide-react';
 import { useEnhancedVaultDeposit } from '@/hooks/useEnhancedVaultDeposit';
 import {
@@ -120,6 +121,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   const [transactionStatus, setTransactionStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   // Get actual wallet connection
   const { address, isConnected } = useAccount();
 
@@ -131,6 +133,10 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   // Approval state
   const [needsApproval, setNeedsApproval] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Only create deposit mutation if vault has valid data
   const vaultData = vault && vault.address && vault.tokenA && vault.tokenB && vault.strategy ? {
@@ -383,7 +389,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   }, [isOpen, vault]);
 
   // Don't render if vault is null or modal is not open
-  if (!isOpen || !vault) {
+  if (!mounted || !isOpen || !vault) {
     return null;
   }
 
@@ -556,7 +562,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   const projectedDaily = isValidAmount ? (parseFloat(depositAmount) * vault.apy / 365) : 0;
   const actionDisabled = !isValidAmount || depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending' || (needsApproval && !isApprovalConfirmed);
 
-  return (
+  const modalContent = (
     <div
       className="fixed inset-0 z-[1000000] flex items-end justify-center bg-[#02030a]/82 px-0 backdrop-blur-xl sm:items-center sm:px-4 deposit-modal-container"
       onClick={(e) => {
@@ -837,6 +843,8 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 function MetricCard({ label, value, color }: { label: string; value: string; color?: string }) {
