@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';

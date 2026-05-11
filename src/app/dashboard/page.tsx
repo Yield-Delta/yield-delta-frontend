@@ -323,9 +323,6 @@ const DashboardPage = () => {
                           <tr key={pos.address} className="position-row-anim executive-row group cursor-pointer" onClick={() => router.push(`/vault?address=${pos.address}`)}>
                             <td className="px-8 py-8">
                                <div className="flex items-center gap-4">
-import Image from 'next/image';
-
-...
                                   <div className="w-10 h-10 bg-slate-800 border border-white/10 flex items-center justify-center group-hover:border-[#00f5d4]/40 transition-colors">
                                      <Image src={`/chains/${vault?.chainId === 1328 ? 'sei.svg' : 'solana.svg'}`} alt="chain" width={24} height={24} className="w-6 h-6" />
                                   </div>
