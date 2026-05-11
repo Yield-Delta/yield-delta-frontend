@@ -13,6 +13,9 @@ import { useSeiMarketData } from '@/hooks/useMarketData';
 import { useVaultStore, VaultData } from '@/stores/vaultStore';
 import { useVaultTVL } from '@/hooks/useVaultTVL';
 import { useTotalTVLInUSD } from '@/hooks/useTotalTVLInUSD';
+import { useMultiChainStore } from '@/stores/multiChainStore';
+import { ChainId } from '@/types/chain';
+import { getVaultsForChain, isSolanaChain } from '@/lib/vaultCatalog';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,7 +29,11 @@ const formatAmount = (amount: number, token: string = 'SEI') => {
 }
 
 const getVaultToken = (vault: VaultData) =>
-  vault.strategy === 'stable_max' || vault.tokenA === 'USDC' ? 'USDC' : 'SEI'
+  vault.strategy === 'stable_max' || vault.tokenA.toUpperCase().includes('USDC')
+    ? 'USDC'
+    : vault.tokenA.toUpperCase().includes('SOL')
+      ? 'SOL'
+      : 'SEI'
 
 const getRiskLevel = (apy: number, strategy?: string): 'Low' | 'Medium' | 'High' => {
   const modifier: Record<string, number> = {
@@ -152,6 +159,8 @@ export default function VaultsPage() {
   const [activeFilter, setActiveFilter] = useState('all')
 
   const { selectedVault, setSelectedVault, getFilteredVaults, isLoading: vaultLoading } = useVaultStore()
+  const activeChain = useMultiChainStore((state) => state.activeChain)
+  const vaultChain = activeChain || ChainId.SEI_TESTNET
   const [vaultsData, setVaultsData] = React.useState<VaultData[]>([])
   const [queryLoading, setQueryLoading] = React.useState(true)
   const [queryError, setQueryError] = React.useState<Error | null>(null)
@@ -160,6 +169,14 @@ export default function VaultsPage() {
     const fetchVaults = async () => {
       try {
         setQueryLoading(true)
+        setQueryError(null)
+
+        const localVaults = getVaultsForChain(vaultChain)
+        if (localVaults) {
+          setVaultsData(localVaults)
+          return
+        }
+
         const res = await fetch('/api/vaults')
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const result = await res.json()
@@ -172,14 +189,17 @@ export default function VaultsPage() {
       }
     }
     fetchVaults()
-  }, [])
+  }, [vaultChain])
 
   const { data: marketData } = useSeiMarketData()
-  const vaultAddresses = React.useMemo(() => vaultsData?.map(v => v.address) || [], [vaultsData])
+  const isSolanaVaultChain = isSolanaChain(vaultChain)
+  const vaultAddresses = React.useMemo(() => (
+    isSolanaVaultChain ? [] : vaultsData?.map(v => v.address) || []
+  ), [isSolanaVaultChain, vaultsData])
   const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
   const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
 
-  const isLoading = vaultLoading || queryLoading || tvlLoading
+  const isLoading = vaultLoading || queryLoading || (!isSolanaVaultChain && tvlLoading)
   const filteredVaults = React.useMemo(
     () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
     [vaultsData, getFilteredVaults]

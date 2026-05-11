@@ -334,7 +334,7 @@ function StatCard({ label, value, accent, tag }: { label: string; value: string;
 }
 
 function VaultRow({ vault, color, formatNumber, onView }: {
-  vault: { address: string; name: string; strategy: string; tvl: number; apy: number; tokenA: string; tokenB: string; chainId: number }
+  vault: { address: string; name: string; strategy: string; tvl: number; apy: number; tokenA: string; tokenB: string; chainId: number | string }
   color: string
   formatNumber: (n: number, d?: number) => string
   onView: () => void

@@ -5,6 +5,9 @@ import { useWriteContract, useAccount } from 'wagmi'
 import { parseUnits } from 'viem'
 import SEIVault from '@/lib/abis/SEIVault'
 import { createLogger } from '@/utils/logger'
+import { ChainId } from '@/types/chain'
+import { useMultiChainStore } from '@/stores/multiChainStore'
+import { getVaultsForChain } from '@/lib/vaultCatalog'
 
 const logger = createLogger('useVaults')
 
@@ -29,7 +32,7 @@ interface CreateVaultRequest {
 export const VAULT_QUERY_KEYS = {
   all: ['vaults'] as const,
   lists: () => [...VAULT_QUERY_KEYS.all, 'list'] as const,
-  list: (filters: Record<string, unknown>) => [...VAULT_QUERY_KEYS.lists(), filters] as const,
+  list: (filters: Record<string, unknown>, chainId?: ChainId | null) => [...VAULT_QUERY_KEYS.lists(), chainId || ChainId.SEI_TESTNET, filters] as const,
   details: () => [...VAULT_QUERY_KEYS.all, 'detail'] as const,
   detail: (address: string) => [...VAULT_QUERY_KEYS.details(), address] as const,
   positions: (walletAddress: string) => [...VAULT_QUERY_KEYS.all, 'positions', walletAddress] as const,
@@ -37,13 +40,15 @@ export const VAULT_QUERY_KEYS = {
 
 // Fetch all vaults
 export const useVaults = (filters?: { strategy?: string; active?: boolean }) => {
+  const activeChain = useMultiChainStore((state) => state.activeChain)
+  const vaultChain = activeChain || ChainId.SEI_TESTNET
   const setVaults = useVaultStore((state) => state.setVaults)
   const setLoading = useVaultStore((state) => state.setLoading)
   const setError = useVaultStore((state) => state.setError)
   const addNotification = useAppStore((state) => state.addNotification)
 
   return useQuery({
-    queryKey: VAULT_QUERY_KEYS.list(filters || {}),
+    queryKey: VAULT_QUERY_KEYS.list(filters || {}, vaultChain),
     queryFn: async (): Promise<VaultData[]> => {
       logger.debug('queryFn called - starting fetch');
 
@@ -53,6 +58,26 @@ export const useVaults = (filters?: { strategy?: string; active?: boolean }) => 
       }
 
       try {
+        const chainVaults = getVaultsForChain(vaultChain)
+        if (chainVaults) {
+          let filteredVaults = chainVaults
+          if (filters?.strategy) {
+            filteredVaults = filteredVaults.filter((vault) => vault.strategy === filters.strategy)
+          }
+          if (filters?.active !== undefined) {
+            filteredVaults = filteredVaults.filter((vault) => vault.active === filters.active)
+          }
+
+          logger.info(`Loaded ${filteredVaults.length} local vaults for ${vaultChain}`)
+
+          if (typeof window !== 'undefined') {
+            setVaults(filteredVaults)
+            setError(null)
+          }
+
+          return filteredVaults
+        }
+
         const params = new URLSearchParams()
         if (filters?.strategy) params.append('strategy', filters.strategy)
         if (filters?.active !== undefined) params.append('active', filters.active.toString())

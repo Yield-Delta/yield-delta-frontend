@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Navigation from '@/components/Navigation';
 import AIChat from '@/components/AIChat';
+import styles from './page.module.css';
 import { BarChart3, TrendingUp, AlertTriangle, Zap, CheckCircle, RefreshCw, MessageCircle, X, Bot, Activity, Info, Wallet, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,6 +16,9 @@ import { getTokenInfo } from '@/utils/tokenUtils';
 import { useTokenPrices, convertToUSD } from '@/hooks/useTokenPrices';
 import { calculateSimulatedYield } from '@/utils/simulatedYield';
 import Link from 'next/link';
+import { useMultiChainStore } from '@/stores/multiChainStore';
+import { ChainId } from '@/types/chain';
+import { isEvmChain } from '@/lib/vaultCatalog';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -48,11 +52,15 @@ const RebalanceDashboardPage = () => {
   const { address: userAddress } = useAccount();
   const { data: vaults, isLoading: vaultsLoading } = useVaults();
   const { data: tokenPrices, isLoading: pricesLoading } = useTokenPrices();
+  const activeChain = useMultiChainStore((state) => state.activeChain)
+  const vaultChain = activeChain || ChainId.SEI_TESTNET
+  const isEvmVaultChain = isEvmChain(vaultChain)
 
   // Get vault addresses for positions
   const vaultAddresses = useMemo(() => {
+    if (!isEvmVaultChain) return [];
     return vaults?.map(v => v.address) || [];
-  }, [vaults]);
+  }, [isEvmVaultChain, vaults]);
 
   // Fetch user positions
   const { positions: rawPositions, isLoading: positionsLoading } = useMultipleVaultPositions(vaultAddresses);
@@ -409,251 +417,113 @@ const RebalanceDashboardPage = () => {
   const isLoading = !mounted || vaultsLoading || positionsLoading || pricesLoading;
 
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* Three.js Background */}
-      <div
-        ref={mountRef}
-        className="fixed inset-0 z-0"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(155, 93, 229, 0.15) 0%, rgba(0, 245, 212, 0.05) 50%, transparent 100%)'
-        }}
-      />
+    <div className={styles.pageShell}>
+      <div ref={mountRef} className={styles.threeLayer} />
+      <div className={styles.gridLayer} aria-hidden />
+      <div className={styles.pageVeil} aria-hidden />
 
-      {/* Background overlay */}
-      <div className="fixed inset-0 z-5 bg-gradient-to-b from-background/70 via-background/60 to-background/70 pointer-events-none" />
-
-      {/* Navigation */}
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
 
-      {/* Header */}
-      <div className="relative z-10" style={{ paddingTop: '1.5rem' }}>
-        <div
-          className="border-b border-white/10 backdrop-blur-xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(155, 93, 229, 0.15) 0%, rgba(0, 245, 212, 0.08) 50%, rgba(255, 32, 110, 0.12) 100%)',
-            backdropFilter: 'blur(20px)',
-            borderBottom: '1px solid rgba(155, 93, 229, 0.3)',
-            boxShadow: '0 8px 32px rgba(0, 245, 212, 0.1)'
-          }}
-        >
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
-                  style={{
-                    background: 'linear-gradient(135deg, #00f5d4 0%, #ff206e 100%)',
-                    boxShadow: '0 0 30px rgba(0, 245, 212, 0.4)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
-                  <Bot className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1
-                    className="text-3xl font-extrabold flex items-center gap-3"
-                    style={{
-                      background: 'linear-gradient(135deg, #00f5d4 0%, #9b5de5 50%, #ff206e 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(0, 245, 212, 0.5)'
-                    }}
-                  >
-                    AI Rebalancing Dashboard
-                  </h1>
-                  <p className="text-gray-300 mt-1 font-medium">Kairos AI automatically optimizes your positions</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-400 font-medium">Portfolio Value</div>
-                <div
-                  className="text-2xl font-black"
-                  style={{
-                    background: 'linear-gradient(135deg, #ffffff 0%, #00f5d4 100%)',
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '0 0 20px rgba(255, 255, 255, 0.3)'
-                  }}
-                >
-                  {isLoading ? '...' : formatCurrency(portfolioStats.totalValue)}
-                </div>
-                {!isLoading && portfolioStats.totalValue > 0 && (
-                  <div
-                    className={`text-sm font-bold ${
-                      portfolioStats.dailyChange >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}
-                    style={{
-                      textShadow: `0 0 10px ${portfolioStats.dailyChange >= 0 ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`
-                    }}
-                  >
-                    {portfolioStats.dailyChange >= 0 ? '+' : ''}{portfolioStats.dailyChange.toFixed(2)}% P&L
-                  </div>
-                )}
-              </div>
+      <main className={styles.main}>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <div className={styles.liveBadge}>
+              <span />
+              KAIROS REBALANCING
             </div>
+            <h1>AI position control for active vault portfolios</h1>
+            <p>Kairos monitors your deposits, simulated yield, and vault exposure to surface optimization and risk signals.</p>
           </div>
-        </div>
-      </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        {/* Loading State */}
+          <div className={styles.portfolioConsole}>
+            <div className={styles.consoleHeader}>
+              <Bot />
+              <span>Portfolio Value</span>
+            </div>
+            <strong>{isLoading ? '...' : formatCurrency(portfolioStats.totalValue)}</strong>
+            {!isLoading && portfolioStats.totalValue > 0 && (
+              <div className={portfolioStats.dailyChange >= 0 ? styles.pnlPositive : styles.pnlNegative}>
+                {portfolioStats.dailyChange >= 0 ? '+' : ''}{portfolioStats.dailyChange.toFixed(2)}% P&L
+              </div>
+            )}
+          </div>
+        </section>
+
         {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-400 mr-3" />
-            <span className="text-lg text-gray-300">Loading your portfolio...</span>
-          </div>
+          <section className={styles.statePanel}>
+            <Loader2 />
+            <h2>Loading your portfolio...</h2>
+          </section>
         )}
 
-        {/* No Wallet Connected */}
         {mounted && !userAddress && !vaultsLoading && (
-          <div className="text-center py-20">
-            <Wallet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">Connect Your Wallet</h2>
-            <p className="text-gray-400 mb-6">Please connect your wallet to view AI rebalancing insights</p>
-          </div>
+          <section className={styles.statePanel}>
+            <Wallet />
+            <h2>Connect Your Wallet</h2>
+            <p>Please connect your wallet to view AI rebalancing insights.</p>
+          </section>
         )}
 
-        {/* No Positions */}
         {mounted && userAddress && !isLoading && vaultPositions.length === 0 && (
-          <div className="text-center py-20">
-            <Info className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-2">No Active Positions</h2>
-            <p className="text-gray-400 mb-6">Deposit to vaults to enable AI-powered rebalancing</p>
+          <section className={styles.statePanel}>
+            <Info />
+            <h2>No Active Positions</h2>
+            <p>Deposit to vaults to enable AI-powered rebalancing.</p>
             <Link
               href="/vaults"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-600 transition-all"
+              className={styles.primaryLink}
             >
               Explore Vaults
             </Link>
-          </div>
+          </section>
         )}
 
-        {/* Main Content - Show when user has positions */}
         {!isLoading && userAddress && vaultPositions.length > 0 && (
           <>
-            {/* Automated Rebalancing Info Banner */}
-            <div
-              className="mb-8 p-6 rounded-2xl"
-              style={{
-                background: 'linear-gradient(135deg, rgba(0, 245, 212, 0.15) 0%, rgba(155, 93, 229, 0.15) 100%)',
-                border: '1px solid rgba(0, 245, 212, 0.3)',
-                backdropFilter: 'blur(20px)',
-              }}
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: 'linear-gradient(135deg, #00f5d4 0%, #9b5de5 100%)',
-                  }}
-                >
-                  <Bot className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-2">Automated AI Rebalancing Active</h3>
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    Kairos AI continuously monitors your positions and automatically executes optimal rebalancing strategies.
-                    This dashboard shows you what the AI is analyzing and recommending. You don&apos;t need to take manual action -
-                    the AI handles optimization automatically using SEI&apos;s 400ms finality for lightning-fast execution.
-                  </p>
-                </div>
+            <section className={styles.statusBanner}>
+              <Bot />
+              <div>
+                <h2>Automated AI Rebalancing Active</h2>
+                <p>
+                  Kairos continuously monitors your positions and can surface optimal rebalancing strategies. SEI&apos;s 400ms finality keeps execution windows tight when the strategy changes.
+                </p>
               </div>
-            </div>
+            </section>
 
-            {/* Stats Overview */}
-            <div ref={statsRef} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <section ref={statsRef} className={styles.statsGrid}>
               {[
                 { label: 'Unrealized P&L', value: formatCurrency(portfolioStats.unrealizedPnL), change: `${portfolioStats.dailyChange >= 0 ? '+' : ''}${portfolioStats.dailyChange.toFixed(1)}%`, color: '#10b981' },
-                { label: 'Average APY', value: `${portfolioStats.avgAPY.toFixed(1)}%`, change: 'Across positions', color: '#3b82f6' },
+                { label: 'Average APY', value: `${portfolioStats.avgAPY.toFixed(1)}%`, change: 'Across positions', color: '#00f5d4' },
                 { label: 'Active Positions', value: portfolioStats.activePositions.toString(), change: 'Being monitored', color: '#9b5de5' },
-                { label: 'AI Status', value: 'Active', change: '24/7 monitoring', color: '#f59e0b' }
+                { label: 'AI Status', value: 'Active', change: '24/7 monitoring', color: '#ff206e' }
               ].map((stat, index) => (
-                <div
+                <article
                   key={index}
-                  className="transition-all duration-500 hover:scale-105 cursor-pointer group"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '20px',
-                    padding: '1.5rem',
-                    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = `${stat.color}60`;
-                    e.currentTarget.style.boxShadow = `0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px ${stat.color}40, 0 0 0 1px rgba(255, 255, 255, 0.15) inset`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
-                  }}
+                  className={styles.statCard}
+                  style={{ '--accent': stat.color } as React.CSSProperties}
                 >
-                  <div className="text-gray-300 text-sm mb-2 font-medium">{stat.label}</div>
-                  <div
-                    className="text-xl font-black mb-2"
-                    style={{
-                      background: `linear-gradient(135deg, ${stat.color} 0%, #ffffff 100%)`,
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: `0 0 20px ${stat.color}40`
-                    }}
-                  >
-                    {stat.value}
-                  </div>
-                  <div className="text-sm font-bold" style={{ color: stat.color, textShadow: `0 0 10px ${stat.color}40` }}>
-                    {stat.change}
-                  </div>
-                </div>
+                  <span>{stat.label}</span>
+                  <strong>{stat.value}</strong>
+                  <em>{stat.change}</em>
+                </article>
               ))}
-            </div>
+            </section>
 
-            {/* AI Analysis Section */}
-            <div ref={cardsRef}>
-              <div
-                className="mb-8 group transition-all duration-500 hover:scale-[1.02]"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(155, 93, 229, 0.3)',
-                  borderRadius: '24px',
-                  padding: '2rem',
-                  boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(155, 93, 229, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
-                }}
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2
-                    className="text-2xl font-black flex items-center gap-3"
-                    style={{
-                      background: 'linear-gradient(135deg, #fbae3c 0%, #ff206e 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(251, 174, 60, 0.5)'
-                    }}
-                  >
-                    <Zap className="w-6 h-6" style={{ color: '#fbae3c', filter: 'drop-shadow(0 0 10px rgba(251, 174, 60, 0.7))' }} />
+            <section ref={cardsRef} className={styles.analysisStack}>
+              <div className={styles.analysisPanel}>
+                <div className={styles.panelHeader}>
+                  <h2>
+                    <Zap />
                     AI Analysis & Recommendations
                   </h2>
                   <button
                     onClick={handleAnalyze}
                     disabled={isAnalyzing}
-                    className="transition-all duration-300 hover:scale-105 active:scale-95 flex items-center gap-2 font-bold px-6 py-3 rounded-xl disabled:opacity-50"
-                    style={{
-                      background: isAnalyzing
-                        ? 'linear-gradient(135deg, rgba(251, 174, 60, 0.3) 0%, rgba(255, 32, 110, 0.3) 100%)'
-                        : 'linear-gradient(135deg, #fbae3c 0%, #ff206e 100%)',
-                      color: '#000000',
-                      boxShadow: '0 10px 30px rgba(251, 174, 60, 0.4), 0 0 20px rgba(255, 32, 110, 0.3)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      backdropFilter: 'blur(10px)'
-                    }}
+                    className={styles.analyzeButton}
                   >
                     {isAnalyzing ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                        <span className={styles.spinner} />
                         Analyzing...
                       </>
                     ) : (
@@ -666,213 +536,96 @@ const RebalanceDashboardPage = () => {
                 </div>
 
                 {isAnalyzing ? (
-                  <div className="text-center py-12">
-                    <div
-                      className="w-20 h-20 rounded-full animate-spin mx-auto mb-6"
-                      style={{
-                        border: '4px solid rgba(251, 174, 60, 0.3)',
-                        borderTop: '4px solid #fbae3c',
-                        boxShadow: '0 0 40px rgba(251, 174, 60, 0.6)'
-                      }}
-                    />
-                    <div
-                      className="text-xl font-black mb-3"
-                      style={{
-                        background: 'linear-gradient(135deg, #fbae3c 0%, #ff206e 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        textShadow: '0 0 20px rgba(251, 174, 60, 0.5)'
-                      }}
-                    >
-                      Kairos AI Analyzing
-                    </div>
-                    <div className="text-gray-300 font-medium">Scanning market conditions and optimizing strategies...</div>
+                  <div className={styles.analysisState}>
+                    <span className={styles.largeSpinner} />
+                    <h3>Kairos AI Analyzing</h3>
+                    <p>Scanning market conditions and optimizing strategies...</p>
                   </div>
                 ) : aiRecommendations.length > 0 ? (
-                  <div className="space-y-6">
-                    <div
-                      className="rounded-xl p-6 mb-6"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        backdropFilter: 'blur(10px)',
-                        boxShadow: '0 10px 30px rgba(16, 185, 129, 0.2)'
-                      }}
-                    >
-                      <div className="flex items-center gap-3 text-green-400 mb-3">
-                        <CheckCircle className="w-6 h-6" style={{ filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.7))' }} />
-                        <span className="font-black text-lg">Analysis Complete</span>
+                  <div className={styles.recommendationStack}>
+                    <div className={styles.completeBanner}>
+                      <CheckCircle />
+                      <div>
+                        <strong>Analysis Complete</strong>
+                        <p>Found {aiRecommendations.length} insights for your positions</p>
                       </div>
-                      <p className="text-gray-200 font-medium text-lg">
-                        Found <span className="font-black text-green-400">{aiRecommendations.length}</span> insights for your positions
-                      </p>
                     </div>
 
-                    {/* AI Recommendations */}
-                    <div className="space-y-4">
+                    <div className={styles.recommendationList}>
                       {aiRecommendations.map((rec) => (
                         <div
                           key={rec.id}
-                          className="transition-all duration-500 hover:scale-[1.02] group"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-                            backdropFilter: 'blur(15px)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
-                            borderRadius: '20px',
-                            padding: '1.5rem',
-                            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.08) inset'
-                          }}
+                          className={styles.recommendationCard}
                         >
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-4">
-                              <div
-                                className="flex items-center justify-center w-12 h-12 rounded-xl"
-                                style={{
-                                  background: 'linear-gradient(135deg, rgba(0, 245, 212, 0.2) 0%, rgba(155, 93, 229, 0.2) 100%)',
-                                  backdropFilter: 'blur(10px)',
-                                  border: '1px solid rgba(0, 245, 212, 0.3)',
-                                  boxShadow: '0 0 20px rgba(0, 245, 212, 0.3)'
-                                }}
-                              >
+                          <div className={styles.recHeader}>
+                            <div className={styles.recIdentity}>
+                              <span>
                                 {getRecommendationIcon(rec.type)}
-                              </div>
+                              </span>
                               <div>
-                                <div
-                                  className="font-black text-lg capitalize mb-1"
-                                  style={{
-                                    background: 'linear-gradient(135deg, #ffffff 0%, #00f5d4 100%)',
-                                    backgroundClip: 'text',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent'
-                                  }}
-                                >
-                                  {rec.vault}
-                                </div>
-                                <div className="text-sm text-gray-400 font-medium capitalize">
-                                  {rec.type.replace('_', ' ')}
-                                </div>
+                                <strong>{rec.vault}</strong>
+                                <em>{rec.type.replace('_', ' ')}</em>
                               </div>
                             </div>
 
-                            <div className="text-right">
-                              <div
-                                className="font-black text-lg"
-                                style={{
-                                  background: 'linear-gradient(135deg, #00f5d4 0%, #9b5de5 100%)',
-                                  backgroundClip: 'text',
-                                  WebkitBackgroundClip: 'text',
-                                  WebkitTextFillColor: 'transparent'
-                                }}
-                              >
-                                {rec.impact}
-                              </div>
-                              <div className="text-sm text-gray-400 font-bold">
-                                {rec.confidence}% confidence
-                              </div>
+                            <div className={styles.recImpact}>
+                              <strong>{rec.impact}</strong>
+                              <span>{rec.confidence}% confidence</span>
                             </div>
                           </div>
 
-                          <div
-                            className="text-sm font-medium rounded-xl p-4"
-                            style={{
-                              background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.2) 100%)',
-                              border: '1px solid rgba(155, 93, 229, 0.3)',
-                              backdropFilter: 'blur(10px)',
-                              color: '#e5e7eb'
-                            }}
-                          >
+                          <p className={styles.recDescription}>
                             {rec.description}
-                          </div>
+                          </p>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <BarChart3
-                      className="w-20 h-20 mx-auto mb-6 opacity-50"
-                      style={{
-                        color: '#9b5de5',
-                        filter: 'drop-shadow(0 0 20px rgba(155, 93, 229, 0.3))'
-                      }}
-                    />
-                    <div
-                      className="text-lg font-bold"
-                      style={{
-                        background: 'linear-gradient(135deg, #9b5de5 0%, #00f5d4 100%)',
-                        backgroundClip: 'text',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent'
-                      }}
-                    >
-                      Click &quot;Run Analysis&quot; to see AI recommendations
-                    </div>
+                  <div className={styles.analysisState}>
+                    <BarChart3 />
+                    <h3>Run analysis to see AI recommendations</h3>
                   </div>
                 )}
               </div>
 
-              {/* Historical Activity */}
               {rebalanceHistory.length > 0 && (
-                <div
-                  className="group transition-all duration-500 hover:scale-[1.02]"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    borderRadius: '24px',
-                    padding: '2rem',
-                    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(59, 130, 246, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
-                  }}
-                >
-                  <h3
-                    className="text-2xl font-black mb-6 flex items-center gap-3"
-                    style={{
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      textShadow: '0 0 30px rgba(59, 130, 246, 0.5)'
-                    }}
-                  >
-                    <Activity className="w-6 h-6" style={{ color: '#3b82f6', filter: 'drop-shadow(0 0 15px rgba(59, 130, 246, 0.7))' }} />
+                <div className={styles.historyPanel}>
+                  <h3>
+                    <Activity />
                     Recent AI Rebalancing Activity
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className={styles.historyList}>
                     {rebalanceHistory.map((event) => (
                       <div
                         key={event.id}
-                        className="p-4 rounded-xl"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                        }}
+                        className={styles.historyItem}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-bold text-white">{event.vault}</div>
-                          <div className="text-sm text-gray-400">
+                        <div>
+                          <strong>{event.vault}</strong>
+                          <span>
                             {event.timestamp.toLocaleDateString()}
-                          </div>
+                          </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-gray-300">{event.action}</div>
-                          <div className="text-sm text-green-400 font-medium">{event.result}</div>
+                        <div>
+                          <span>{event.action}</span>
+                          <em>{event.result}</em>
                         </div>
                         {event.txHash && (
-                          <div className="mt-2 text-xs text-gray-500 font-mono">
+                          <code>
                             TX: {event.txHash}
-                          </div>
+                          </code>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           </>
         )}
-      </div>
+      </main>
 
       {/* AI Chat Interface */}
       {showChat && (
