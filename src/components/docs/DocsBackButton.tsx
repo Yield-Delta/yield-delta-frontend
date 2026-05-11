@@ -18,17 +18,18 @@ export function DocsBackButton({
       <Link href={href}>
         <Button
           variant="outline"
-          className="gap-2 hover:gap-3 transition-all duration-300 group"
+          className="group gap-2 rounded-full text-sm font-semibold text-white/72 transition-all duration-300 hover:gap-3 hover:text-white"
           style={{
-            background: 'linear-gradient(135deg, rgba(155, 93, 229, 0.08) 0%, rgba(0, 245, 212, 0.06) 100%)',
-            border: '1px solid rgba(155, 93, 229, 0.3)',
-            backdropFilter: 'blur(10px)',
+            background: 'rgba(0, 245, 212, 0.075)',
+            border: '1px solid rgba(0, 245, 212, 0.32)',
+            backdropFilter: 'blur(18px)',
+            boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 34px rgba(0, 245, 212, 0.08)',
             minHeight: '44px',
             minWidth: '44px',
-            padding: '0.75rem 1.25rem',
+            padding: '0.7rem 1rem',
           }}
         >
-          <ArrowLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1" />
+          <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-1" />
           <span className="font-semibold">{label}</span>
         </Button>
       </Link>
