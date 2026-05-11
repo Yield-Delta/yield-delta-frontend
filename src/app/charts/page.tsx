@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Navigation from '@/components/Navigation';
+import styles from './page.module.css';
 import {
   TrendingUp,
   TrendingDown,
@@ -635,63 +636,90 @@ const ChartsPage = () => {
     ));
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Background gradient */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          background: 'radial-gradient(ellipse at center, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%)'
-        }}
-      />
+  const latestRSI = calculateRSI(ohlcData).slice(-1)[0]?.value;
+  const latestMACD = calculateMACD(ohlcData);
+  const macdValue = latestMACD.macd.slice(-1)[0]?.value || 0;
+  const signalValue = latestMACD.signal.slice(-1)[0]?.value || 0;
+  const sma20Value = calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0;
+  const sma50Value = calculateSMA(ohlcData, 50).slice(-1)[0]?.value || 0;
+  const dailyRange = low24h > 0 ? (((high24h - low24h) / low24h) * 100).toFixed(2) : '0.00';
 
+  const technicalSummary = [
+    {
+      title: 'Trend Analysis',
+      icon: TrendingUp,
+      accent: '#10b981',
+      items: [
+        { label: 'Short-term', value: priceChange >= 0 ? 'Bullish' : 'Bearish', positive: priceChange >= 0 },
+        { label: 'SMA 20', value: currentPrice > sma20Value ? 'Above' : 'Below', positive: currentPrice > sma20Value },
+        { label: 'SMA 50', value: currentPrice > sma50Value ? 'Above' : 'Below', positive: currentPrice > sma50Value },
+      ],
+    },
+    {
+      title: 'Momentum',
+      icon: Activity,
+      accent: '#9b5de5',
+      items: [
+        { label: 'RSI (14)', value: latestRSI?.toFixed(1) || 'N/A', positive: (latestRSI || 50) < 70 && (latestRSI || 50) > 30 },
+        { label: 'MACD', value: macdValue >= 0 ? 'Positive' : 'Negative', positive: macdValue >= 0 },
+        { label: 'Signal', value: macdValue > signalValue ? 'Bullish' : 'Bearish', positive: macdValue > signalValue },
+      ],
+    },
+    {
+      title: 'Volatility',
+      icon: Target,
+      accent: '#00f5d4',
+      items: [
+        { label: 'Daily Range', value: `${dailyRange}%`, positive: true },
+        { label: 'BB Width', value: 'Normal', positive: true },
+        { label: 'Volume', value: volume24h > 2000000 ? 'High' : 'Normal', positive: volume24h > 2000000 },
+      ],
+    },
+  ];
+
+  return (
+    <div className={styles.pageShell}>
+      <div className={styles.gridBackdrop} aria-hidden />
+      <div className={styles.radarGlow} aria-hidden />
       <Navigation variant="dark" showWallet={true} showLaunchApp={false} />
 
-      {/* Main Content */}
-      <div className="relative z-10" style={{ paddingTop: '1.5rem' }}>
-        {/* Header */}
-        <div
-          className="border-b border-white/10"
-          style={{
-            background: 'linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 100%)',
-          }}
-        >
-          <div className="max-w-[1600px] mx-auto px-4 py-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-              {/* Token Selector & Price */}
-              <div className="flex items-center gap-6">
-                {/* Token Dropdown */}
-                <div className="relative">
+      <main className={styles.main}>
+        <section className={styles.heroPanel}>
+          <div className={styles.heroCopy}>
+            <div className={styles.liveBadge}>
+              <span />
+              MARKET SIGNALS
+            </div>
+            <h1 className={styles.title}>
+              Institutional charts for <span>{selectedToken.symbol}</span> liquidity timing
+            </h1>
+            <p className={styles.subtitle}>
+              Live token pricing, technical overlays, and momentum diagnostics tuned to Yield Delta strategy workflows.
+            </p>
+          </div>
+
+          <div className={styles.marketPanel}>
+            <div className={styles.tokenRow}>
+              <div className={styles.tokenDropdown}>
                   <button
                     onClick={() => setShowTokenDropdown(!showTokenDropdown)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 hover:bg-white/10"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                    }}
+                  className={styles.tokenButton}
                   >
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white"
+                    className={styles.tokenAvatar}
                       style={{ background: selectedToken.color }}
                     >
                       {selectedToken.symbol.slice(0, 2)}
                     </div>
-                    <div className="text-left">
-                      <div className="font-bold text-white text-lg">{selectedToken.symbol}/USD</div>
-                      <div className="text-xs text-gray-400">{selectedToken.name}</div>
+                  <div>
+                    <div className={styles.tokenSymbol}>{selectedToken.symbol}/USD</div>
+                    <div className={styles.tokenName}>{selectedToken.name}</div>
                     </div>
-                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showTokenDropdown ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={showTokenDropdown ? styles.chevronOpen : styles.chevron} />
                   </button>
 
                   {showTokenDropdown && (
-                    <div
-                      className="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden z-50"
-                      style={{
-                        background: 'rgba(20, 20, 30, 0.95)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(20px)',
-                      }}
-                    >
+                  <div className={styles.dropdown}>
                       {TOKENS.map(token => (
                         <button
                           key={token.symbol}
@@ -699,17 +727,17 @@ const ChartsPage = () => {
                             setSelectedToken(token);
                             setShowTokenDropdown(false);
                           }}
-                          className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 transition-colors"
+                        className={styles.dropdownItem}
                         >
                           <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm"
+                          className={styles.dropdownAvatar}
                             style={{ background: token.color }}
                           >
                             {token.symbol.slice(0, 2)}
                           </div>
-                          <div className="text-left">
-                            <div className="font-semibold text-white">{token.symbol}</div>
-                            <div className="text-xs text-gray-400">{token.name}</div>
+                        <div>
+                          <div className={styles.dropdownSymbol}>{token.symbol}</div>
+                          <div className={styles.dropdownName}>{token.name}</div>
                           </div>
                         </button>
                       ))}
@@ -717,68 +745,48 @@ const ChartsPage = () => {
                   )}
                 </div>
 
-                {/* Price Display */}
-                <div>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-bold text-white">
+              <div className={styles.priceBlock}>
+                <div className={styles.price}>
                       ${currentPrice.toFixed(4)}
-                    </span>
-                    <span className={`flex items-center gap-1 text-lg font-semibold ${priceChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                </div>
+                <div className={priceChange >= 0 ? styles.priceUp : styles.priceDown}>
                       {priceChange >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                       {priceChange >= 0 ? '+' : ''}{priceChangePercent.toFixed(2)}%
-                    </span>
-                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Stats */}
-              <div className="flex flex-wrap items-center gap-4">
+            <div className={styles.statGrid}>
                 {[
-                  { label: '24h High', value: `$${high24h.toFixed(4)}`, icon: TrendingUp, color: 'text-green-400' },
-                  { label: '24h Low', value: `$${low24h.toFixed(4)}`, icon: TrendingDown, color: 'text-red-400' },
-                  { label: '24h Volume', value: `$${(volume24h / 1000000).toFixed(2)}M`, icon: BarChart3, color: 'text-blue-400' },
+                { label: '24h High', value: `$${high24h.toFixed(4)}`, icon: TrendingUp, accent: '#10b981' },
+                { label: '24h Low', value: `$${low24h.toFixed(4)}`, icon: TrendingDown, accent: '#ff206e' },
+                { label: '24h Volume', value: `$${(volume24h / 1000000).toFixed(2)}M`, icon: BarChart3, accent: '#00f5d4' },
                 ].map((stat, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
+                  className={styles.statPill}
+                  style={{ '--accent': stat.accent } as React.CSSProperties}
                   >
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  <stat.icon className={styles.statIcon} />
                     <div>
-                      <div className="text-xs text-gray-400">{stat.label}</div>
-                      <div className="font-semibold text-white">{stat.value}</div>
+                    <div className={styles.statLabel}>{stat.label}</div>
+                    <div className={styles.statValue}>{stat.value}</div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
-        </div>
+        </section>
 
-        {/* Chart Controls */}
-        <div className="max-w-[1600px] mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Timeframe Selector */}
-            <div className="flex items-center gap-3">
-              <Clock className="w-4 h-4 text-gray-400" />
-              <div className="flex gap-2">
+        <section className={styles.controlDeck}>
+          <div className={styles.controlGroup}>
+            <span className={styles.groupLabel}><Clock /> Timeframe</span>
+            <div className={styles.segmented}>
                 {TIMEFRAMES.map(tf => (
                   <button
                     key={tf.value}
                     onClick={() => setSelectedTimeframe(tf)}
-                    className={`px-5 py-2.5 rounded-full font-medium text-sm transition-all min-w-[52px] ${
-                      selectedTimeframe.value === tf.value
-                        ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50 shadow-lg'
-                        : 'text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
-                    }`}
-                    style={{
-                      boxShadow: selectedTimeframe.value === tf.value
-                        ? '0 4px 15px rgba(99, 102, 241, 0.3)'
-                        : 'none'
-                    }}
+                    className={selectedTimeframe.value === tf.value ? styles.segmentActive : styles.segment}
                   >
                     {tf.label}
                   </button>
@@ -786,49 +794,38 @@ const ChartsPage = () => {
               </div>
             </div>
 
-            {/* Indicator Toggles */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Layers className="w-4 h-4 text-gray-400" />
+          <div className={styles.indicatorGroup}>
+            <span className={styles.groupLabel}><Layers /> Overlays</span>
+            <div className={styles.chips}>
               {indicators.map(indicator => (
                 <button
                   key={indicator.name}
                   onClick={() => toggleIndicator(indicator.name)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                    indicator.enabled
-                      ? 'bg-white/10 border border-white/20'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'
-                  }`}
-                  style={indicator.enabled ? { borderColor: indicator.color + '50', boxShadow: `0 2px 10px ${indicator.color}20` } : {}}
+                  className={indicator.enabled ? styles.chipActive : styles.chip}
+                  style={{ '--chip': indicator.color } as React.CSSProperties}
                 >
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ background: indicator.enabled ? indicator.color : 'rgba(255,255,255,0.2)' }}
-                  />
+                  <span />
                   {indicator.name}
                 </button>
               ))}
             </div>
+          </div>
 
-            {/* Sub-chart toggles */}
-            <div className="flex items-center gap-2">
+          <div className={styles.oscillatorGroup}>
               <button
                 onClick={() => setShowRSI(!showRSI)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                  showRSI ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
-                }`}
-                style={showRSI ? { boxShadow: '0 2px 10px rgba(168, 85, 247, 0.2)' } : {}}
+              className={showRSI ? styles.oscillatorActive : styles.oscillator}
+              style={{ '--chip': '#9b5de5' } as React.CSSProperties}
               >
-                <Activity className="w-3.5 h-3.5" />
+              <Activity />
                 RSI
               </button>
               <button
                 onClick={() => setShowMACD(!showMACD)}
-                className={`px-4 py-2 rounded-full text-xs font-medium transition-all flex items-center gap-2 ${
-                  showMACD ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'text-gray-500 hover:text-gray-300 border border-transparent'
-                }`}
-                style={showMACD ? { boxShadow: '0 2px 10px rgba(6, 182, 212, 0.2)' } : {}}
+              className={showMACD ? styles.oscillatorActive : styles.oscillator}
+              style={{ '--chip': '#00f5d4' } as React.CSSProperties}
               >
-                <Zap className="w-3.5 h-3.5" />
+              <Zap />
                 MACD
               </button>
               <button
@@ -844,154 +841,95 @@ const ChartsPage = () => {
                     setIsLoading(false);
                   }
                 }}
-                className="p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-all"
+              className={styles.refreshButton}
+              aria-label="Refresh chart data"
               >
                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
-          </div>
-        </div>
+        </section>
 
-        {/* Charts Container */}
-        <div className="max-w-[1600px] mx-auto px-4 pb-8">
-          <div
-            className="rounded-2xl overflow-hidden"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-            }}
-          >
-            {/* Main Candlestick Chart */}
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-indigo-400" />
-                  <span className="font-semibold text-white">Price Chart</span>
-                </div>
-                <div className="text-xs text-gray-400">
-                  {selectedToken.symbol}/USD • {selectedTimeframe.label} timeframe
+        <section className={styles.chartFrame}>
+          <div className={styles.chartHeader}>
+            <div>
+              <div className={styles.sectionKicker}>Price Chart</div>
+              <h2>{selectedToken.symbol}/USD execution view</h2>
+            </div>
+            <div className={styles.chartMeta}>
+              <span>{selectedTimeframe.label} timeframe</span>
+              <span>{ohlcData.length} candles</span>
                 </div>
               </div>
+
+          <div className={styles.mainChartWrap}>
               <div
                 ref={chartContainerRef}
-                className="w-full rounded-xl overflow-hidden"
-                style={{ height: '450px' }}
+              className={styles.mainChart}
               />
             </div>
 
-            {/* RSI Chart */}
             {showRSI && (
-              <div className="px-4 pb-4 border-t border-white/5">
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-medium text-white">RSI (14)</span>
-                    <span className="text-xs text-gray-400 ml-2">
-                      Overbought: 70 | Oversold: 30
-                    </span>
+            <div className={styles.subChartPanel}>
+              <div className={styles.subChartHeader}>
+                <div><Activity /> RSI (14)</div>
+                <span>Overbought 70 / Oversold 30</span>
                   </div>
-                </div>
                 <div
                   ref={rsiContainerRef}
-                  className="w-full rounded-xl overflow-hidden"
-                  style={{ height: '120px' }}
+                className={styles.rsiChart}
                 />
               </div>
             )}
 
-            {/* MACD Chart */}
             {showMACD && (
-              <div className="px-4 pb-4 border-t border-white/5">
-                <div className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-cyan-400" />
-                    <span className="text-sm font-medium text-white">MACD (12, 26, 9)</span>
-                    <div className="flex items-center gap-3 ml-4 text-xs">
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-cyan-400" />
+            <div className={styles.subChartPanel}>
+              <div className={styles.subChartHeader}>
+                <div><Zap /> MACD (12, 26, 9)</div>
+                <div className={styles.legend}>
+                  <span style={{ '--dot': '#00f5d4' } as React.CSSProperties}>
                         MACD
                       </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span style={{ '--dot': '#f59e0b' } as React.CSSProperties}>
                         Signal
                       </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-green-400" />
+                  <span style={{ '--dot': '#10b981' } as React.CSSProperties}>
                         Histogram
                       </span>
                     </div>
                   </div>
-                </div>
                 <div
                   ref={macdContainerRef}
-                  className="w-full rounded-xl overflow-hidden"
-                  style={{ height: '150px' }}
+                className={styles.macdChart}
                 />
               </div>
             )}
-          </div>
+        </section>
 
-          {/* Technical Analysis Summary */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                title: 'Trend Analysis',
-                icon: TrendingUp,
-                color: 'green',
-                items: [
-                  { label: 'Short-term', value: priceChange >= 0 ? 'Bullish' : 'Bearish', positive: priceChange >= 0 },
-                  { label: 'SMA 20', value: currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) ? 'Above' : 'Below', positive: currentPrice > (calculateSMA(ohlcData, 20).slice(-1)[0]?.value || 0) },
-                  { label: 'SMA 50', value: currentPrice > (calculateSMA(ohlcData, 50).slice(-1)[0]?.value || 0) ? 'Above' : 'Below', positive: currentPrice > (calculateSMA(ohlcData, 50).slice(-1)[0]?.value || 0) },
-                ]
-              },
-              {
-                title: 'Momentum',
-                icon: Activity,
-                color: 'purple',
-                items: [
-                  { label: 'RSI (14)', value: calculateRSI(ohlcData).slice(-1)[0]?.value.toFixed(1) || 'N/A', positive: (calculateRSI(ohlcData).slice(-1)[0]?.value || 50) < 70 && (calculateRSI(ohlcData).slice(-1)[0]?.value || 50) > 30 },
-                  { label: 'MACD', value: calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 ? 'Positive' : 'Negative', positive: calculateMACD(ohlcData).macd.slice(-1)[0]?.value >= 0 },
-                  { label: 'Signal', value: calculateMACD(ohlcData).macd.slice(-1)[0]?.value > (calculateMACD(ohlcData).signal.slice(-1)[0]?.value || 0) ? 'Bullish' : 'Bearish', positive: calculateMACD(ohlcData).macd.slice(-1)[0]?.value > (calculateMACD(ohlcData).signal.slice(-1)[0]?.value || 0) },
-                ]
-              },
-              {
-                title: 'Volatility',
-                icon: Target,
-                color: 'cyan',
-                items: [
-                  { label: 'Daily Range', value: `${(((high24h - low24h) / low24h) * 100).toFixed(2)}%`, positive: true },
-                  { label: 'BB Width', value: 'Normal', positive: true },
-                  { label: 'Volume', value: volume24h > 2000000 ? 'High' : 'Normal', positive: volume24h > 2000000 },
-                ]
-              },
-            ].map((section, i) => (
+        <section className={styles.summaryGrid}>
+          {technicalSummary.map((section, i) => (
               <div
                 key={i}
-                className="rounded-xl p-4"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                }}
+              className={styles.summaryCard}
+              style={{ '--accent': section.accent } as React.CSSProperties}
               >
-                <div className="flex items-center gap-2 mb-4">
-                  <section.icon className={`w-5 h-5 text-${section.color}-400`} />
-                  <span className="font-semibold text-white">{section.title}</span>
+              <div className={styles.summaryHeader}>
+                <section.icon />
+                <span>{section.title}</span>
                 </div>
-                <div className="space-y-3">
+              <div className={styles.summaryItems}>
                   {section.items.map((item, j) => (
-                    <div key={j} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">{item.label}</span>
-                      <span className={`text-sm font-medium ${item.positive ? 'text-green-400' : 'text-red-400'}`}>
+                  <div key={j} className={styles.summaryItem}>
+                    <span>{item.label}</span>
+                    <strong className={item.positive ? styles.positive : styles.negative}>
                         {item.value}
-                      </span>
+                    </strong>
                     </div>
                   ))}
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };
