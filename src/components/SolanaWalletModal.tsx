@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ExternalLink, AlertCircle, X, ArrowRight } from 'lucide-react'
-import { useSolanaWallet, SolanaWalletType } from '@/hooks/useSolanaWallet'
+import { hasSolanaWallet, useSolanaWallet, SolanaWalletType } from '@/hooks/useSolanaWallet'
 import { ChainId } from '@/types/chain'
 import { getChainMetadata } from '@/lib/chainConfig'
 
@@ -61,6 +61,12 @@ export function SolanaWalletModal({
   const [selectedWallet, setSelectedWallet] = useState<SolanaWalletType | null>(null)
   const chainMetadata = getChainMetadata(chainId)
 
+  const handleClose = useCallback(() => {
+    clearError()
+    setSelectedWallet(null)
+    onClose()
+  }, [clearError, onClose])
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -75,7 +81,7 @@ export function SolanaWalletModal({
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') handleClose() }
     if (isOpen) document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   const handleConnect = async (walletType: SolanaWalletType) => {
     try {
@@ -89,28 +95,11 @@ export function SolanaWalletModal({
   }
 
   const handleCardClick = (walletType: SolanaWalletType, isAvailable: boolean, downloadUrl: string) => {
-    if (isAvailable) {
+    if (isAvailable || hasSolanaWallet(walletType)) {
       handleConnect(walletType)
       return
     }
-    const provider = typeof window !== 'undefined'
-      ? walletType === 'phantom' ? window.phantom?.solana
-        : walletType === 'solflare' ? window.solflare
-        : walletType === 'backpack' ? window.backpack
-        : undefined
-      : undefined
-
-    if (provider) {
-      handleConnect(walletType)
-    } else {
-      window.open(downloadUrl, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  const handleClose = () => {
-    clearError()
-    setSelectedWallet(null)
-    onClose()
+    window.open(downloadUrl, '_blank', 'noopener,noreferrer')
   }
 
   const modalContent = (
@@ -509,4 +498,3 @@ function WalletCard({ index, walletType, info, isAvailable, isLoading, dimmed, o
     </motion.div>
   )
 }
-

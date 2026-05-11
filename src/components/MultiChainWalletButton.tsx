@@ -22,6 +22,7 @@ import { Wallet, Power } from 'lucide-react'
 
 export function MultiChainWalletButton() {
   const [showSolanaModal, setShowSolanaModal] = useState(false)
+  const [solanaModalChain, setSolanaModalChain] = useState<ChainId>(ChainId.SOLANA_DEVNET)
   const [mounted, setMounted] = useState(false)
 
   // EVM wallet state (via wagmi)
@@ -77,8 +78,18 @@ export function MultiChainWalletButton() {
     
     // If selecting a Solana chain and not connected, open wallet modal
     if (metadata.type === ChainType.SOLANA && !isSolanaConnected) {
+      setSolanaModalChain(chainId)
       setShowSolanaModal(true)
     }
+  }
+
+  const handleOpenSolanaModal = () => {
+    setSolanaModalChain(
+      activeMetadata?.type === ChainType.SOLANA && activeChain
+        ? activeChain
+        : ChainId.SOLANA_DEVNET
+    )
+    setShowSolanaModal(true)
   }
 
   // Handle disconnect
@@ -212,7 +223,7 @@ export function MultiChainWalletButton() {
             </div>
           ) : (
             <Button
-              onClick={() => setShowSolanaModal(true)}
+              onClick={handleOpenSolanaModal}
               className="btn-cyber"
             >
               <Wallet className="w-4 h-4 mr-1.5" />
@@ -245,7 +256,7 @@ export function MultiChainWalletButton() {
       <SolanaWalletModal
         isOpen={showSolanaModal}
         onClose={() => setShowSolanaModal(false)}
-        chainId={activeChain || ChainId.SOLANA_DEVNET}
+        chainId={solanaModalChain}
       />
     </>
   )

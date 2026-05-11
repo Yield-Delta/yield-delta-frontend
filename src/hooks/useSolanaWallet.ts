@@ -28,7 +28,8 @@ declare global {
 interface SolanaWallet {
   publicKey?: { toString(): string }
   isConnected: boolean
-  connect(): Promise<{ publicKey: { toString(): string } }>
+  connect(options?: { onlyIfTrusted?: boolean }): Promise<{ publicKey: { toString(): string } }>
+  request?(args: { method: string; params?: Record<string, unknown> }): Promise<{ publicKey?: { toString(): string } }>
   disconnect(): Promise<void>
   on(event: string, callback: (publicKey: { toString(): string } | null) => void): void
   off(event: string, callback: (publicKey: { toString(): string } | null) => void): void
@@ -76,6 +77,36 @@ function chainIdToCluster(chainId: ChainId): SolanaCluster {
   }
 }
 
+export function hasSolanaWallet(walletType: SolanaWalletType): boolean {
+  if (typeof window === 'undefined') return false
+
+  switch (walletType) {
+    case SolanaWalletType.PHANTOM:
+      return Boolean(window.phantom?.solana || window.solana?.isPhantom)
+    case SolanaWalletType.SOLFLARE:
+      return Boolean(window.solflare || window.solana?.isSolflare)
+    case SolanaWalletType.BACKPACK:
+      return Boolean(window.backpack)
+    default:
+      return false
+  }
+}
+
+async function requestSolanaAccount(wallet: SolanaWallet, walletType: SolanaWalletType) {
+  if (walletType === SolanaWalletType.PHANTOM) {
+    try {
+      return await wallet.connect({ onlyIfTrusted: false })
+    } catch (err) {
+      if (!wallet.request) throw err
+      const response = await wallet.request({ method: 'connect' })
+      if (response.publicKey) return { publicKey: response.publicKey }
+      throw err
+    }
+  }
+
+  return wallet.connect()
+}
+
 export function useSolanaWallet(): UseSolanaWalletReturn {
   const {
     solana,
@@ -93,9 +124,9 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
     if (typeof window === 'undefined') return
     const detected: SolanaWalletType[] = []
     // Phantom injects as window.phantom.solana OR window.solana (with isPhantom flag)
-    if (window.phantom?.solana || window.solana?.isPhantom) detected.push(SolanaWalletType.PHANTOM)
-    if (window.solflare || window.solana?.isSolflare) detected.push(SolanaWalletType.SOLFLARE)
-    if (window.backpack) detected.push(SolanaWalletType.BACKPACK)
+    if (hasSolanaWallet(SolanaWalletType.PHANTOM)) detected.push(SolanaWalletType.PHANTOM)
+    if (hasSolanaWallet(SolanaWalletType.SOLFLARE)) detected.push(SolanaWalletType.SOLFLARE)
+    if (hasSolanaWallet(SolanaWalletType.BACKPACK)) detected.push(SolanaWalletType.BACKPACK)
     setAvailableWallets(detected)
   }, [])
 
@@ -144,9 +175,14 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
         throw new Error(`${walletType} wallet not found. Please install the extension.`)
       }
 
-      // Connect to wallet
-      const response = await wallet.connect()
-      const address = response.publicKey.toString()
+      // Connect to wallet and explicitly request the account public key.
+      // Phantom may expose the key on either the connect response or provider state.
+      const response = await requestSolanaAccount(wallet, walletType)
+      const publicKey = response.publicKey ?? wallet.publicKey
+      if (!publicKey) {
+        throw new Error(`${walletType} did not return an account. Please approve the connection in your wallet.`)
+      }
+      const address = publicKey.toString()
 
       // Update store
       connectSolanaWallet(address, chainId)
@@ -167,7 +203,9 @@ export function useSolanaWallet(): UseSolanaWalletReturn {
         if (publicKey) {
           connectSolanaWallet(publicKey.toString(), chainId)
         } else {
-          disconnectSolanaWallet()
+          wallet.connect({ onlyIfTrusted: false })
+            .then((account) => connectSolanaWallet(account.publicKey.toString(), chainId))
+            .catch(() => disconnectSolanaWallet())
         }
       })
 
