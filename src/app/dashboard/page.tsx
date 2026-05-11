@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import DemoBanner from '@/components/DemoBanner';
 import PortfolioChart from '@/components/PortfolioChart';
