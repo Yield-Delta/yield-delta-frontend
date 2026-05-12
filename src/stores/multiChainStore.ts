@@ -260,6 +260,7 @@ export const useMultiChainStore = create<MultiChainStore>()(
       }),
       {
         name: 'multichain-wallet-store',
+        skipHydration: true,
         partialize: (state) => ({
           // Only persist essential data
           activeChain: state.activeChain,

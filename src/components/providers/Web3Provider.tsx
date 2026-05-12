@@ -12,6 +12,7 @@ import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { config } from '@/lib/web3'
 import { ReactNode, useEffect, useState } from 'react'
+import { useMultiChainStore } from '@/stores/multiChainStore'
 
 // Create QueryClient with proper error handling and retry logic
 function makeQueryClient() {
@@ -81,6 +82,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
 
   useEffect(() => {
     setMounted(true)
+    useMultiChainStore.persist.rehydrate()
   }, [])
 
   // Always provide QueryClientProvider and WagmiProvider to prevent hook errors

@@ -175,6 +175,7 @@ export default function VaultsPage() {
   const vaultCardsRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLElement>(null)
   const lastDepositOpenRef = useRef(0)
+  const clearDepositVaultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [showChat, setShowChat] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [depositVault, setDepositVault] = useState<VaultData | null>(null)
@@ -244,6 +245,10 @@ export default function VaultsPage() {
 
   const handleDeposit = React.useCallback((vault: VaultData) => {
     if (!vault) return
+    if (clearDepositVaultTimeoutRef.current) {
+      clearTimeout(clearDepositVaultTimeoutRef.current)
+      clearDepositVaultTimeoutRef.current = null
+    }
     lastDepositOpenRef.current = Date.now()
     setSelectedVault(vault)
     setDepositVault(vault)
@@ -256,7 +261,21 @@ export default function VaultsPage() {
 
   const handleCloseModal = React.useCallback(() => {
     setShowDepositModal(false)
-    setTimeout(() => setDepositVault(null), 300)
+    if (clearDepositVaultTimeoutRef.current) {
+      clearTimeout(clearDepositVaultTimeoutRef.current)
+    }
+    clearDepositVaultTimeoutRef.current = setTimeout(() => {
+      setDepositVault(null)
+      clearDepositVaultTimeoutRef.current = null
+    }, 300)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (clearDepositVaultTimeoutRef.current) {
+        clearTimeout(clearDepositVaultTimeoutRef.current)
+      }
+    }
   }, [])
 
   const handleViewAnalytics = (vault: VaultData) => {
