@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   Brain,
+  Clock3,
   Gauge,
   LineChart,
   ShieldCheck,
@@ -13,185 +14,235 @@ import {
 } from 'lucide-react'
 import styles from './page.module.css'
 
-const backtestRows = [
-  ['ETH/USDC', '69.2%', '-5.2%', '-1.6%'],
-  ['WBTC/ETH', '68.5%', '-4.8%', '-1.5%'],
-  ['SEI/USDC', '70.1%', '-5.6%', '-1.7%'],
-  ['SOL/USDC', '67.9%', '-6.1%', '-2.0%'],
+const resultCards = [
+  { label: 'IL reduction', value: '52%', detail: '$772 passive IL to $372 active IL', accent: '#00f5d4' },
+  { label: 'Net return', value: '+$215', detail: '2.14% over 90 days after costs', accent: '#10b981' },
+  { label: 'Annualized APY', value: '8.91%', detail: 'Positive after IL, fees, and gas', accent: '#f59e0b' },
+  { label: 'In-range time', value: '94%', detail: '13 rebalances across 90 days', accent: '#9b5de5' },
+]
+
+const comparisonRows = [
+  ['Initial capital', '$10,000', '$10,000', '-'],
+  ['Fees earned', '$538', '$589', '+9.5%'],
+  ['Impermanent loss', '-$772', '-$372', '52% lower'],
+  ['Gas cost', '$0', '-$3.25', 'SEI cost advantage'],
+  ['Final net', '-$234', '+$215', '+$449'],
+  ['APY', '-9.4%', '8.91%', '+18.3 pts'],
 ]
 
 const methodCards = [
   {
-    title: 'Predictive Price Movement',
-    icon: Brain,
-    accent: '#00f5d4',
-    copy: 'Order flow, volatility regimes, cross-pair correlation, and sentiment signals forecast short-horizon divergence before ranges drift out of shape.',
-  },
-  {
-    title: 'Dynamic Range Control',
+    title: 'Tighter Active Ranges',
     icon: Gauge,
-    accent: '#9b5de5',
-    copy: 'Liquidity ranges tighten during calm markets, widen during volatility, and rebalance toward the highest expected fee capture zones.',
+    accent: '#00f5d4',
+    copy: 'Yield Delta concentrates liquidity in narrower ranges, increasing fee density while monitoring when that range stops being efficient.',
   },
   {
-    title: 'Hedged Exposure',
-    icon: ShieldCheck,
+    title: 'IL-Aware Rebalancing',
+    icon: Brain,
     accent: '#10b981',
-    copy: 'Delta checks, synthetic hedge logic, and venue-aware execution reduce directional drag without abandoning yield capture.',
+    copy: 'The strategy resets position exposure when price exits range or modeled IL crosses the risk threshold.',
+  },
+  {
+    title: 'Low-Cost Execution',
+    icon: Zap,
+    accent: '#f59e0b',
+    copy: 'Frequent rebalancing only works when transaction costs are small. SEI-style execution makes the cadence economically plausible.',
   },
 ]
 
-const comparisonRows = [
-  ['Average IL, 30d', '-5.2%', '-1.6%', '69.2%'],
-  ['Max drawdown', '-12.8%', '-4.1%', '68.0%'],
-  ['Sharpe ratio', '0.82', '2.41', '+194%'],
-  ['Fee capture', '62%', '89%', '+43.5%'],
-  ['Rebalance cadence', 'Manual', '~12/day', 'Automated'],
+const assumptions = [
+  ['Test period', '90 days'],
+  ['Initial capital', '$10,000'],
+  ['Trading fee tier', '0.30%'],
+  ['Gas cost', '$0.25 / tx'],
+  ['Rebalance trigger', 'Range exit or 2% IL'],
+  ['Total rebalances', '13'],
 ]
+
+export const metadata = {
+  title: 'Impermanent Loss Reduction - Yield Delta',
+  description: 'Backtest methodology and results for Yield Delta active liquidity rebalancing.',
+}
 
 export default function ImpermanentLossReductionPage() {
   return (
-    <main className={`${styles.analysisPage} relative mx-auto max-w-6xl overflow-hidden px-4 pb-20 sm:px-6 lg:px-8`}>
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_0%,rgba(0,245,212,0.12),transparent_34%),radial-gradient(circle_at_82%_14%,rgba(155,93,229,0.16),transparent_36%)]" />
+    <main className={styles.page}>
+      <div className={styles.gridLayer} aria-hidden />
 
-      <Link href="/docs" className={`${styles.backLink} mb-8 inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold text-white/70 transition hover:text-white`}>
-        <ArrowLeft className="h-4 w-4" />
+      <Link href="/docs" className={styles.backLink}>
+        <ArrowLeft />
         Back to Docs
       </Link>
 
-      <section className={`${styles.heroPanel} relative overflow-hidden rounded-[28px] p-5 sm:p-8 lg:p-10`}>
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
-        <div className="absolute -right-20 -top-28 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr] lg:items-end">
-          <div>
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-cyan-200">
-              <Sparkles className="h-3.5 w-3.5" />
-              Technical Analysis
-            </div>
-            <h1 className="max-w-4xl text-balance text-4xl font-bold leading-[0.98] text-white sm:text-5xl lg:text-6xl" style={{ fontFamily: 'var(--font-display)' }}>
-              Impermanent loss reduction, engineered for active liquidity.
-            </h1>
-            <p className="mt-5 max-w-3xl text-base leading-7 text-white/58 sm:text-lg">
-              Yield Delta combines predictive rebalancing, dynamic range placement, and hedged exposure controls to target more than 50% lower IL versus unmanaged concentrated liquidity positions.
-            </p>
+      <section className={styles.hero}>
+        <div className={styles.heroCopy}>
+          <div className={styles.kicker}>
+            <Sparkles />
+            Backtested Methodology
           </div>
-
-          <div className={`${styles.signalPanel} rounded-3xl p-5`}>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-cyan-200/70">Backtest Signal</p>
-            <div className="mt-3 flex items-end gap-3">
-              <strong className="text-5xl font-black text-cyan-200">68.9%</strong>
-              <span className="pb-2 text-sm text-white/45">average IL reduction</span>
-            </div>
-            <div className="mt-5 grid grid-cols-2 gap-2 text-sm">
-              <Metric label="Cadence" value="~12/day" />
-              <Metric label="Efficiency" value="94.2%" />
-            </div>
+          <h1>Impermanent loss reduction, measured against passive LPs.</h1>
+          <p>
+            Yield Delta actively re-centers liquidity ranges before stale positions compound losses. In the 90-day model, active management reduced IL by 52% while turning a passive loss into positive net return.
+          </p>
+          <div className={styles.heroActions}>
+            <Link href="/backtest" className={styles.primaryAction}>
+              Open Snapshot <ArrowRight />
+            </Link>
+            <a href="#methodology" className={styles.secondaryAction}>
+              Review Methodology
+            </a>
           </div>
         </div>
+
+        <aside className={styles.proofPanel} aria-label="Backtest proof summary">
+          <div className={styles.panelHeader}>
+            <LineChart />
+            <span>90-day modeled result</span>
+          </div>
+          <div className={styles.proofNumber}>52%</div>
+          <p>Lower impermanent loss versus unmanaged concentrated liquidity.</p>
+          <div className={styles.ilBars}>
+            <div>
+              <span>Passive LP</span>
+              <strong>-$772</strong>
+              <i className={styles.passiveBar} />
+            </div>
+            <div>
+              <span>Yield Delta</span>
+              <strong>-$372</strong>
+              <i className={styles.activeBar} />
+            </div>
+          </div>
+        </aside>
       </section>
 
-      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {backtestRows.map(([pair, reduction, traditional, yd]) => (
-          <article key={pair} className={`${styles.statCard} rounded-3xl p-5`} style={{ '--accent': '#00f5d4' } as React.CSSProperties}>
-            <p className="text-sm text-white/42">{pair}</p>
-            <strong className="mt-2 block text-3xl text-cyan-200">{reduction}</strong>
-            <div className="mt-4 flex justify-between gap-3 text-xs text-white/48">
-              <span>AMM {traditional}</span>
-              <span className="text-emerald-300">YD {yd}</span>
-            </div>
+      <section className={styles.resultGrid} aria-label="Backtest headline metrics">
+        {resultCards.map((card) => (
+          <article key={card.label} className={styles.resultCard} style={{ '--accent': card.accent } as React.CSSProperties}>
+            <span>{card.label}</span>
+            <strong>{card.value}</strong>
+            <p>{card.detail}</p>
           </article>
         ))}
       </section>
 
-      <section className="mt-10 grid gap-5 lg:grid-cols-3">
-        {methodCards.map((card) => (
-          <article key={card.title} className={`${styles.methodCard} rounded-[24px] p-6`} style={{ '--accent': card.accent } as React.CSSProperties}>
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border" style={{ borderColor: `${card.accent}40`, background: `${card.accent}18`, color: card.accent }}>
-              <card.icon className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white">{card.title}</h2>
-            <p className="mt-3 text-sm leading-6 text-white/52">{card.copy}</p>
-          </article>
-        ))}
-      </section>
-
-      <section className="mt-10 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <div className={`${styles.modelPanel} rounded-[28px] p-6`}>
-          <div className="mb-5 flex items-center gap-3">
-            <Sigma className="h-6 w-6 text-cyan-200" />
-            <h2 className="text-2xl font-bold text-white">Model Foundation</h2>
+      <section className={styles.comparisonSection}>
+        <div className={styles.sectionIntro}>
+          <div className={styles.kicker}>
+            <BarChart3 />
+            Proof
           </div>
-          <div className={`${styles.formulaBox} space-y-4 rounded-2xl p-4 font-mono text-sm leading-7 text-white/70`}>
-            <p><span className="text-cyan-200">IL_traditional</span> = 2 * sqrt(price_ratio) / (1 + price_ratio) - 1</p>
-            <p><span className="text-emerald-300">IL_yielddelta</span> = IL_traditional * (1 - hedge_efficiency) * volatility_factor</p>
-            <p className="text-white/42">hedge_efficiency = 0.52-0.55, adjusted by volatility regime and rebalance cost.</p>
-          </div>
+          <h2>Passive LP vs Yield Delta</h2>
+          <p>
+            The key result is not just lower IL. The strategy preserved enough fee capture to move the vault from negative net return to positive net return after modeled gas costs.
+          </p>
         </div>
 
-        <div className={`${styles.comparisonPanel} overflow-hidden rounded-[28px]`}>
-          <div className={`${styles.comparisonHeader} flex items-center gap-3 p-5`}>
-            <BarChart3 className="h-5 w-5 text-emerald-300" />
-            <h2 className="text-xl font-bold text-white">Traditional AMM vs Yield Delta</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className={`${styles.comparisonTable} w-full min-w-[620px] text-left text-sm`}>
-              <thead className="text-xs uppercase tracking-[0.14em] text-white/35">
-                <tr>
-                  <th className="px-5 py-4">Metric</th>
-                  <th className="px-5 py-4">Traditional</th>
-                  <th className="px-5 py-4">Yield Delta</th>
-                  <th className="px-5 py-4">Change</th>
+        <div className={styles.comparisonTable}>
+          <table>
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Passive LP</th>
+                <th>Yield Delta</th>
+                <th>Change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparisonRows.map(([metric, passive, yd, change]) => (
+                <tr key={metric}>
+                  <td>{metric}</td>
+                  <td>{passive}</td>
+                  <td>{yd}</td>
+                  <td>{change}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y">
-                {comparisonRows.map(([metric, traditional, yd, change]) => (
-                  <tr key={metric} className="text-white/66">
-                    <td className="px-5 py-4 font-semibold text-white">{metric}</td>
-                    <td className="px-5 py-4 text-red-300/85">{traditional}</td>
-                    <td className="px-5 py-4 text-emerald-300">{yd}</td>
-                    <td className="px-5 py-4 font-bold text-cyan-200">{change}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="methodology" className={styles.methodSection}>
+        <div className={styles.sectionIntro}>
+          <div className={styles.kicker}>
+            <ShieldCheck />
+            Method
+          </div>
+          <h2>How the strategy changes the loss curve</h2>
+        </div>
+
+        <div className={styles.methodGrid}>
+          {methodCards.map((card) => (
+            <article key={card.title} className={styles.methodCard} style={{ '--accent': card.accent } as React.CSSProperties}>
+              <div>
+                <card.icon />
+              </div>
+              <h3>{card.title}</h3>
+              <p>{card.copy}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.modelSection}>
+        <div className={styles.modelCopy}>
+          <div className={styles.kicker}>
+            <Sigma />
+            Model Foundation
+          </div>
+          <h2>Position resets are the core mechanic.</h2>
+          <p>
+            A passive LP carries IL from the original entry price. Yield Delta closes and reopens ranges around updated market prices, converting large accumulated IL into smaller, bounded losses while keeping capital in fee-producing bands.
+          </p>
+          <div className={styles.formulaBox}>
+            <code>IL = 2 * sqrt(price_ratio) / (1 + price_ratio) - 1</code>
+            <code>rebalance when range_exit || modeled_IL &gt; threshold</code>
           </div>
         </div>
-      </section>
 
-      <section className="mt-10 grid gap-5 lg:grid-cols-2">
-        <article className={`${styles.insightPanel} rounded-[24px] p-6`} style={{ '--accent': '#9b5de5' } as React.CSSProperties}>
-          <Zap className="mb-4 h-7 w-7 text-purple-200" />
-          <h2 className="text-2xl font-bold text-white">SEI Speed Advantage</h2>
-          <p className="mt-3 text-sm leading-6 text-white/55">Fast finality and low execution cost make frequent rebalancing practical, allowing the AI engine to respond while liquidity risk is still forming.</p>
-        </article>
-        <article className={`${styles.insightPanel} rounded-[24px] p-6`} style={{ '--accent': '#f59e0b' } as React.CSSProperties}>
-          <LineChart className="mb-4 h-7 w-7 text-amber-200" />
-          <h2 className="text-2xl font-bold text-white">Risk Disclosure</h2>
-          <p className="mt-3 text-sm leading-6 text-white/55">Backtests model historical and testnet conditions. IL can be reduced, not eliminated, and future performance can diverge during extreme volatility or liquidity shocks.</p>
-        </article>
-      </section>
-
-      <section className={`${styles.ctaPanel} mt-10 rounded-[28px] p-6 text-center sm:p-8`}>
-        <h2 className="text-3xl font-bold text-white">Explore the vaults built around this engine</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-white/55">Compare strategies, risk levels, and allocation behavior across Yield Delta vaults.</p>
-        <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <Link href="/vaults" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-cyan-300 px-5 font-bold text-black transition hover:bg-cyan-200">
-            Explore Vaults <ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link href="/docs/testnet-setup" className={`${styles.backLink} inline-flex min-h-12 items-center gap-2 rounded-full px-5 font-bold text-white/75 transition hover:text-white`}>
-            Setup Testnet
-          </Link>
+        <div className={styles.assumptionPanel}>
+          <div className={styles.panelHeader}>
+            <Clock3 />
+            <span>Assumptions</span>
+          </div>
+          <dl>
+            {assumptions.map(([label, value]) => (
+              <div key={label}>
+                <dt>{label}</dt>
+                <dd>{value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
+      </section>
+
+      <section className={styles.riskSection}>
+        <article>
+          <LineChart />
+          <h2>What this proves</h2>
+          <p>
+            The model shows that active liquidity management can reduce IL enough to change the return profile of LP positions, especially on chains where execution costs do not overwhelm rebalancing.
+          </p>
+        </article>
+        <article>
+          <ShieldCheck />
+          <h2>What it does not prove</h2>
+          <p>
+            Backtests are not guarantees. Performance can degrade under liquidity shocks, extreme volatility, oracle issues, or if live execution costs exceed assumptions.
+          </p>
+        </article>
+      </section>
+
+      <section className={styles.cta}>
+        <div>
+          <h2>Use the clean proof visual in the pitch deck.</h2>
+          <p>The detailed page explains the method. The `/backtest` route is the screenshot-friendly version for investors.</p>
+        </div>
+        <Link href="/backtest" className={styles.primaryAction}>
+          View Backtest Snapshot <ArrowRight />
+        </Link>
       </section>
     </main>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className={`${styles.metricMini} rounded-2xl p-3`}>
-      <span className="block text-xs text-white/35">{label}</span>
-      <strong className="text-lg text-white">{value}</strong>
-    </div>
   )
 }

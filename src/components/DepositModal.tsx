@@ -564,7 +564,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[1000000] flex items-end justify-center bg-[#02030a]/82 px-0 backdrop-blur-xl sm:items-center sm:px-4 deposit-modal-container"
+      className="fixed inset-0 z-[10000000] flex items-end justify-center bg-[#02030a]/82 px-0 backdrop-blur-xl sm:items-center sm:px-4 deposit-modal-container"
       onClick={(e) => {
         console.log('[DepositModal] Backdrop clicked');
         if (e.target === e.currentTarget) {

@@ -1,116 +1,508 @@
-.analysisPage {
+.page {
   position: relative;
   isolation: isolate;
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 88px;
+  color: white;
 }
 
-.analysisPage::before {
+.gridLayer {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(0, 245, 212, 0.12), transparent 28rem),
+    radial-gradient(circle at 86% 12%, rgba(245, 158, 11, 0.1), transparent 24rem),
+    linear-gradient(180deg, rgba(5, 8, 18, 0.72), rgba(3, 5, 12, 0.98));
+}
+
+.gridLayer::after {
   content: '';
   position: absolute;
-  inset: -4rem -2rem auto;
-  height: 34rem;
-  pointer-events: none;
-  z-index: -1;
-  background:
-    radial-gradient(circle at 18% 18%, rgba(0, 245, 212, 0.18), transparent 32rem),
-    radial-gradient(circle at 84% 10%, rgba(155, 93, 229, 0.2), transparent 30rem),
-    linear-gradient(180deg, rgba(6, 10, 25, 0.9), transparent);
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(circle at 50% 20%, black, transparent 72%);
 }
 
 .backLink,
-.heroPanel,
-.signalPanel,
-.statCard,
-.methodCard,
-.modelPanel,
-.formulaBox,
-.comparisonPanel,
-.insightPanel,
-.ctaPanel,
-.metricMini {
-  border-style: solid !important;
-  border-width: 1px !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 800;
+  text-decoration: none;
 }
 
 .backLink {
-  border-color: rgba(0, 245, 212, 0.32) !important;
-  background: rgba(0, 245, 212, 0.075);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 12px 34px rgba(0, 245, 212, 0.08);
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(255, 255, 255, 0.68);
 }
 
-.heroPanel {
-  border-color: rgba(0, 245, 212, 0.24) !important;
+.backLink svg,
+.primaryAction svg,
+.kicker svg,
+.panelHeader svg,
+.methodCard svg,
+.riskSection svg,
+.cta svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) 0.92fr;
+  gap: 28px;
+  align-items: stretch;
+  min-height: 470px;
+}
+
+.heroCopy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 0;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  margin-bottom: 18px;
+  color: #00f5d4;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.sectionIntro h2,
+.modelCopy h2,
+.riskSection h2,
+.cta h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+
+.hero h1 {
+  max-width: 760px;
+  font-size: clamp(3.2rem, 7vw, 6.65rem);
+  line-height: 0.9;
+}
+
+.hero p,
+.sectionIntro p,
+.modelCopy p,
+.riskSection p,
+.cta p {
+  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.7;
+}
+
+.hero p {
+  max-width: 680px;
+  margin: 24px 0 0;
+  font-size: 1.08rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.primaryAction {
+  border: 1px solid rgba(0, 245, 212, 0.45);
+  background: #00f5d4;
+  color: #02100d;
+  box-shadow: 0 16px 42px rgba(0, 245, 212, 0.18);
+}
+
+.secondaryAction {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.proofPanel,
+.resultCard,
+.comparisonTable,
+.methodCard,
+.assumptionPanel,
+.riskSection article,
+.cta {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
   background:
-    linear-gradient(135deg, rgba(5, 8, 20, 0.96), rgba(8, 11, 24, 0.88)),
-    radial-gradient(circle at 82% 0%, rgba(0, 245, 212, 0.16), transparent 20rem);
-  box-shadow:
-    0 28px 100px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(155, 93, 229, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.058), rgba(255, 255, 255, 0.025)),
+    rgba(5, 8, 18, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 80px rgba(0, 0, 0, 0.24);
 }
 
-.signalPanel {
-  border-color: rgba(0, 245, 212, 0.32) !important;
-  background: linear-gradient(150deg, rgba(0, 245, 212, 0.115), rgba(16, 185, 129, 0.045));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 18px 50px rgba(0, 245, 212, 0.09);
+.proofPanel {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
 }
 
-.statCard {
-  border-color: color-mix(in srgb, var(--accent, #00f5d4) 34%, transparent) !important;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--accent, #00f5d4) 9%, transparent), rgba(255, 255, 255, 0.028));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent, #00f5d4) 16%, transparent);
+.proofPanel::before {
+  content: '';
+  position: absolute;
+  inset: -30% -10% auto;
+  height: 58%;
+  background: radial-gradient(circle at 50% 0%, rgba(0, 245, 212, 0.22), transparent 62%);
+  pointer-events: none;
+}
+
+.panelHeader {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 900;
+}
+
+.panelHeader svg {
+  color: #00f5d4;
+}
+
+.proofNumber {
+  position: relative;
+  margin-top: 34px;
+  color: #00f5d4;
+  font-family: var(--font-display);
+  font-size: clamp(7rem, 18vw, 13rem);
+  font-weight: 800;
+  line-height: 0.78;
+  text-shadow: 0 0 62px rgba(0, 245, 212, 0.24);
+}
+
+.proofPanel p {
+  position: relative;
+  max-width: 420px;
+  margin: 24px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.6;
+}
+
+.ilBars {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.ilBars div {
+  display: grid;
+  grid-template-columns: 112px 80px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.ilBars span {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.ilBars strong {
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+}
+
+.ilBars i {
+  display: block;
+  height: 13px;
+  border-radius: 999px;
+}
+
+.passiveBar {
+  width: 100%;
+  background: linear-gradient(90deg, #ff637d, rgba(255, 99, 125, 0.24));
+}
+
+.activeBar {
+  width: 48%;
+  background: linear-gradient(90deg, #00f5d4, rgba(16, 185, 129, 0.32));
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.resultCard {
+  padding: 18px;
+  border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.1));
+}
+
+.resultCard span {
+  color: rgba(255, 255, 255, 0.45);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.resultCard strong {
+  display: block;
+  margin-top: 10px;
+  color: color-mix(in srgb, var(--accent) 82%, white);
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 0.95;
+}
+
+.resultCard p {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.comparisonSection,
+.methodSection,
+.modelSection,
+.riskSection,
+.cta {
+  margin-top: 54px;
+}
+
+.comparisonSection,
+.modelSection {
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.sectionIntro h2,
+.modelCopy h2,
+.riskSection h2,
+.cta h2 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 0.98;
+}
+
+.sectionIntro p,
+.modelCopy p {
+  margin: 18px 0 0;
+}
+
+.comparisonTable {
+  overflow-x: auto;
+}
+
+.comparisonTable table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.comparisonTable th {
+  color: rgba(255, 255, 255, 0.35);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-align: left;
+  text-transform: uppercase;
+  padding: 18px;
+}
+
+.comparisonTable td {
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 750;
+  padding: 17px 18px;
+}
+
+.comparisonTable td:first-child {
+  color: white;
+}
+
+.comparisonTable td:nth-child(2) {
+  color: #ff9aaa;
+}
+
+.comparisonTable td:nth-child(3),
+.comparisonTable td:nth-child(4) {
+  color: #7fffe9;
+}
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 22px;
 }
 
 .methodCard {
-  border-color: color-mix(in srgb, var(--accent, #00f5d4) 30%, transparent) !important;
-  background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--accent, #00f5d4) 12%, transparent), transparent 13rem),
-    rgba(8, 11, 22, 0.82);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.28);
+  padding: 22px;
+  border-color: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.1));
 }
 
-.modelPanel {
-  border-color: rgba(0, 245, 212, 0.24) !important;
-  background: rgba(0, 245, 212, 0.045);
+.methodCard div {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--accent) 36%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--accent) 88%, white);
+}
+
+.methodCard h3 {
+  margin: 18px 0 0;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.methodCard p {
+  margin: 12px 0 0;
+  color: rgba(255, 255, 255, 0.54);
+  line-height: 1.65;
 }
 
 .formulaBox {
-  border-color: rgba(16, 185, 129, 0.24) !important;
-  background: rgba(0, 0, 0, 0.26);
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
 }
 
-.comparisonPanel {
-  border-color: rgba(16, 185, 129, 0.28) !important;
-  background: rgba(7, 10, 20, 0.92);
-  box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.11);
+.formulaBox code {
+  display: block;
+  border: 1px solid rgba(0, 245, 212, 0.16);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.24);
+  color: rgba(174, 255, 244, 0.82);
+  padding: 12px;
+  white-space: normal;
 }
 
-.comparisonHeader {
-  border-bottom: 1px solid rgba(16, 185, 129, 0.22) !important;
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), transparent);
+.assumptionPanel {
+  padding: 22px;
 }
 
-.comparisonTable tbody {
-  border-color: rgba(16, 185, 129, 0.12) !important;
+.assumptionPanel dl {
+  display: grid;
+  gap: 0;
+  margin: 18px 0 0;
 }
 
-.insightPanel {
-  border-color: color-mix(in srgb, var(--accent, #9b5de5) 32%, transparent) !important;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--accent, #9b5de5) 10%, transparent), rgba(255, 255, 255, 0.025));
+.assumptionPanel div {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 13px 0;
 }
 
-.ctaPanel {
-  border-color: rgba(0, 245, 212, 0.32) !important;
-  background:
-    linear-gradient(135deg, rgba(0, 245, 212, 0.12), rgba(155, 93, 229, 0.1)),
-    rgba(6, 8, 18, 0.88);
-  box-shadow: 0 22px 70px rgba(0, 245, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+.assumptionPanel dt {
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.metricMini {
-  border-color: rgba(0, 245, 212, 0.18) !important;
-  background: rgba(0, 0, 0, 0.22);
+.assumptionPanel dd {
+  margin: 0;
+  color: white;
+  font-weight: 850;
+  text-align: right;
+}
+
+.riskSection {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.riskSection article {
+  padding: 24px;
+}
+
+.riskSection svg {
+  color: #f59e0b;
+}
+
+.riskSection h2 {
+  margin-top: 16px;
+  font-size: 1.8rem;
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  border-color: rgba(0, 245, 212, 0.24);
+}
+
+.cta p {
+  margin: 10px 0 0;
+}
+
+@media (max-width: 980px) {
+  .hero,
+  .comparisonSection,
+  .modelSection,
+  .riskSection,
+  .cta {
+    grid-template-columns: 1fr;
+  }
+
+  .resultGrid,
+  .methodGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cta {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    width: min(100% - 24px, 1180px);
+    padding-top: 20px;
+  }
+
+  .hero {
+    min-height: auto;
+  }
+
+  .resultGrid,
+  .methodGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .ilBars div {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .activeBar,
+  .passiveBar {
+    width: 100%;
+  }
 }

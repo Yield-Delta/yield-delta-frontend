@@ -16,7 +16,7 @@ import { useAccount } from 'wagmi'
 import { useMultiChainStore } from '@/stores/multiChainStore'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
 import { ChainId, ChainType, WalletStatus } from '@/types/chain'
-import { getChainMetadata, getDefaultChain } from '@/lib/chainConfig'
+import { getDefaultChain } from '@/lib/chainConfig'
 import { formatBalance, evmChainIdToChainId } from '@/lib/chainUtils'
 import { Wallet, Power } from 'lucide-react'
 
@@ -74,13 +74,7 @@ export function MultiChainWalletButton() {
 
   // Handle chain selection
   const handleChainSelect = (chainId: ChainId) => {
-    const metadata = getChainMetadata(chainId)
-    
-    // If selecting a Solana chain and not connected, open wallet modal
-    if (metadata.type === ChainType.SOLANA && !isSolanaConnected) {
-      setSolanaModalChain(chainId)
-      setShowSolanaModal(true)
-    }
+    setSolanaModalChain(chainId)
   }
 
   const handleOpenSolanaModal = () => {
