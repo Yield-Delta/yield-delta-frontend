@@ -715,7 +715,7 @@ export default function VaultsPage() {
       )}
 
       {/* ── DEPOSIT MODAL ─────────────────────────────────── */}
-      {isSolanaVaultChain ? (
+      {showDepositModal && depositVault && (isSolanaVaultChain ? (
         <SolanaDepositModal
           vault={toSolanaDepositVault(depositVault)}
           isOpen={showDepositModal}
@@ -729,7 +729,7 @@ export default function VaultsPage() {
           onClose={handleCloseModal}
           onSuccess={handleDepositSuccess}
         />
-      )}
+      ))}
 
       {/* ── FLOATING AI BUTTON ────────────────────────────── */}
       <div style={{

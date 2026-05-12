@@ -786,7 +786,7 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
       </div>
 
       {/* ── MODALS ────────────────────────────────────────── */}
-      {isSolanaVault ? (
+      {showDepositModal && vault && (isSolanaVault ? (
         <SolanaDepositModal
           vault={toSolanaDepositVault(vault)}
           isOpen={showDepositModal}
@@ -800,7 +800,7 @@ function VaultDetailPageContent({ vaultAddress, action }: VaultDetailPageProps) 
           onClose={() => setShowDepositModal(false)}
           onSuccess={handleDepositSuccess}
         />
-      )}
+      ))}
       <WithdrawModal
         vault={vault}
         isOpen={showWithdrawModal}

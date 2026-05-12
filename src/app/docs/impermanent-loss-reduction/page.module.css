@@ -189,7 +189,7 @@
   margin-top: 34px;
   color: #00f5d4;
   font-family: var(--font-display);
-  font-size: clamp(7rem, 18vw, 13rem);
+  font-size: clamp(4.5rem, 11vw, 8rem);
   font-weight: 800;
   line-height: 0.78;
   text-shadow: 0 0 62px rgba(0, 245, 212, 0.24);
