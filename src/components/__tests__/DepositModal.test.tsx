@@ -160,8 +160,28 @@ describe('DepositModal', () => {
 
       // Click on the backdrop (the modal overlay)
       const backdrop = screen.getByTestId('modal-backdrop');
+      await new Promise((resolve) => setTimeout(resolve, 550));
       await user.click(backdrop);
       expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ignore the opening click when it lands on the backdrop', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <DepositModal
+          vault={mockVault}
+          isOpen={true}
+          onClose={mockOnClose}
+          onSuccess={mockOnSuccess}
+        />,
+        { wrapper: createWrapper() }
+      );
+
+      const backdrop = screen.getByTestId('modal-backdrop');
+      await user.click(backdrop);
+
+      expect(mockOnClose).not.toHaveBeenCalled();
     });
   });
 

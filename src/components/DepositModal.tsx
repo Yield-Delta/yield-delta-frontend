@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Loader2, ArrowRight, Info, Shield, TrendingUp, Vault, DollarSign, CheckCircle2, Zap, X } from 'lucide-react';
 import { useEnhancedVaultDeposit } from '@/hooks/useEnhancedVaultDeposit';
@@ -122,6 +122,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const openedAtRef = useRef(0);
   // Get actual wallet connection
   const { address, isConnected } = useAccount();
 
@@ -364,6 +365,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
   // Add effect to track when the modal should be opening + handle body scroll
   useEffect(() => {
     if (isOpen) {
+      openedAtRef.current = Date.now();
       if (vault) {
         console.log('✅ [DepositModal] Modal opened for vault:', vault.name);
         // Lock body scroll - use overflow hidden instead of position fixed to prevent layout shifts
@@ -570,9 +572,19 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
         inset: 0,
         zIndex: 10000000,
         isolation: 'isolate',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'clamp(12px, 3vw, 28px)',
+        background: 'rgba(2, 3, 10, 0.84)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
       }}
       onClick={(e) => {
         console.log('[DepositModal] Backdrop clicked');
+        if (Date.now() - openedAtRef.current < 500) {
+          return;
+        }
         if (e.target === e.currentTarget) {
           handleClose();
         }
@@ -580,14 +592,51 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       data-testid="modal-backdrop"
     >
       <style jsx>{`
+        .deposit-modal-container {
+          min-height: 100dvh;
+        }
+
+        .deposit-modal-content {
+          width: min(590px, calc(100vw - 24px));
+          max-height: min(90dvh, 760px);
+          border-radius: 30px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          background:
+            linear-gradient(180deg, rgba(12, 15, 28, 0.98), rgba(5, 7, 16, 0.98)),
+            #060711;
+          color: white;
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.04),
+            0 34px 130px rgba(0, 0, 0, 0.86);
+        }
+
+        .modal-scrollable-content {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+        }
+
+        .transaction-side,
+        .important-notice,
+        .apy-info-section {
+          border-radius: 24px;
+        }
+
+        .quick-deposit-button {
+          border-radius: 16px;
+        }
+
+        .modal-footer button {
+          border-radius: 16px;
+        }
+
         @media (max-width: 640px) {
           .evm-deposit-panel {
             width: 100%;
-            max-height: 94dvh;
-            border-radius: 28px 28px 0 0;
+            max-height: 92dvh;
+            border-radius: 24px;
           }
           .evm-deposit-body {
-            max-height: calc(94dvh - 92px);
+            max-height: calc(92dvh - 92px);
             padding: 1rem;
           }
           .evm-deposit-title {
@@ -602,6 +651,9 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       <div
         className="evm-deposit-panel relative flex w-full max-w-[590px] flex-col overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] text-white shadow-[0_-28px_90px_rgba(0,0,0,0.72)] sm:max-h-[88dvh] sm:rounded-[30px] sm:shadow-[0_34px_130px_rgba(0,0,0,0.86)] deposit-modal-content"
         style={{
+          width: 'min(590px, calc(100vw - 24px))',
+          maxHeight: 'min(90dvh, 760px)',
+          borderRadius: 30,
           boxShadow: `0 0 0 1px ${vaultColor}24, 0 34px 130px rgba(0,0,0,0.86), 0 0 80px ${vaultColor}24`,
         }}
         onClick={(e) => {

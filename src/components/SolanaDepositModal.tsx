@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   AlertCircle,
@@ -87,6 +87,7 @@ export default function SolanaDepositModal({
   const [mounted, setMounted] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [txSignature, setTxSignature] = useState<string | null>(null)
+  const openedAtRef = useRef(0)
 
   const { address: walletAddress, isConnected: isWalletConnected, balance } = useSolanaWallet()
 
@@ -117,6 +118,7 @@ export default function SolanaDepositModal({
 
   useEffect(() => {
     if (isOpen) {
+      openedAtRef.current = Date.now()
       setTransactionStatus('idle')
       setErrorMessage(null)
       setShowSuccess(false)
@@ -162,24 +164,68 @@ export default function SolanaDepositModal({
             inset: 0,
             zIndex: 10000000,
             isolation: 'isolate',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 'clamp(12px, 3vw, 28px)',
           }}
         >
+          <style jsx>{`
+            .solana-deposit-shell {
+              width: min(560px, calc(100vw - 24px));
+              max-height: min(90dvh, 740px);
+              border-radius: 28px;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+              background:
+                linear-gradient(180deg, rgba(12, 15, 28, 0.98), rgba(5, 7, 16, 0.98)),
+                #060711;
+              color: white;
+              box-shadow:
+                0 0 0 1px rgba(255, 255, 255, 0.04),
+                0 32px 120px rgba(0, 0, 0, 0.84);
+            }
+
+            .solana-deposit-body {
+              max-height: min(90dvh, 740px);
+              scrollbar-width: thin;
+              scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+            }
+
+            @media (max-width: 640px) {
+              .solana-deposit-shell {
+                width: 100%;
+                max-height: 92dvh;
+                border-radius: 24px;
+              }
+
+              .solana-deposit-body {
+                max-height: 92dvh;
+              }
+            }
+          `}</style>
+
           <motion.div
             className="absolute inset-0 bg-[#02030a]/85 backdrop-blur-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={onClose}
+            onClick={() => {
+              if (Date.now() - openedAtRef.current < 500) return
+              onClose()
+            }}
           />
 
           <motion.div
-            className="relative w-full max-h-[94dvh] overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] shadow-[0_-24px_80px_rgba(0,0,0,0.7)] sm:max-w-[560px] sm:rounded-[28px] sm:shadow-[0_32px_120px_rgba(0,0,0,0.82)]"
+            className="solana-deposit-shell relative w-full max-h-[94dvh] overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] shadow-[0_-24px_80px_rgba(0,0,0,0.7)] sm:max-w-[560px] sm:rounded-[28px] sm:shadow-[0_32px_120px_rgba(0,0,0,0.82)]"
             initial={{ opacity: 0, y: 44, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 28, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 360, damping: 32, mass: 0.9 }}
             style={{
+              width: 'min(560px, calc(100vw - 24px))',
+              maxHeight: 'min(90dvh, 740px)',
+              borderRadius: 28,
               boxShadow: `0 0 0 1px ${vaultColor}24, 0 30px 120px rgba(0,0,0,0.86), 0 0 70px ${vaultColor}24`,
             }}
           >
@@ -187,7 +233,7 @@ export default function SolanaDepositModal({
             <div className="absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full blur-3xl" style={{ background: `${vaultColor}28` }} />
             <div className="absolute inset-0 pointer-events-none opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
 
-            <div className="relative max-h-[94dvh] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:py-6">
+            <div className="solana-deposit-body relative max-h-[94dvh] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:py-6">
               <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-white/20 sm:hidden" />
 
               <div className="mb-5 flex items-start justify-between gap-4">

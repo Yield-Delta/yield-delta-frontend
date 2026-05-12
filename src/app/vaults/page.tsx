@@ -464,8 +464,9 @@ export default function VaultsPage() {
 
                     const target = e.target as HTMLElement
                     if (target.closest('[data-vault-action="analytics"]')) return
+                    if (target.closest('[data-vault-action="deposit"]')) return
 
-                    if (target.closest('[data-vault-action="deposit"]') || window.matchMedia('(max-width: 680px)').matches) {
+                    if (window.matchMedia('(max-width: 680px)').matches) {
                       e.preventDefault()
                       e.stopPropagation()
                       handleDeposit(vault)
@@ -598,12 +599,6 @@ export default function VaultsPage() {
                       <button
                         type="button"
                         data-vault-action="deposit"
-                        onPointerUp={(e) => {
-                          if (e.pointerType !== 'touch') return
-                          e.preventDefault()
-                          e.stopPropagation()
-                          handleDeposit(vault)
-                        }}
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
