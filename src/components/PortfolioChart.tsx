@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState, useMemo } from 'react';
-import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, Calendar, Activity, Layers3, Sparkles } from 'lucide-react';
 import { TokenPrices } from '@/hooks/useTokenPrices';
 import styles from './PortfolioChart.module.css';
 
@@ -125,7 +125,9 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
   }, [vaultPositions, tokenPrices, vaults, timeRange]);
 
   const stats = useMemo(() => {
-    if (!chartData.length) return { change: 0, changePercent: 0, current: 0 };
+    if (!chartData.length) {
+      return { change: 0, changePercent: 0, current: 0, deposited: 0, yieldEarned: 0, pnl: 0 };
+    }
 
     const first = chartData[0];
     const last = chartData[chartData.length - 1];
@@ -136,6 +138,9 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
       change,
       changePercent,
       current: last.portfolioValue,
+      deposited: last.totalDeposited,
+      yieldEarned: last.yieldEarned,
+      pnl: last.pnl,
     };
   }, [chartData]);
 
@@ -192,159 +197,198 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
   return (
     <div className={styles.card}>
       <div className={styles.content}>
-      <div className={styles.header}>
-        <div>
-          <div className={styles.eyebrow}>
-            <TrendingUp />
-            Live Position
+        <div className={styles.header}>
+          <div>
+            <div className={styles.eyebrow}>
+              <Activity />
+              Live Position
+            </div>
+            <h3 className={styles.title}>Portfolio Performance</h3>
+            <p className={styles.subcopy}>Capital, yield, and simulated vault growth over the selected horizon.</p>
           </div>
-          <h3 className={styles.title}>Portfolio Performance</h3>
-          <div className={styles.valueRow}>
-            <span className={styles.currentValue}>${stats.current.toFixed(2)}</span>
-            <span className={styles.changePill} data-negative={stats.changePercent < 0}>
-              {stats.changePercent >= 0 ? '+' : ''}{stats.changePercent.toFixed(2)}%
-            </span>
+
+          <div className={styles.controls}>
+            <div className={styles.segmented} aria-label="Chart time range">
+              {(['7D', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`${styles.segment} ${timeRange === range ? styles.segmentActive : ''}`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.segmented} aria-label="Chart display type">
+              <button
+                onClick={() => setChartType('area')}
+                className={`${styles.segment} ${chartType === 'area' ? styles.segmentActive : ''}`}
+              >
+                Area
+              </button>
+              <button
+                onClick={() => setChartType('line')}
+                className={`${styles.segment} ${chartType === 'line' ? styles.segmentActive : ''}`}
+              >
+                Line
+              </button>
+            </div>
           </div>
-          <p className={styles.changeText}>
-            {stats.change >= 0 ? '+' : ''}${stats.change.toFixed(2)} USD
+        </div>
+
+        <div className={styles.heroStrip}>
+          <div className={styles.valuePanel}>
+            <span className={styles.valueLabel}>Current Value</span>
+            <div className={styles.valueRow}>
+              <span className={styles.currentValue}>${stats.current.toFixed(2)}</span>
+              <span className={styles.changePill} data-negative={stats.changePercent < 0}>
+                {stats.changePercent >= 0 ? '+' : ''}{stats.changePercent.toFixed(2)}%
+              </span>
+            </div>
+            <p className={styles.changeText}>
+              {stats.change >= 0 ? '+' : ''}${stats.change.toFixed(2)} USD over {timeRange}
+            </p>
+          </div>
+
+          <div className={styles.metricRail}>
+            <div className={styles.statTile}>
+              <Layers3 />
+              <span>Deposited</span>
+              <strong>${stats.deposited.toFixed(2)}</strong>
+            </div>
+            <div className={styles.statTile}>
+              <Sparkles />
+              <span>Yield</span>
+              <strong>${stats.yieldEarned.toFixed(2)}</strong>
+            </div>
+            <div className={styles.statTile} data-negative={stats.pnl < 0}>
+              <TrendingUp />
+              <span>P&L</span>
+              <strong>{stats.pnl >= 0 ? '+' : ''}${stats.pnl.toFixed(2)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <section className={styles.chartPanel}>
+          <div className={styles.chartChrome}>
+            <div>
+              <span className={styles.chartLabel}>Equity Curve</span>
+              <p className={styles.chartCaption}>{chartData.length} sampled points · simulated yield model</p>
+            </div>
+            <div className={styles.customLegend}>
+              <span><i className={styles.legendPortfolio} />Portfolio</span>
+              <span><i className={styles.legendDeposit} />Deposited</span>
+              {chartType === 'line' && <span><i className={styles.legendYield} />Yield</span>}
+            </div>
+          </div>
+
+          <div className={styles.chartShell}>
+            <ResponsiveContainer width="100%" height="100%">
+              {chartType === 'area' ? (
+                <AreaChart data={chartData} margin={{ top: 20, right: 18, left: 2, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#68f1dd" stopOpacity={0.42}/>
+                      <stop offset="62%" stopColor="#5f83ff" stopOpacity={0.15}/>
+                      <stop offset="100%" stopColor="#68f1dd" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorDeposited" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#7a8498" stopOpacity={0.24}/>
+                      <stop offset="100%" stopColor="#7a8498" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="4 14" stroke="rgba(255,255,255,0.14)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="totalDeposited"
+                    stroke="#7a8498"
+                    strokeWidth={2}
+                    fill="url(#colorDeposited)"
+                    name="Deposited"
+                    dot={false}
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: '#f8fbff' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="portfolioValue"
+                    stroke="#68f1dd"
+                    strokeWidth={3}
+                    fill="url(#colorValue)"
+                    name="Portfolio Value"
+                    dot={false}
+                    activeDot={{ r: 5, strokeWidth: 3, stroke: '#f8fbff' }}
+                  />
+                </AreaChart>
+              ) : (
+                <LineChart data={chartData} margin={{ top: 20, right: 18, left: 2, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="4 14" stroke="rgba(255,255,255,0.14)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
+                    tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="totalDeposited"
+                    stroke="#7a8498"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Deposited"
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: '#f8fbff' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="portfolioValue"
+                    stroke="#68f1dd"
+                    strokeWidth={3}
+                    dot={false}
+                    name="Portfolio Value"
+                    activeDot={{ r: 5, strokeWidth: 3, stroke: '#f8fbff' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="yieldEarned"
+                    stroke="#57d28f"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Yield Earned"
+                    strokeDasharray="5 5"
+                    activeDot={{ r: 4, strokeWidth: 2, stroke: '#f8fbff' }}
+                  />
+                </LineChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <div className={styles.footer}>
+          <p className={styles.footerText}>
+            <Calendar />
+            Chart shows simulated yield for testnet demonstration purposes
           </p>
         </div>
-
-        <div className={styles.controls}>
-          <div className={styles.segmented}>
-            {(['7D', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
-              <button
-                key={range}
-                onClick={() => setTimeRange(range)}
-                className={`${styles.segment} ${timeRange === range ? styles.segmentActive : ''}`}
-              >
-                {range}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.segmented}>
-            <button
-              onClick={() => setChartType('area')}
-              className={`${styles.segment} ${chartType === 'area' ? styles.segmentActive : ''}`}
-            >
-              Area
-            </button>
-            <button
-              onClick={() => setChartType('line')}
-              className={`${styles.segment} ${chartType === 'line' ? styles.segmentActive : ''}`}
-            >
-              Line
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.chartShell}>
-        <ResponsiveContainer width="100%" height="100%">
-          {chartType === 'area' ? (
-            <AreaChart data={chartData} margin={{ top: 16, right: 18, left: 2, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#68f1dd" stopOpacity={0.34}/>
-                  <stop offset="95%" stopColor="#68f1dd" stopOpacity={0}/>
-                </linearGradient>
-                <linearGradient id="colorDeposited" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#7a8498" stopOpacity={0.22}/>
-                  <stop offset="95%" stopColor="#7a8498" stopOpacity={0}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="4 12" stroke="rgba(255,255,255,0.14)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={(value) => `$${value.toFixed(0)}`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ paddingTop: '18px', color: 'rgba(255,255,255,0.58)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                iconType="circle"
-              />
-              <Area
-                type="monotone"
-                dataKey="totalDeposited"
-                stroke="#7a8498"
-                strokeWidth={2}
-                fill="url(#colorDeposited)"
-                name="Deposited"
-              />
-              <Area
-                type="monotone"
-                dataKey="portfolioValue"
-                stroke="#68f1dd"
-                strokeWidth={3}
-                fill="url(#colorValue)"
-                name="Portfolio Value"
-              />
-            </AreaChart>
-          ) : (
-            <LineChart data={chartData} margin={{ top: 16, right: 18, left: 2, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="4 12" stroke="rgba(255,255,255,0.14)" vertical={false} />
-              <XAxis
-                dataKey="date"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                tickFormatter={(value) => `$${value.toFixed(0)}`}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                wrapperStyle={{ paddingTop: '18px', color: 'rgba(255,255,255,0.58)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
-                iconType="circle"
-              />
-              <Line
-                type="monotone"
-                dataKey="totalDeposited"
-                stroke="#7a8498"
-                strokeWidth={2}
-                dot={false}
-                name="Deposited"
-              />
-              <Line
-                type="monotone"
-                dataKey="portfolioValue"
-                stroke="#68f1dd"
-                strokeWidth={3}
-                dot={false}
-                name="Portfolio Value"
-              />
-              <Line
-                type="monotone"
-                dataKey="yieldEarned"
-                stroke="#57d28f"
-                strokeWidth={2}
-                dot={false}
-                name="Yield Earned"
-                strokeDasharray="5 5"
-              />
-            </LineChart>
-          )}
-        </ResponsiveContainer>
-      </div>
-
-      <div className={styles.footer}>
-        <p className={styles.footerText}>
-          <Calendar />
-          Chart shows simulated yield for testnet demonstration purposes
-        </p>
-      </div>
       </div>
     </div>
   );

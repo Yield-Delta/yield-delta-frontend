@@ -105,7 +105,62 @@
   line-height: 1 !important;
 }
 
+.subcopy {
+  max-width: 520px !important;
+  margin: 10px 0 0 !important;
+  color: rgba(255, 255, 255, 0.48) !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+}
+
+.heroStrip {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr) !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+.valuePanel {
+  position: relative !important;
+  overflow: hidden !important;
+  min-height: 156px !important;
+  border: 1px solid rgba(104, 241, 221, 0.13) !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(135deg, rgba(104, 241, 221, 0.1), rgba(95, 131, 255, 0.05)),
+    rgba(255, 255, 255, 0.035) !important;
+  padding: 20px !important;
+}
+
+.valuePanel::after {
+  content: "" !important;
+  position: absolute !important;
+  right: -70px !important;
+  top: -90px !important;
+  width: 240px !important;
+  height: 240px !important;
+  border-radius: 999px !important;
+  background: rgba(104, 241, 221, 0.14) !important;
+  filter: blur(54px) !important;
+  pointer-events: none !important;
+}
+
+.valueLabel {
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  color: rgba(255, 255, 255, 0.46) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.13em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
 .valueRow {
+  position: relative !important;
+  z-index: 1 !important;
   display: flex !important;
   flex-wrap: wrap !important;
   align-items: baseline !important;
@@ -116,7 +171,7 @@
 .currentValue {
   color: #fff !important;
   font-family: var(--font-display), var(--font-sans), system-ui, sans-serif !important;
-  font-size: clamp(32px, 5vw, 48px) !important;
+  font-size: clamp(44px, 7vw, 76px) !important;
   font-weight: 900 !important;
   line-height: 0.95 !important;
 }
@@ -142,10 +197,63 @@
 }
 
 .changeText {
+  position: relative !important;
+  z-index: 1 !important;
   margin: 7px 0 0 !important;
   color: rgba(255, 255, 255, 0.46) !important;
   font-family: var(--font-mono), ui-monospace, monospace !important;
   font-size: 12px !important;
+}
+
+.metricRail {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.statTile {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  min-height: 156px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  padding: 16px !important;
+}
+
+.statTile svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: #68f1dd !important;
+}
+
+.statTile span {
+  margin-top: auto !important;
+  color: rgba(255, 255, 255, 0.42) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+.statTile strong {
+  display: block !important;
+  overflow: hidden !important;
+  margin-top: 8px !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: clamp(20px, 2.8vw, 30px) !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.statTile[data-negative="true"] svg,
+.statTile[data-negative="true"] strong {
+  color: #ff537e !important;
 }
 
 .controls {
@@ -190,15 +298,79 @@
   box-shadow: 0 10px 28px rgba(104, 241, 221, 0.14) !important;
 }
 
-.chartShell {
+.chartPanel {
   position: relative !important;
   overflow: hidden !important;
-  height: 390px !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 22px !important;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
     rgba(0, 0, 0, 0.18) !important;
+}
+
+.chartChrome {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 16px 16px 12px !important;
+}
+
+.chartLabel {
+  display: block !important;
+  color: rgba(255, 255, 255, 0.86) !important;
+  font-size: 15px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+}
+
+.chartCaption {
+  margin: 5px 0 0 !important;
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+.customLegend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.customLegend span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: rgba(255, 255, 255, 0.52) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+}
+
+.customLegend i {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+}
+
+.legendPortfolio {
+  background: #68f1dd !important;
+  box-shadow: 0 0 14px rgba(104, 241, 221, 0.55) !important;
+}
+
+.legendDeposit {
+  background: #7a8498 !important;
+}
+
+.legendYield {
+  background: #57d28f !important;
+}
+
+.chartShell {
+  height: 390px !important;
   padding: 12px 10px 4px !important;
 }
 
@@ -305,5 +477,35 @@
   .chartShell {
     height: 360px !important;
     padding: 8px 4px 2px !important;
+  }
+
+  .heroStrip {
+    grid-template-columns: 1fr !important;
+  }
+
+  .metricRail {
+    grid-template-columns: 1fr !important;
+  }
+
+  .statTile {
+    min-height: auto !important;
+    display: grid !important;
+    grid-template-columns: 22px minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .statTile span,
+  .statTile strong {
+    margin-top: 0 !important;
+  }
+
+  .chartChrome {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+  }
+
+  .customLegend {
+    justify-content: flex-start !important;
   }
 }
