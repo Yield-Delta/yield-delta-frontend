@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { useTokenAllowance } from '@/hooks/useTokenBalance';
 import { parseUnits } from 'viem';
+import styles from './DepositModal.module.css';
 
 // ERC20 ABI for approve function
 const ERC20_ABI = [
@@ -566,7 +567,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-[10000000] flex items-end justify-center bg-[#02030a]/82 px-0 backdrop-blur-xl sm:items-center sm:px-4 deposit-modal-container"
+      className={`${styles.overlay} deposit-modal-container`}
       style={{
         position: 'fixed',
         inset: 0,
@@ -591,12 +592,17 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
       }}
       data-testid="modal-backdrop"
     >
-      <style jsx>{`
+      <style jsx global>{`
         .deposit-modal-container {
           min-height: 100dvh;
+          font-family: var(--font-sans), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .deposit-modal-content {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
           width: min(590px, calc(100vw - 24px));
           max-height: min(90dvh, 760px);
           border-radius: 30px;
@@ -608,54 +614,448 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
           box-shadow:
             0 0 0 1px rgba(255, 255, 255, 0.04),
             0 34px 130px rgba(0, 0, 0, 0.86);
+          font-family: var(--font-sans), Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
-        .modal-scrollable-content {
+        .deposit-modal-content * {
+          box-sizing: border-box;
+          font-family: inherit;
+        }
+
+        .deposit-modal-container .modal-scrollable-content {
+          position: relative;
+          flex: 1 1 auto;
+          overflow-y: auto;
+          padding: 1.25rem 1.25rem 1rem;
           scrollbar-width: thin;
           scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
         }
 
-        .transaction-side,
-        .important-notice,
-        .apy-info-section {
+        .deposit-modal-container .modal-header-section {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 1rem;
+          margin-bottom: 1.25rem;
+        }
+
+        .deposit-modal-container .modal-heading-cluster {
+          display: flex;
+          min-width: 0;
+          align-items: flex-start;
+          gap: 0.8rem;
+        }
+
+        .deposit-modal-container .modal-badge-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.45rem;
+          margin-bottom: 0.65rem;
+        }
+
+        .deposit-modal-container .modal-title {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.94);
+          font-family: var(--font-display), var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+          font-size: clamp(1.45rem, 2.6vw, 2rem);
+          font-weight: 800;
+          line-height: 1.05;
+          letter-spacing: 0;
+        }
+
+        .deposit-modal-container .modal-subtitle {
+          margin-top: 0.45rem;
+          color: rgba(255, 255, 255, 0.48);
+          font-size: 0.88rem;
+          line-height: 1.4;
+          text-transform: capitalize;
+        }
+
+        .deposit-modal-container .modal-badge {
+          display: inline-flex;
+          align-items: center;
+          min-height: 1.55rem;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 0.25rem 0.6rem;
+          font-family: var(--font-mono), ui-monospace, monospace;
+          font-size: 0.64rem;
+          font-weight: 700;
+          line-height: 1;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .deposit-modal-container .modal-close-button {
+          display: flex;
+          height: 2.5rem;
+          width: 2.5rem;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.64);
+          transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .deposit-modal-container .modal-close-button:hover {
+          border-color: rgba(255, 255, 255, 0.18);
+          background: rgba(255, 255, 255, 0.1);
+          color: white;
+        }
+
+        .deposit-modal-container .evm-vault-icon {
+          display: flex;
+          height: 3rem;
+          width: 3rem;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
+          border-radius: 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .deposit-modal-container .evm-metric-card,
+        .deposit-modal-container .transaction-side,
+        .deposit-modal-container .important-notice,
+        .deposit-modal-container .apy-info-section,
+        .deposit-modal-container .evm-info-tile {
           border-radius: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(255, 255, 255, 0.045);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
         }
 
-        .quick-deposit-button {
-          border-radius: 16px;
+        .deposit-modal-container .evm-metric-card {
+          min-width: 0;
+          padding: 0.8rem;
         }
 
-        .modal-footer button {
+        .deposit-modal-container .evm-metrics-grid,
+        .deposit-modal-container .evm-info-grid,
+        .deposit-modal-container .modal-footer-grid {
+          display: grid;
+          gap: 0.65rem;
+        }
+
+        .deposit-modal-container .evm-metrics-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          margin-bottom: 1rem;
+        }
+
+        .deposit-modal-container .evm-info-grid,
+        .deposit-modal-container .modal-footer-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .deposit-modal-container .evm-info-grid {
+          margin-bottom: 1rem;
+        }
+
+        .deposit-modal-container .evm-metric-label {
+          margin: 0 0 0.35rem;
+          color: rgba(255, 255, 255, 0.36);
+          font-family: var(--font-mono), ui-monospace, monospace;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+        }
+
+        .deposit-modal-container .evm-metric-value {
+          margin: 0;
+          overflow: hidden;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 1rem;
+          font-weight: 800;
+          line-height: 1.2;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .deposit-modal-container .transaction-side,
+        .deposit-modal-container .important-notice {
+          padding: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .deposit-modal-container .amount-label-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+          color: rgba(255, 255, 255, 0.56);
+          font-size: 0.88rem;
+          line-height: 1.25;
+        }
+
+        .deposit-modal-container .amount-label-row span:last-child {
+          min-width: 0;
+          overflow: hidden;
+          text-align: right;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .deposit-modal-container .amount-input-card {
+          display: flex;
+          align-items: flex-end;
+          gap: 0.75rem;
+          min-height: 4.4rem;
+          border-radius: 20px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(0, 0, 0, 0.18);
+          padding: 0.85rem 0.9rem;
+        }
+
+        .deposit-modal-container .evm-deposit-amount {
+          min-width: 0;
+          flex: 1;
+          border: 0;
+          background: transparent;
+          color: rgba(255, 255, 255, 0.96);
+          font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+          font-size: clamp(2.25rem, 6vw, 3.6rem);
+          font-weight: 800;
+          line-height: 0.95;
+          outline: none;
+        }
+
+        .deposit-modal-container .evm-deposit-amount::placeholder {
+          color: rgba(255, 255, 255, 0.16);
+        }
+
+        .deposit-modal-container .token-pill {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 3.4rem;
+          border-radius: 14px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          padding: 0.55rem 0.7rem;
+          font-size: 0.86rem;
+          font-weight: 800;
+        }
+
+        .deposit-modal-container .quick-deposit-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 0.5rem;
+          margin-top: 0.75rem;
+        }
+
+        .deposit-modal-container .quick-deposit-button {
+          min-height: 2.5rem;
           border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          background: rgba(255, 255, 255, 0.055);
+          color: rgba(255, 255, 255, 0.68);
+          font-family: var(--font-mono), ui-monospace, monospace;
+          font-size: 0.78rem;
+          font-weight: 700;
+          transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .deposit-modal-container .quick-deposit-button:hover {
+          border-color: rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.09);
+          color: white;
+        }
+
+        .deposit-modal-container .evm-info-tile {
+          display: flex;
+          min-height: 4.75rem;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.85rem;
+        }
+
+        .deposit-modal-container .evm-info-icon {
+          display: flex;
+          height: 2.35rem;
+          width: 2.35rem;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.065);
+          color: #6ee7d8;
+        }
+
+        .deposit-modal-container .evm-info-label {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.4);
+          font-size: 0.76rem;
+          line-height: 1.2;
+        }
+
+        .deposit-modal-container .evm-info-value {
+          margin: 0.2rem 0 0;
+          overflow: hidden;
+          color: rgba(255, 255, 255, 0.88);
+          font-size: 0.9rem;
+          font-weight: 700;
+          line-height: 1.25;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .deposit-modal-container .important-notice h3 {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.92);
+          font-size: 1rem;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+
+        .deposit-modal-container .important-notice p {
+          margin: 0;
+          color: rgba(255, 255, 255, 0.58);
+          font-size: 0.9rem;
+          line-height: 1.55;
+        }
+
+        .deposit-modal-container .apy-info-section {
+          padding: 1rem;
+          overflow: hidden;
+        }
+
+        .deposit-modal-container .apy-info-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+
+        .deposit-modal-container .apy-label-row {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+          color: rgba(255, 255, 255, 0.58);
+          font-size: 0.88rem;
+          font-weight: 700;
+        }
+
+        .deposit-modal-container .apy-performance {
+          color: rgba(255, 255, 255, 0.52);
+          font-size: 0.86rem;
+          line-height: 1.7;
+          text-align: right;
+          white-space: nowrap;
+        }
+
+        .deposit-modal-container .apy-info-section p {
+          margin: 0;
+        }
+
+        .deposit-modal-container .apy-display-large {
+          display: block;
+          margin-top: 0.35rem;
+          font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+          font-size: clamp(2rem, 5vw, 2.7rem);
+          font-weight: 900;
+          line-height: 0.95;
+        }
+
+        .deposit-modal-container .modal-footer {
+          border-top: 1px solid rgba(255, 255, 255, 0.09);
+          background: rgba(0, 0, 0, 0.38);
+          padding: 0.85rem;
+          backdrop-filter: blur(18px);
+          -webkit-backdrop-filter: blur(18px);
+        }
+
+        .deposit-modal-container .modal-footer button {
+          min-height: 3rem;
+          border-radius: 16px;
+          border: 0;
+          font-family: var(--font-sans), system-ui, sans-serif;
+          font-size: 0.88rem;
+          font-weight: 800;
+          cursor: pointer;
+        }
+
+        .deposit-modal-container .modal-cancel-button {
+          border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          background: rgba(255, 255, 255, 0.06);
+          color: rgba(255, 255, 255, 0.74);
+        }
+
+        .deposit-modal-container .modal-primary-button {
+          color: #03110f;
+          box-shadow: 0 16px 38px rgba(0, 245, 212, 0.18);
+        }
+
+        .deposit-modal-container .modal-approve-button {
+          display: flex;
+          min-height: 3rem;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          border-radius: 16px;
+          background: #fbbf24;
+          color: #080603;
+          font-weight: 900;
+        }
+
+        .deposit-modal-container .transaction-status-panel {
+          margin-top: 1rem;
+          border-radius: 18px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 0, 0, 0.25);
+          padding: 0.8rem;
+        }
+
+        .deposit-modal-container .transaction-status-row {
+          display: flex;
+          min-width: 0;
+          align-items: center;
+          gap: 0.75rem;
+          color: rgba(255, 255, 255, 0.88);
+          font-size: 0.88rem;
+          font-weight: 700;
         }
 
         @media (max-width: 640px) {
-          .evm-deposit-panel {
+          .deposit-modal-container .evm-deposit-panel {
             width: 100%;
             max-height: 92dvh;
             border-radius: 24px;
           }
-          .evm-deposit-body {
+          .deposit-modal-container .evm-deposit-body {
             max-height: calc(92dvh - 92px);
             padding: 1rem;
           }
-          .evm-deposit-title {
+          .deposit-modal-container .evm-deposit-title {
             font-size: 1.35rem;
           }
-          .evm-deposit-amount {
+          .deposit-modal-container .evm-deposit-amount {
             font-size: 2.65rem;
+          }
+
+          .deposit-modal-container .evm-metrics-grid,
+          .deposit-modal-container .evm-info-grid,
+          .deposit-modal-container .modal-footer-grid {
+            gap: 0.5rem;
+          }
+
+          .deposit-modal-container .apy-info-row {
+            align-items: flex-start;
           }
         }
       `}</style>
 
       <div
-        className="evm-deposit-panel relative flex w-full max-w-[590px] flex-col overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] text-white shadow-[0_-28px_90px_rgba(0,0,0,0.72)] sm:max-h-[88dvh] sm:rounded-[30px] sm:shadow-[0_34px_130px_rgba(0,0,0,0.86)] deposit-modal-content"
+        className={`${styles.panel} deposit-modal-content`}
         style={{
-          width: 'min(590px, calc(100vw - 24px))',
-          maxHeight: 'min(90dvh, 760px)',
-          borderRadius: 30,
+          '--accent': vaultColor,
           boxShadow: `0 0 0 1px ${vaultColor}24, 0 34px 130px rgba(0,0,0,0.86), 0 0 80px ${vaultColor}24`,
-        }}
+        } as React.CSSProperties}
         onClick={(e) => {
           console.log('[DepositModal] Modal content clicked - preventing propagation');
           e.stopPropagation();
@@ -664,41 +1064,39 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
         aria-modal="true"
         aria-labelledby="deposit-modal-title"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${vaultColor}, #10b981, transparent)` }} />
-        <div className="pointer-events-none absolute -top-28 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full blur-3xl" style={{ background: `${vaultColor}24` }} />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.075]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
+        <div className={styles.topRule} />
+        <div className={styles.ambientGlow} />
+        <div className={styles.texture} />
 
-        <div className="evm-deposit-body modal-scrollable-content relative flex-1 overflow-y-auto px-5 pb-4 pt-4 sm:px-6 sm:pt-6">
-          <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-white/20 sm:hidden" />
+        <div className={`${styles.body} modal-scrollable-content`}>
+          <div className={styles.grabber} />
 
-          <header className="mb-5 flex items-start justify-between gap-4 modal-header-section">
-            <div className="flex min-w-0 items-start gap-3">
+          <header className={`${styles.header} modal-header-section`}>
+            <div className={`${styles.headingCluster} modal-heading-cluster`}>
               <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
+                className={`${styles.vaultIcon} evm-vault-icon`}
                 style={{
-                  background: `linear-gradient(135deg, ${vaultColor}2e, rgba(16,185,129,0.08))`,
                   borderColor: `${vaultColor}45`,
-                  boxShadow: `0 16px 38px ${vaultColor}20`,
                 }}
               >
                 <Vault className="h-6 w-6" style={{ color: vaultColor }} />
               </div>
               <div className="min-w-0">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                <div className={`${styles.badgeRow} modal-badge-row`}>
+                  <span className={`${styles.badge} modal-badge`}>
                     EVM Vault
                   </span>
                   <span
-                    className="rounded-full border px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em]"
+                    className={`${styles.badge} modal-badge`}
                     style={{ borderColor: `${vaultColor}38`, color: vaultColor, background: `${vaultColor}16` }}
                   >
                     {riskLevel} Risk
                   </span>
                 </div>
-                <h2 id="deposit-modal-title" className="evm-deposit-title text-balance text-2xl font-bold leading-tight text-white modal-title" style={{ fontFamily: 'var(--font-display)' }}>
+                <h2 id="deposit-modal-title" className={`${styles.title} modal-title`}>
                   Deposit to {vault.name}
                 </h2>
-                <p className="mt-1 text-sm text-white/45 modal-subtitle">
+                <p className={`${styles.subtitle} modal-subtitle`}>
                   {vault.strategy.replace(/_/g, ' ')} · {vault.tokenA}/{vault.tokenB}
                 </p>
               </div>
@@ -708,28 +1106,28 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
               onClick={handleClose}
               disabled={depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending'}
               aria-label="Close deposit modal"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className={`${styles.closeButton} modal-close-button`}
             >
               <X className="h-4 w-4" />
             </button>
           </header>
 
-          <section className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+          <section className={`${styles.metricsGrid} evm-metrics-grid`}>
             <MetricCard label="APY" value={`${(vault.apy * 100).toFixed(1)}%`} color={vaultColor} />
             <MetricCard label="TVL" value={`$${formatCurrency(vault.tvl)}`} />
             <MetricCard label="Fee" value={`${(vault.fee / 10000).toFixed(2)}%`} />
           </section>
 
-          <section className="mb-4 rounded-3xl border border-white/10 bg-white/[0.045] p-4 transaction-side">
-            <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-              <span className="font-medium text-white/60">Deposit amount</span>
-              <span className="truncate text-right text-white/45">
+          <section className={`${styles.depositCard} transaction-side`}>
+            <div className={`${styles.amountLabelRow} amount-label-row`}>
+              <span>Deposit amount</span>
+              <span className={styles.balanceText}>
                 Balance {currentUserBalance.amount.toFixed(4)} {tokenSymbol}
                 {currentUserBalance.isLoading && ' · loading'}
               </span>
             </div>
 
-            <div className="flex items-end gap-3 amount-input-card">
+            <div className={`${styles.amountInputCard} amount-input-card`}>
               <input
                 id="deposit-amount"
                 type="number"
@@ -739,18 +1137,17 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
                 placeholder="0.00"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value)}
-                className="evm-deposit-amount min-w-0 flex-1 bg-transparent text-5xl font-bold leading-none text-white outline-none placeholder:text-white/18"
-                style={{ fontFamily: 'var(--font-display)' }}
+                className={`${styles.amountInput} evm-deposit-amount`}
               />
               <span
-                className="mb-1 rounded-2xl border px-3 py-2 text-sm font-bold"
+                className={`${styles.tokenPill} token-pill`}
                 style={{ borderColor: `${vaultColor}38`, background: `${vaultColor}16`, color: vaultColor }}
               >
                 {tokenSymbol}
               </span>
             </div>
 
-            <div className="mt-4 grid grid-cols-4 gap-2 quick-deposit-grid">
+            <div className={`${styles.quickGrid} quick-deposit-grid`}>
               {[0.25, 0.5, 0.75, 1].map((ratio) => (
                 <button
                   key={ratio}
@@ -759,7 +1156,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
                     const amount = Math.max(0, currentUserBalance.amount * ratio);
                     setDepositAmount(amount > 0 ? amount.toFixed(4) : ratio === 1 ? currentUserBalance.amount.toString() : '');
                   }}
-                  className="quick-deposit-button min-h-10 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-white/65 transition hover:bg-white/[0.08] hover:text-white"
+                  className={`${styles.quickButton} quick-deposit-button`}
                 >
                   {ratio === 1 ? 'MAX' : `${Math.round(ratio * 100)}%`}
                 </button>
@@ -767,41 +1164,41 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
             </div>
           </section>
 
-          <section className="mb-4 grid grid-cols-2 gap-2 sm:gap-3">
+          <section className={`${styles.infoGrid} evm-info-grid`}>
             <InfoTile icon={<DollarSign className="h-4 w-4" />} label="Token Rule" value={requirementText} />
             <InfoTile icon={<TrendingUp className="h-4 w-4" />} label="Daily Estimate" value={`~${(projectedDaily * 100).toFixed(3)}%`} />
           </section>
 
-          <section className="mb-4 rounded-3xl border border-white/10 bg-white/[0.035] p-4 important-notice">
-            <div className="mb-2 flex items-center gap-2">
+          <section className={`${styles.notice} important-notice`}>
+            <div className={styles.noticeHeader}>
               <Shield className="h-5 w-5" style={{ color: needsApproval ? '#f59e0b' : '#10b981' }} />
-              <h3 className="font-bold text-white">Transaction readiness</h3>
+              <h3 className={styles.noticeTitle}>Transaction readiness</h3>
             </div>
-            <p className="text-sm leading-6 text-white/55">
+            <p className={styles.noticeText}>
               {primaryToken?.isNative
                 ? 'This vault accepts native SEI deposits directly from your wallet.'
                 : `This vault requires ${primaryToken?.symbol || tokenSymbol}. ${needsApproval ? 'Approve token spending before depositing.' : 'Allowance is ready for this amount.'}`}
             </p>
             {needsApproval && !isApprovalConfirmed && (
-              <p className="mt-3 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-3 text-sm font-semibold text-amber-200">
+              <p className={styles.approvalNote}>
                 Approval required for {tokenInfo?.symbol || 'this token'} before the deposit transaction.
               </p>
             )}
           </section>
 
-          <section className="rounded-3xl border p-4 apy-info-section" style={{ borderColor: `${vaultColor}30`, background: `linear-gradient(135deg, ${vaultColor}12, rgba(255,255,255,0.035))` }}>
-            <div className="flex items-center justify-between gap-4">
+          <section className={`${styles.apyCard} apy-info-section`} style={{ borderColor: `${vaultColor}30`, background: `linear-gradient(135deg, ${vaultColor}12, rgba(255,255,255,0.035))` }}>
+            <div className={`${styles.apyRow} apy-info-row`}>
               <div>
-                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-white/58">
+                <div className={`${styles.apyLabelRow} apy-label-row`}>
                   <Zap className="h-4 w-4" style={{ color: vaultColor }} />
                   Annual Percentage Yield
                 </div>
-                <strong className="block text-4xl leading-none apy-display-large" style={{ color: vaultColor, fontFamily: 'var(--font-display)' }}>
+                <strong className={`${styles.apyValue} apy-display-large`} style={{ color: vaultColor }}>
                   {(vault.apy * 100).toFixed(1)}%
                 </strong>
               </div>
-              <div className="text-right text-sm text-white/50">
-                <p className="font-semibold text-white/80">Performance</p>
+              <div className={`${styles.performance} apy-performance`}>
+                <p className={styles.performanceTitle}>Performance</p>
                 <p>Sharpe {vault.performance.sharpeRatio.toFixed(2)}</p>
                 <p>Win {vault.performance.winRate.toFixed(0)}%</p>
               </div>
@@ -809,16 +1206,16 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
           </section>
 
           {(transactionStatus === 'pending' || transactionStatus === 'success' || transactionStatus === 'error') && (
-            <section className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-3">
+            <section className={`${styles.statusPanel} transaction-status-panel`}>
               {transactionStatus === 'pending' && (
-                <div className="flex items-center gap-3 text-sm font-semibold text-white">
+                <div className={`${styles.statusRow} transaction-status-row`}>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   <span>{isApproving || isApprovalConfirming ? 'Approval is being processed...' : depositMutation.isConfirming ? 'Waiting for confirmation...' : 'Transaction is being processed...'}</span>
                 </div>
               )}
 
               {transactionStatus === 'success' && (
-                <div className="flex min-w-0 items-center gap-3 text-sm font-semibold text-emerald-300">
+                <div className={`${styles.statusRow} transaction-status-row`}>
                   <CheckCircle2 className="h-5 w-5 shrink-0" />
                   <span>Transaction successful!</span>
                   {transactionHash && <span className="truncate text-xs opacity-75">{transactionHash}</span>}
@@ -826,7 +1223,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
               )}
 
               {transactionStatus === 'error' && (
-                <div className="flex min-w-0 items-start gap-3 text-sm font-semibold text-red-300">
+                <div className={`${styles.statusRow} transaction-status-row`}>
                   <Info className="h-5 w-5 shrink-0" />
                   <div className="min-w-0">
                     <p>Transaction failed</p>
@@ -838,12 +1235,12 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
           )}
         </div>
 
-        <footer className="modal-footer relative shrink-0 border-t border-white/10 bg-black/45 p-4 backdrop-blur-xl">
-          <div className="grid grid-cols-2 gap-3">
+        <footer className={`${styles.footer} modal-footer`}>
+          <div className={`${styles.footerGrid} modal-footer-grid`}>
             <button
               onClick={handleClose}
               disabled={depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending'}
-              className="min-h-12 rounded-2xl border border-white/12 bg-white/[0.05] font-bold text-white/72 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              className={`${styles.cancelButton} modal-cancel-button`}
             >
               {transactionStatus === 'success' ? 'Close' : 'Cancel'}
             </button>
@@ -852,7 +1249,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
               <button
                 onClick={handleApprove}
                 disabled={!isValidAmount || isApproving || isApprovalConfirming}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-amber-400 px-4 font-black text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`${styles.approveButton} modal-approve-button`}
               >
                 {isApproving || isApprovalConfirming ? (
                   <>
@@ -870,7 +1267,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
               <button
                 onClick={transactionStatus === 'success' ? handleClose : handleDeposit}
                 disabled={actionDisabled}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
+                className={`${styles.primaryButton} modal-primary-button`}
                 style={{ background: `linear-gradient(135deg, ${vaultColor}, #10b981)`, boxShadow: `0 16px 40px ${vaultColor}32` }}
               >
                 {depositMutation.isPending || depositMutation.isConfirming || transactionStatus === 'pending' ? (
@@ -907,22 +1304,22 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
 
 function MetricCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.045] p-3">
-      <p className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/35">{label}</p>
-      <p className="truncate text-base font-bold text-white" style={color ? { color } : undefined}>{value}</p>
+    <div className={`${styles.metricCard} evm-metric-card`}>
+      <p className={`${styles.metricLabel} evm-metric-label`}>{label}</p>
+      <p className={`${styles.metricValue} evm-metric-value`} style={color ? { color } : undefined}>{value}</p>
     </div>
   );
 }
 
 function InfoTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-emerald-300">
+    <div className={`${styles.infoTile} evm-info-tile`}>
+      <div className={`${styles.infoIcon} evm-info-icon`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-white/38">{label}</p>
-        <p className="truncate text-sm font-semibold text-white">{value}</p>
+        <p className={`${styles.infoLabel} evm-info-label`}>{label}</p>
+        <p className={`${styles.infoValue} evm-info-value`}>{value}</p>
       </div>
     </div>
   );
