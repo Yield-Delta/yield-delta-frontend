@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
+import styles from './SolanaDepositModal.module.css'
 
 interface SolanaVaultData {
   address: string
@@ -158,7 +159,7 @@ export default function SolanaDepositModal({
     <AnimatePresence>
       {isOpen && (
         <div
-          className="fixed inset-0 z-[10000000] flex items-end justify-center px-0 sm:items-center sm:px-4"
+          className={styles.overlay}
           style={{
             position: 'fixed',
             inset: 0,
@@ -205,7 +206,7 @@ export default function SolanaDepositModal({
           `}</style>
 
           <motion.div
-            className="absolute inset-0 bg-[#02030a]/85 backdrop-blur-xl"
+            className={styles.backdrop}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -217,53 +218,49 @@ export default function SolanaDepositModal({
           />
 
           <motion.div
-            className="solana-deposit-shell relative w-full max-h-[94dvh] overflow-hidden rounded-t-[28px] border border-white/10 bg-[#060711] shadow-[0_-24px_80px_rgba(0,0,0,0.7)] sm:max-w-[560px] sm:rounded-[28px] sm:shadow-[0_32px_120px_rgba(0,0,0,0.82)]"
+            className={`${styles.shell} solana-deposit-shell`}
             initial={{ opacity: 0, y: 44, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 28, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 360, damping: 32, mass: 0.9 }}
             style={{
-              width: 'min(560px, calc(100vw - 24px))',
-              maxHeight: 'min(90dvh, 740px)',
-              borderRadius: 28,
+              '--accent': vaultColor,
               boxShadow: `0 0 0 1px ${vaultColor}24, 0 30px 120px rgba(0,0,0,0.86), 0 0 70px ${vaultColor}24`,
-            }}
+            } as React.CSSProperties}
           >
-            <div className="absolute inset-x-0 top-0 h-px" style={{ background: `linear-gradient(90deg, transparent, ${vaultColor}, #14f195, transparent)` }} />
-            <div className="absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full blur-3xl" style={{ background: `${vaultColor}28` }} />
-            <div className="absolute inset-0 pointer-events-none opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '22px 22px' }} />
+            <div className={styles.topRule} />
+            <div className={styles.ambientGlow} />
+            <div className={styles.texture} />
 
-            <div className="solana-deposit-body relative max-h-[94dvh] overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:py-6">
-              <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-white/20 sm:hidden" />
+            <div className={`${styles.body} solana-deposit-body`}>
+              <div className={styles.grabber} />
 
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
+              <div className={styles.header}>
+                <div className={styles.headingCluster}>
                   <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border"
+                    className={styles.vaultIcon}
                     style={{
-                      background: `linear-gradient(135deg, ${vaultColor}2e, rgba(20,241,149,0.08))`,
                       borderColor: `${vaultColor}45`,
-                      boxShadow: `0 16px 38px ${vaultColor}20`,
                     }}
                   >
                     <Coins className="h-6 w-6" style={{ color: vaultColor }} />
                   </div>
                   <div className="min-w-0">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                    <div className={styles.badgeRow}>
+                      <span className={styles.badge}>
                         Solana Devnet
                       </span>
                       <span
-                        className="rounded-full border px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em]"
+                        className={styles.badge}
                         style={{ borderColor: `${vaultColor}38`, color: vaultColor, background: `${vaultColor}16` }}
                       >
                         {riskLevel} Risk
                       </span>
                     </div>
-                    <h2 className="text-balance text-xl font-bold leading-tight text-white sm:text-2xl" style={{ fontFamily: 'var(--font-display)' }}>
+                    <h2 className={styles.title}>
                       Deposit to {vault?.name || 'Solana Vault'}
                     </h2>
-                    <p className="mt-1 text-sm text-white/45">
+                    <p className={styles.subtitle}>
                       {vault ? formatStrategy(vault.strategy) : 'AI routed Solana strategy'}
                     </p>
                   </div>
@@ -272,14 +269,14 @@ export default function SolanaDepositModal({
                 <button
                   onClick={onClose}
                   aria-label="Close deposit modal"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:bg-white/10 hover:text-white"
+                  className={styles.closeButton}
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {vault && (
-                <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+                <div className={styles.metricsGrid}>
                   <Metric label="APY" value={`${(vault.apy * 100).toFixed(1)}%`} color={vaultColor} />
                   <Metric label="TVL" value={`$${formatCurrency(vault.tvl)}`} />
                   <Metric label="Token" value={depositToken} />
@@ -287,22 +284,22 @@ export default function SolanaDepositModal({
               )}
 
               {!isWalletConnected ? (
-                <div className="rounded-3xl border border-red-400/20 bg-red-500/10 p-5 text-center">
-                  <Wallet className="mx-auto mb-3 h-10 w-10 text-red-300" />
-                  <p className="font-semibold text-white">Wallet not connected</p>
-                  <p className="mt-1 text-sm text-white/55">Connect Phantom first, then come back to fund this vault.</p>
+                <div className={styles.walletWarning}>
+                  <Wallet className={`${styles.walletWarningIcon} h-10 w-10`} />
+                  <p className={styles.walletWarningTitle}>Wallet not connected</p>
+                  <p className={styles.walletWarningText}>Connect Phantom first, then come back to fund this vault.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="rounded-3xl border border-white/10 bg-white/[0.045] p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-                      <span className="font-medium text-white/60">Amount</span>
-                      <span className="truncate text-right text-white/45">
+                <div className={styles.connectedStack}>
+                  <div className={styles.amountCard}>
+                    <div className={styles.amountLabelRow}>
+                      <span>Amount</span>
+                      <span className={styles.balanceText}>
                         Balance {balance || '0'} {depositToken}
                       </span>
                     </div>
 
-                    <div className="flex items-end gap-3">
+                    <div className={styles.amountInputRow}>
                       <input
                         type="number"
                         inputMode="decimal"
@@ -311,26 +308,25 @@ export default function SolanaDepositModal({
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
                         placeholder="0.00"
-                        className="min-w-0 flex-1 bg-transparent text-4xl font-bold leading-none text-white outline-none placeholder:text-white/18 sm:text-5xl"
-                        style={{ fontFamily: 'var(--font-display)' }}
+                        className={styles.amountInput}
                         disabled={transactionStatus === 'pending'}
                       />
                       <span
-                        className="mb-1 rounded-2xl border px-3 py-2 text-sm font-bold"
+                        className={styles.tokenPill}
                         style={{ borderColor: `${vaultColor}38`, background: `${vaultColor}16`, color: vaultColor }}
                       >
                         {depositToken}
                       </span>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-4 gap-2">
+                    <div className={styles.quickGrid}>
                       {QUICK_AMOUNTS.map((ratio) => (
                         <button
                           key={ratio}
                           type="button"
                           onClick={() => setAmountFromRatio(ratio)}
                           disabled={transactionStatus === 'pending' || maxAmount <= 0}
-                          className="min-h-10 rounded-2xl border border-white/10 bg-white/[0.04] text-sm font-semibold text-white/65 transition hover:bg-white/[0.08] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                          className={styles.quickButton}
                         >
                           {ratio === 1 ? 'MAX' : `${Math.round(ratio * 100)}%`}
                         </button>
@@ -338,7 +334,7 @@ export default function SolanaDepositModal({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className={styles.detailGrid}>
                     <Detail icon={<Sparkles className="h-4 w-4" />} label="USD Est." value={`$${projectedValue.toFixed(2)}`} />
                     <Detail icon={<ShieldCheck className="h-4 w-4" />} label="Daily Yield" value={`$${projectedDailyYield.toFixed(2)}`} />
                   </div>
@@ -358,7 +354,7 @@ export default function SolanaDepositModal({
                   <button
                     onClick={handleDeposit}
                     disabled={!canDeposit}
-                    className="group flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl px-5 text-base font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
+                    className={styles.primaryButton}
                     style={{
                       background: canDeposit
                         ? `linear-gradient(135deg, ${vaultColor}, #14f195)`
@@ -381,8 +377,8 @@ export default function SolanaDepositModal({
                 </div>
               )}
 
-              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-3">
-                <div className="flex items-start gap-2 text-xs leading-relaxed text-white/42">
+              <div className={styles.feeNote}>
+                <div className={styles.feeNoteInner}>
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300/70" />
                   <p>Deposits are simulated on devnet for strategy testing. Keep a small SOL buffer for fees and review vault risk before funding.</p>
                 </div>
@@ -399,22 +395,22 @@ export default function SolanaDepositModal({
 
 function Metric({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.045] p-3">
-      <p className="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-white/35">{label}</p>
-      <p className="truncate text-base font-bold text-white" style={color ? { color } : undefined}>{value}</p>
+    <div className={styles.metricCard}>
+      <p className={styles.metricLabel}>{label}</p>
+      <p className={styles.metricValue} style={color ? { color } : undefined}>{value}</p>
     </div>
   )
 }
 
 function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex min-h-16 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-emerald-300">
+    <div className={styles.detailCard}>
+      <div className={styles.detailIcon}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs text-white/38">{label}</p>
-        <p className="truncate text-sm font-semibold text-white">{value}</p>
+        <p className={styles.detailLabel}>{label}</p>
+        <p className={styles.detailValue}>{value}</p>
       </div>
     </div>
   )
@@ -431,16 +427,16 @@ function Status({
   title: string
   description: string
 }) {
-  const styles = tone === 'success'
-    ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300'
-    : 'border-red-400/20 bg-red-500/10 text-red-300'
+  const toneClass = tone === 'success'
+    ? styles.statusSuccess
+    : styles.statusError
 
   return (
-    <div className={`flex items-start gap-3 rounded-2xl border p-3 ${styles}`}>
+    <div className={`${styles.statusCard} ${toneClass}`}>
       <div className="shrink-0">{icon}</div>
       <div className="min-w-0">
-        <p className="text-sm font-semibold">{title}</p>
-        <p className="mt-0.5 truncate text-xs opacity-75">{description}</p>
+        <p className={styles.statusTitle}>{title}</p>
+        <p className={styles.statusDescription}>{description}</p>
       </div>
     </div>
   )
