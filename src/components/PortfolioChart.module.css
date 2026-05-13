@@ -1,0 +1,309 @@
+.card {
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(104, 241, 221, 0.12), transparent 34%),
+    radial-gradient(circle at 82% 12%, rgba(126, 87, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, rgba(18, 22, 35, 0.86), rgba(7, 10, 19, 0.96)) !important;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: #f8fbff !important;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.card,
+.card * {
+  box-sizing: border-box !important;
+}
+
+.card::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  opacity: 0.07 !important;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.45) 1px, transparent 1px) !important;
+  background-size: 54px 54px !important;
+  mask-image: linear-gradient(180deg, black, transparent 78%) !important;
+}
+
+.emptyCard {
+  min-height: 260px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 36px 24px !important;
+}
+
+.emptyState {
+  position: relative !important;
+  z-index: 1 !important;
+  max-width: 420px !important;
+  text-align: center !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
+.emptyIcon {
+  width: 48px !important;
+  height: 48px !important;
+  margin: 0 auto 14px !important;
+  color: #68f1dd !important;
+  opacity: 0.85 !important;
+}
+
+.emptyText {
+  margin: 0 !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+
+.content {
+  position: relative !important;
+  z-index: 1 !important;
+  padding: 22px !important;
+}
+
+.header {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  align-items: start !important;
+  margin-bottom: 20px !important;
+}
+
+.eyebrow {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 11px !important;
+  color: rgba(255, 255, 255, 0.48) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.eyebrow svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: #68f1dd !important;
+}
+
+.title {
+  margin: 0 !important;
+  color: #fff !important;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif !important;
+  font-size: clamp(24px, 3vw, 32px) !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1 !important;
+}
+
+.valueRow {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  gap: 10px !important;
+  margin-top: 16px !important;
+}
+
+.currentValue {
+  color: #fff !important;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif !important;
+  font-size: clamp(32px, 5vw, 48px) !important;
+  font-weight: 900 !important;
+  line-height: 0.95 !important;
+}
+
+.changePill {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 30px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(104, 241, 221, 0.22) !important;
+  background: rgba(104, 241, 221, 0.09) !important;
+  padding: 6px 10px !important;
+  color: #68f1dd !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+}
+
+.changePill[data-negative="true"] {
+  border-color: rgba(255, 83, 126, 0.24) !important;
+  background: rgba(255, 83, 126, 0.1) !important;
+  color: #ff537e !important;
+}
+
+.changeText {
+  margin: 7px 0 0 !important;
+  color: rgba(255, 255, 255, 0.46) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 12px !important;
+}
+
+.controls {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+.segmented {
+  display: inline-flex !important;
+  gap: 4px !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 14px !important;
+  background: rgba(0, 0, 0, 0.22) !important;
+  padding: 4px !important;
+}
+
+.segment {
+  min-width: 42px !important;
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.54) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.04em !important;
+  cursor: pointer !important;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease !important;
+}
+
+.segment:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+}
+
+.segmentActive {
+  color: #03110f !important;
+  background: linear-gradient(135deg, #68f1dd, #5f83ff) !important;
+  box-shadow: 0 10px 28px rgba(104, 241, 221, 0.14) !important;
+}
+
+.chartShell {
+  position: relative !important;
+  overflow: hidden !important;
+  height: 390px !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 22px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(0, 0, 0, 0.18) !important;
+  padding: 12px 10px 4px !important;
+}
+
+.tooltip {
+  min-width: 220px !important;
+  border: 1px solid rgba(104, 241, 221, 0.22) !important;
+  border-radius: 18px !important;
+  background: rgba(7, 10, 19, 0.94) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5) !important;
+  padding: 14px !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  backdrop-filter: blur(18px) !important;
+  font-family: var(--font-sans), system-ui, sans-serif !important;
+}
+
+.tooltipDate {
+  margin: 0 0 10px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+
+.tooltipRows {
+  display: grid !important;
+  gap: 7px !important;
+}
+
+.tooltipRow {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 18px !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 13px !important;
+}
+
+.tooltipLabel {
+  color: rgba(255, 255, 255, 0.48) !important;
+}
+
+.tooltipValue {
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+
+.tooltipPositive {
+  color: #68f1dd !important;
+}
+
+.tooltipDivider {
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.footer {
+  margin-top: 14px !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding-top: 14px !important;
+}
+
+.footerText {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.44) !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+.footerText svg {
+  width: 14px !important;
+  height: 14px !important;
+  color: rgba(104, 241, 221, 0.7) !important;
+}
+
+@media (max-width: 720px) {
+  .content {
+    padding: 18px !important;
+  }
+
+  .header {
+    grid-template-columns: 1fr !important;
+  }
+
+  .controls {
+    justify-content: flex-start !important;
+  }
+
+  .segmented {
+    width: 100% !important;
+  }
+
+  .segment {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+
+  .chartShell {
+    height: 360px !important;
+    padding: 8px 4px 2px !important;
+  }
+}

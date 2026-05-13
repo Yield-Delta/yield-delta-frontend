@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, Calendar } from 'lucide-react';
 import { TokenPrices } from '@/hooks/useTokenPrices';
+import styles from './PortfolioChart.module.css';
 
 interface ChartDataPoint {
   timestamp: number;
@@ -151,24 +152,24 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
     const data = payload[0].payload;
 
     return (
-      <div className="bg-slate-800/95 backdrop-blur-sm border border-slate-700 rounded-lg p-4 shadow-xl">
-        <p className="text-gray-400 text-sm mb-2">{data.date}</p>
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-blue-400 text-sm">Portfolio Value:</span>
-            <span className="text-white font-semibold">${data.portfolioValue.toFixed(2)}</span>
+      <div className={styles.tooltip}>
+        <p className={styles.tooltipDate}>{data.date}</p>
+        <div className={styles.tooltipRows}>
+          <div className={styles.tooltipRow}>
+            <span className={styles.tooltipLabel}>Portfolio Value</span>
+            <span className={styles.tooltipValue}>${data.portfolioValue.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-gray-400 text-sm">Deposited:</span>
-            <span className="text-white">${data.totalDeposited.toFixed(2)}</span>
+          <div className={styles.tooltipRow}>
+            <span className={styles.tooltipLabel}>Deposited</span>
+            <span className={styles.tooltipValue}>${data.totalDeposited.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="text-green-400 text-sm">Yield Earned:</span>
-            <span className="text-green-400 font-semibold">${data.yieldEarned.toFixed(2)}</span>
+          <div className={styles.tooltipRow}>
+            <span className={styles.tooltipLabel}>Yield Earned</span>
+            <span className={`${styles.tooltipValue} ${styles.tooltipPositive}`}>${data.yieldEarned.toFixed(2)}</span>
           </div>
-          <div className="flex items-center justify-between gap-4 pt-1 border-t border-slate-700">
-            <span className="text-purple-400 text-sm">P&L:</span>
-            <span className={`font-semibold ${data.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <div className={`${styles.tooltipRow} ${styles.tooltipDivider}`}>
+            <span className={styles.tooltipLabel}>P&L</span>
+            <span className={`${styles.tooltipValue} ${data.pnl >= 0 ? styles.tooltipPositive : ''}`}>
               {data.pnl >= 0 ? '+' : ''}${data.pnl.toFixed(2)}
             </span>
           </div>
@@ -179,73 +180,59 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
 
   if (!chartData.length) {
     return (
-      <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-8">
-        <div className="text-center text-gray-400">
-          <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>No data available yet. Make a deposit to see your portfolio performance over time.</p>
+      <div className={`${styles.card} ${styles.emptyCard}`}>
+        <div className={styles.emptyState}>
+          <TrendingUp className={styles.emptyIcon} />
+          <p className={styles.emptyText}>No data available yet. Make a deposit to see your portfolio performance over time.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+    <div className={styles.card}>
+      <div className={styles.content}>
+      <div className={styles.header}>
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-blue-400" />
-            <h3 className="text-xl font-bold text-white">Portfolio Performance</h3>
+          <div className={styles.eyebrow}>
+            <TrendingUp />
+            Live Position
           </div>
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-white">${stats.current.toFixed(2)}</span>
-            <span className={`text-lg font-semibold ${stats.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <h3 className={styles.title}>Portfolio Performance</h3>
+          <div className={styles.valueRow}>
+            <span className={styles.currentValue}>${stats.current.toFixed(2)}</span>
+            <span className={styles.changePill} data-negative={stats.changePercent < 0}>
               {stats.changePercent >= 0 ? '+' : ''}{stats.changePercent.toFixed(2)}%
             </span>
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className={styles.changeText}>
             {stats.change >= 0 ? '+' : ''}${stats.change.toFixed(2)} USD
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex gap-2">
-          {/* Time Range Selector */}
-          <div className="flex gap-1 bg-slate-900/50 rounded-lg p-1">
+        <div className={styles.controls}>
+          <div className={styles.segmented}>
             {(['7D', '1M', '3M', '1Y', 'ALL'] as TimeRange[]).map((range) => (
               <button
                 key={range}
                 onClick={() => setTimeRange(range)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  timeRange === range
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-slate-800'
-                }`}
+                className={`${styles.segment} ${timeRange === range ? styles.segmentActive : ''}`}
               >
                 {range}
               </button>
             ))}
           </div>
 
-          {/* Chart Type Selector */}
-          <div className="flex gap-1 bg-slate-900/50 rounded-lg p-1">
+          <div className={styles.segmented}>
             <button
               onClick={() => setChartType('area')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                chartType === 'area'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`${styles.segment} ${chartType === 'area' ? styles.segmentActive : ''}`}
             >
               Area
             </button>
             <button
               onClick={() => setChartType('line')}
-              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                chartType === 'line'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-slate-800'
-              }`}
+              className={`${styles.segment} ${chartType === 'line' ? styles.segmentActive : ''}`}
             >
               Line
             </button>
@@ -253,41 +240,42 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="h-[400px] w-full">
+      <div className={styles.chartShell}>
         <ResponsiveContainer width="100%" height="100%">
           {chartType === 'area' ? (
-            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 16, right: 18, left: 2, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#68f1dd" stopOpacity={0.34}/>
+                  <stop offset="95%" stopColor="#68f1dd" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorDeposited" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6b7280" stopOpacity={0.2}/>
-                  <stop offset="95%" stopColor="#6b7280" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#7a8498" stopOpacity={0.22}/>
+                  <stop offset="95%" stopColor="#7a8498" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+              <CartesianGrid strokeDasharray="4 12" stroke="rgba(255,255,255,0.14)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
               />
               <YAxis
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={(value) => `$${value.toFixed(0)}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '18px', color: 'rgba(255,255,255,0.58)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
                 iconType="circle"
               />
               <Area
                 type="monotone"
                 dataKey="totalDeposited"
-                stroke="#6b7280"
+                stroke="#7a8498"
                 strokeWidth={2}
                 fill="url(#colorDeposited)"
                 name="Deposited"
@@ -295,34 +283,36 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
               <Area
                 type="monotone"
                 dataKey="portfolioValue"
-                stroke="#3b82f6"
+                stroke="#68f1dd"
                 strokeWidth={3}
                 fill="url(#colorValue)"
                 name="Portfolio Value"
               />
             </AreaChart>
           ) : (
-            <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+            <LineChart data={chartData} margin={{ top: 16, right: 18, left: 2, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="4 12" stroke="rgba(255,255,255,0.14)" vertical={false} />
               <XAxis
                 dataKey="date"
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
               />
               <YAxis
-                stroke="#64748b"
-                tick={{ fill: '#94a3b8', fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: 'rgba(255,255,255,0.48)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
                 tickFormatter={(value) => `$${value.toFixed(0)}`}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
-                wrapperStyle={{ paddingTop: '20px' }}
+                wrapperStyle={{ paddingTop: '18px', color: 'rgba(255,255,255,0.58)', fontSize: 12, fontFamily: 'var(--font-mono)' }}
                 iconType="circle"
               />
               <Line
                 type="monotone"
                 dataKey="totalDeposited"
-                stroke="#6b7280"
+                stroke="#7a8498"
                 strokeWidth={2}
                 dot={false}
                 name="Deposited"
@@ -330,7 +320,7 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
               <Line
                 type="monotone"
                 dataKey="portfolioValue"
-                stroke="#3b82f6"
+                stroke="#68f1dd"
                 strokeWidth={3}
                 dot={false}
                 name="Portfolio Value"
@@ -338,7 +328,7 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
               <Line
                 type="monotone"
                 dataKey="yieldEarned"
-                stroke="#10b981"
+                stroke="#57d28f"
                 strokeWidth={2}
                 dot={false}
                 name="Yield Earned"
@@ -349,12 +339,12 @@ const PortfolioChart: React.FC<PortfolioChartProps> = ({ vaultPositions, tokenPr
         </ResponsiveContainer>
       </div>
 
-      {/* Footer Note */}
-      <div className="mt-4 pt-4 border-t border-slate-700/50">
-        <p className="text-xs text-gray-500 text-center">
-          <Calendar className="w-3 h-3 inline mr-1" />
+      <div className={styles.footer}>
+        <p className={styles.footerText}>
+          <Calendar />
           Chart shows simulated yield for testnet demonstration purposes
         </p>
+      </div>
       </div>
     </div>
   );
