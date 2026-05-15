@@ -7,7 +7,13 @@ seeds = true
 skip-lint = false
 
 [programs.devnet]
-yield_vault = "PLACEHOLDER_PROGRAM_ID"
+yield_vault          = "PLACEHOLDER_YIELD_VAULT"
+yield_vault_core     = "PLACEHOLDER_YIELD_VAULT_CORE"
+yield_oracle         = "PLACEHOLDER_YIELD_ORACLE"
+staking_vault        = "PLACEHOLDER_STAKING_VAULT"
+lp_vault             = "PLACEHOLDER_LP_VAULT"
+delta_neutral_vault  = "PLACEHOLDER_DELTA_NEUTRAL_VAULT"
+meta_vault           = "PLACEHOLDER_META_VAULT"
 
 [registry]
 url = "https://api.apr.dev"
