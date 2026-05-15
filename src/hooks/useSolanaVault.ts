@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { PublicKey, SystemProgram } from '@solana/web3.js'
+import { PublicKey, SystemProgram, type Transaction, type VersionedTransaction } from '@solana/web3.js'
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -34,11 +34,17 @@ export interface UseSolanaVaultReturn {
   error: string | null
 }
 
-function getPhantomWallet() {
+interface SolanaProvider {
+  publicKey: PublicKey
+  signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T>
+  signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]>
+}
+
+function getPhantomWallet(): SolanaProvider {
   if (typeof window === 'undefined') throw new Error('Window not available')
-  const w = (window as any).solana
-  if (!w?.publicKey) throw new Error('Phantom wallet not connected')
-  return w
+  const solana = (window as unknown as { solana: SolanaProvider }).solana
+  if (!solana?.publicKey) throw new Error('Phantom wallet not connected')
+  return solana
 }
 
 export function useSolanaVault(): UseSolanaVaultReturn {
@@ -70,7 +76,8 @@ export function useSolanaVault(): UseSolanaVaultReturn {
         const userShareAccount = await getAssociatedTokenAddress(vaultMint, userPubkey)
         const [userPositionPDA] = getUserPositionPDA(vaultPDA, userPubkey)
 
-        const sig = await (program.methods as any)
+        // @ts-expect-error - program.methods is dynamically generated from IDL
+        const sig = await program.methods
           .deposit(amountRaw)
           .accounts({
             user: userPubkey,
@@ -120,7 +127,8 @@ export function useSolanaVault(): UseSolanaVaultReturn {
         const userShareAccount = await getAssociatedTokenAddress(vaultMint, userPubkey)
         const [userPositionPDA] = getUserPositionPDA(vaultPDA, userPubkey)
 
-        const sig = await (program.methods as any)
+        // @ts-expect-error - program.methods is dynamically generated from IDL
+        const sig = await program.methods
           .withdraw(sharesRaw)
           .accounts({
             user: userPubkey,
@@ -156,10 +164,12 @@ export function useSolanaVault(): UseSolanaVaultReturn {
         const vaultPDA = new PublicKey(vaultAddress)
         const [userPositionPDA] = getUserPositionPDA(vaultPDA, new PublicKey(walletAddress))
 
-        const position = await (program.account as any).userPosition.fetchNullable(userPositionPDA)
+        // @ts-expect-error - program.account is dynamically generated from IDL
+        const position = await program.account.userPosition.fetchNullable(userPositionPDA)
         if (!position) return { shares: '0', value: '0' }
 
-        const vaultState = await (program.account as any).vaultState.fetch(vaultPDA)
+        // @ts-expect-error - program.account is dynamically generated from IDL
+        const vaultState = await program.account.vaultState.fetch(vaultPDA)
         const sharesNum: number = position.shares.toNumber()
         const totalShares: number = vaultState.totalShares.toNumber()
         const totalAssets: number = vaultState.totalAssets.toNumber()

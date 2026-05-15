@@ -7,7 +7,7 @@ import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
 import SolanaDepositModal from '@/components/SolanaDepositModal';
-import { MessageCircle, X, Loader2, TrendingUp, Shield, Zap } from 'lucide-react';
+import { MessageCircle, X, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSeiMarketData } from '@/hooks/useMarketData';

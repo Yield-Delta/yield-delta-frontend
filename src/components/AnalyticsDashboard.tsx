@@ -38,12 +38,6 @@ interface AnalyticsDashboardProps {
   }
 }
 
-const formatCurrency = (amount: number) => {
-  if (amount >= 1000000) return `$${(amount / 1000000).toFixed(2)}M`
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}K`
-  return `$${amount.toFixed(2)}`
-}
-
 const getVaultColor = (strategy: string) => {
   const colors: Record<string, string> = {
     concentrated_liquidity: '#00f5d4',
@@ -178,7 +172,7 @@ function MiniChart({ data, color }: { data: number[]; color: string }) {
   return <canvas ref={canvasRef} width={120} height={40} className="w-full h-10" />
 }
 
-export default function AnalyticsDashboard({ vault, vaultPositionsForChart, tokenPrices, vaults, userPosition }: AnalyticsDashboardProps) {
+export default function AnalyticsDashboard({ vault, userPosition }: AnalyticsDashboardProps) {
   const vaultColor = getVaultColor(vault.strategy)
   
   const dailyRate = vault.apy / 365

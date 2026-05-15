@@ -328,6 +328,7 @@ export default function DepositModal({ vault, isOpen, onClose, onSuccess }: Depo
     router,
     onSuccess,
     handleClose,
+    depositMutation,
   ]);
 
   // Watch for transaction errors

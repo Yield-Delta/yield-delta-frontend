@@ -20,7 +20,8 @@ export default function AIOrb3D({
     const animationFrameRef = useRef<number | undefined>(undefined);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        const currentContainer = containerRef.current;
+        if (!currentContainer) return;
 
         // Scene setup
         const scene = new THREE.Scene();
@@ -42,7 +43,7 @@ export default function AIOrb3D({
         });
         renderer.setSize(size, size);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        containerRef.current.appendChild(renderer.domElement);
+        currentContainer.appendChild(renderer.domElement);
         rendererRef.current = renderer;
 
         // Lights
@@ -232,10 +233,8 @@ export default function AIOrb3D({
                 cancelAnimationFrame(animationFrameRef.current);
             }
 
-            // Store ref in variable to avoid stale closure warning
-            const container = containerRef.current;
-            if (container && renderer.domElement) {
-                container.removeChild(renderer.domElement);
+            if (currentContainer && renderer.domElement) {
+                currentContainer.removeChild(renderer.domElement);
             }
 
             // Dispose of Three.js objects
