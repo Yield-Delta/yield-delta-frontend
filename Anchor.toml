@@ -7,6 +7,7 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
+adaptive_yield_vault = "AdpYv1tXoQ3k2JqMm2BhwRrF3i6qVSrVBoCXVomQvpD"
 delta_neutral_vault = "C48TJDYWpws9dKu8bo8nq679w9vfCd7D1Emi9Abbhfyf"
 lp_vault = "7UWS2aFyvNXiCHj1BTuWC7QU9iMBZcvjGBNABi7ByN4A"
 meta_vault = "F4x55MUt2WXxqmtVQNyXBxg822pGUdge8KoYvuH6fLDQ"

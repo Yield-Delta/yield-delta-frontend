@@ -18,7 +18,6 @@ pub use state::{OracleState, SignalAccount, VolatilityRegime};
 use instructions::initialize_oracle::InitializeOracle;
 use instructions::mark_rebalanced::MarkRebalanced;
 use instructions::post_signal::PostSignal;
-// Re-export client account modules so #[program] macro can find them at crate root
 pub(crate) use instructions::initialize_oracle::__client_accounts_initialize_oracle;
 pub(crate) use instructions::mark_rebalanced::__client_accounts_mark_rebalanced;
 pub(crate) use instructions::post_signal::__client_accounts_post_signal;

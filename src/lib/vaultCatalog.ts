@@ -94,19 +94,20 @@ export const SOLANA_DEVNET_VAULTS: VaultData[] = [
     performance: { totalReturn: 0.0256, sharpeRatio: 1.95, maxDrawdown: 0.052, winRate: 0.78 },
   },
   {
-    address: 'SoLSandboxVault11111111111111111111111111111',
-    name: 'Experimental Strategy Sandbox Vault',
-    strategy: 'arbitrage',
-    tokenA: 'SOL-test',
+    address: 'AdpYv1tXoQ3k2JqMm2BhwRrF3i6qVSrVBoCXVomQvpD',
+    name: 'Adaptive Yield Vault',
+    strategy: 'experimental',
+    tokenA: 'USDC-test',
     tokenB: 'USDC-test',
     fee: 0,
     tickSpacing: 1,
     tvl: 0,
-    apy: 0.16,
+    // Base 12% APY — scales 0.70× in Low regime and 1.50× in High regime (8.4%–18%)
+    apy: 0.12,
     chainId: ChainId.SOLANA_DEVNET,
     active: true,
-    description: 'Test-only strategy sandbox for rapid rebalancing, routing, and telemetry experiments.',
-    performance: { totalReturn: 0.038, sharpeRatio: 0.52, maxDrawdown: 0.21, winRate: 0.54 },
+    description: 'Reads the on-chain oracle volatility regime (Low/Medium/High) and adjusts yield rate in real time. Slot-locked withdrawals activate during High-volatility transitions — a Solana-native circuit breaker.',
+    performance: { totalReturn: 0.031, sharpeRatio: 1.42, maxDrawdown: 0.08, winRate: 0.72 },
   },
 ]
 

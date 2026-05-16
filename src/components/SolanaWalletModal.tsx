@@ -3,10 +3,24 @@
 import React, { useCallback, useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ExternalLink, AlertCircle, X, ArrowRight } from 'lucide-react'
+import { ExternalLink, AlertCircle, X, ArrowRight, Smartphone } from 'lucide-react'
 import { hasSolanaWallet, useSolanaWallet, SolanaWalletType } from '@/hooks/useSolanaWallet'
 import { ChainId } from '@/types/chain'
 import { getChainMetadata } from '@/lib/chainConfig'
+
+function detectSafari(): { isSafari: boolean; isMobileSafari: boolean } {
+  if (typeof navigator === 'undefined') return { isSafari: false, isMobileSafari: false }
+  const ua = navigator.userAgent
+  const isMobileSafari = /iPhone|iPad|iPod/i.test(ua) && /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS/i.test(ua)
+  const isDesktopSafari = /^((?!chrome|android).)*safari/i.test(ua) && !/Mobile|iPhone|iPad|iPod/i.test(ua)
+  return { isSafari: isMobileSafari || isDesktopSafari, isMobileSafari }
+}
+
+function buildPhantomDeepLink(currentUrl: string): string {
+  const encoded = encodeURIComponent(currentUrl)
+  const ref = encodeURIComponent(window.location.origin)
+  return `https://phantom.app/ul/browse/${encoded}?ref=${ref}`
+}
 
 interface SolanaWalletModalProps {
   isOpen: boolean
@@ -59,7 +73,12 @@ export function SolanaWalletModal({
 }: SolanaWalletModalProps) {
   const { connect, isConnecting, availableWallets, redetect, error, clearError } = useSolanaWallet()
   const [selectedWallet, setSelectedWallet] = useState<SolanaWalletType | null>(null)
+  const [safariInfo, setSafariInfo] = useState({ isSafari: false, isMobileSafari: false })
   const chainMetadata = getChainMetadata(chainId)
+
+  useEffect(() => {
+    setSafariInfo(detectSafari())
+  }, [])
 
   const handleClose = useCallback(() => {
     clearError()
@@ -266,7 +285,7 @@ export function SolanaWalletModal({
                 color: 'rgba(255,255,255,0.38)',
                 lineHeight: 1.5,
               }}>
-                Choose a wallet to start earning yield
+                Connect to approve transactions on Solana
               </p>
             </div>
 
@@ -297,6 +316,77 @@ export function SolanaWalletModal({
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Safari notice */}
+              {safariInfo.isSafari && availableWallets.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginBottom: '12px' }}
+                  style={{
+                    background: 'rgba(153,69,255,0.08)',
+                    border: '1px solid rgba(153,69,255,0.25)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <Smartphone size={16} style={{ flexShrink: 0, color: '#9945FF', marginTop: '1px' }} />
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>
+                        Safari detected
+                      </p>
+                      <p style={{ margin: '3px 0 10px', fontSize: '0.73rem', color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
+                        {safariInfo.isMobileSafari
+                          ? 'Phantom isn\'t available in mobile Safari. Open this page inside the Phantom app browser to connect.'
+                          : 'Phantom extension may not be active in Safari. Install it or open this page in Chrome.'}
+                      </p>
+                      {safariInfo.isMobileSafari ? (
+                        <a
+                          href={buildPhantomDeepLink(window.location.href)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '7px 14px',
+                            borderRadius: '999px',
+                            background: 'linear-gradient(135deg, #9945FF, #14F195)',
+                            color: '#fff',
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            textDecoration: 'none',
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          Open in Phantom
+                          <ArrowRight size={13} strokeWidth={2.5} />
+                        </a>
+                      ) : (
+                        <a
+                          href="https://phantom.app/download"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '7px 14px',
+                            borderRadius: '999px',
+                            background: 'rgba(153,69,255,0.15)',
+                            border: '1px solid rgba(153,69,255,0.35)',
+                            color: '#ab9ff2',
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          Get Phantom for Safari
+                          <ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
               {/* Wallet cards */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

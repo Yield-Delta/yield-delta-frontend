@@ -39,6 +39,15 @@ const navigation: NavItem[] = [
     href: '/docs/ai-engine',
   },
   {
+    title: 'Solana Programs',
+    href: '/docs/solana-programs',
+    children: [
+      { title: 'Program Overview', href: '/docs/solana-programs' },
+      { title: 'Adaptive Yield Vault', href: '/docs/solana-programs/adaptive-yield-vault' },
+      { title: 'Backtesting Results', href: '/docs/solana-programs/backtesting' },
+    ],
+  },
+  {
     title: 'Smart Contracts',
     href: '/docs/smart-contracts',
   },

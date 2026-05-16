@@ -20,6 +20,10 @@ use instructions::deposit::*;
 use instructions::initialize::*;
 use instructions::simulate_compound::*;
 use instructions::withdraw::*;
+pub(crate) use instructions::deposit::__client_accounts_deposit;
+pub(crate) use instructions::initialize::__client_accounts_initialize;
+pub(crate) use instructions::simulate_compound::__client_accounts_simulate_compound;
+pub(crate) use instructions::withdraw::__client_accounts_withdraw;
 
 // Replace with: solana address -k target/deploy/lp_vault-keypair.json
 declare_id!("7UWS2aFyvNXiCHj1BTuWC7QU9iMBZcvjGBNABi7ByN4A");

@@ -72,6 +72,7 @@ const getVaultColor = (strategy: string) => {
     delta_neutral: '#22d3ee',
     ai_meta_vault: '#ff206e',
     experimental_sandbox: '#ff6b6b',
+    experimental: '#ff6ef7',
   }
   return colors[strategy] || '#9945ff'
 }

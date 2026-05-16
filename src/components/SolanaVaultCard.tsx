@@ -38,6 +38,10 @@ const getVaultColor = (strategy: string) => {
     margin: '#ff6b6b',
     leveraged: '#ffd93d',
     staked_sol: '#8b5cf6',
+    delta_neutral: '#22d3ee',
+    hedge: '#f59e0b',
+    arbitrage: '#a855f7',
+    experimental: '#ff6ef7',
   }
   return colors[strategy] || '#9945ff'
 }
@@ -50,6 +54,10 @@ const getStrategyIcon = (strategy: string) => {
     margin: '◉',
     leveraged: '◐',
     staked_sol: '✦',
+    delta_neutral: '⟁',
+    hedge: '⬢',
+    arbitrage: '↯',
+    experimental: '⚡',
   }
   return icons[strategy] || '◆'
 }
@@ -167,10 +175,10 @@ export default function SolanaVaultCard({ vault, index, onDeposit, onWithdraw }:
                 >
                   {vault.name}
                 </h3>
-                <span 
+                <span
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full"
-                  style={{ 
-                    background: `${vaultColor}20`, 
+                  style={{
+                    background: `${vaultColor}20`,
                     color: vaultColor,
                     border: `1px solid ${vaultColor}40`
                   }}
@@ -178,20 +186,45 @@ export default function SolanaVaultCard({ vault, index, onDeposit, onWithdraw }:
                   <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: vaultColor }} />
                   SOL
                 </span>
+                {vault.strategy === 'experimental' && (
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 text-xs rounded-full font-bold tracking-wide"
+                    style={{
+                      background: 'rgba(255,110,247,0.12)',
+                      color: '#ff6ef7',
+                      border: '1px solid rgba(255,110,247,0.35)',
+                    }}
+                  >
+                    EXP
+                  </span>
+                )}
               </div>
             </div>
             
             <div className="text-right">
-              <p className="text-xs text-white/40 mb-1">APY</p>
-              <p 
-                className="text-2xl font-bold"
-                style={{ 
-                  color: vaultColor,
-                  textShadow: `0 0 20px ${vaultColor}60`
-                }}
-              >
-                {displayApy}%
+              <p className="text-xs text-white/40 mb-1">
+                {vault.strategy === 'experimental' ? 'APY RANGE' : 'APY'}
               </p>
+              {vault.strategy === 'experimental' ? (
+                <div>
+                  <p
+                    className="text-xl font-bold leading-none"
+                    style={{ color: vaultColor, textShadow: `0 0 20px ${vaultColor}60` }}
+                  >
+                    8.4–18%
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: vaultColor, opacity: 0.6 }}>
+                    vol-adaptive
+                  </p>
+                </div>
+              ) : (
+                <p
+                  className="text-2xl font-bold"
+                  style={{ color: vaultColor, textShadow: `0 0 20px ${vaultColor}60` }}
+                >
+                  {displayApy}%
+                </p>
+              )}
             </div>
           </div>
 

@@ -20,6 +20,11 @@ use instructions::initialize::Initialize;
 use instructions::set_allocations::SetAllocations;
 use instructions::withdraw::Withdraw;
 use state::AllocationSlot;
+pub(crate) use instructions::accrue_returns::__client_accounts_accrue_returns;
+pub(crate) use instructions::deposit::__client_accounts_deposit;
+pub(crate) use instructions::initialize::__client_accounts_initialize;
+pub(crate) use instructions::set_allocations::__client_accounts_set_allocations;
+pub(crate) use instructions::withdraw::__client_accounts_withdraw;
 
 // Replace with: solana address -k target/deploy/meta_vault-keypair.json
 declare_id!("F4x55MUt2WXxqmtVQNyXBxg822pGUdge8KoYvuH6fLDQ");

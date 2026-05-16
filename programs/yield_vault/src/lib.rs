@@ -7,6 +7,9 @@ pub mod state;
 use instructions::deposit::*;
 use instructions::initialize::*;
 use instructions::withdraw::*;
+pub(crate) use instructions::deposit::__client_accounts_deposit;
+pub(crate) use instructions::initialize::__client_accounts_initialize;
+pub(crate) use instructions::withdraw::__client_accounts_withdraw;
 
 // Replace with the address printed by `solana address -k target/deploy/yield_vault-keypair.json`
 // after the first `anchor build`, then rebuild before deploying.

@@ -17,6 +17,10 @@ use instructions::accrue_yield::*;
 use instructions::initialize::*;
 use instructions::stake::*;
 use instructions::unstake::*;
+pub(crate) use instructions::accrue_yield::__client_accounts_accrue_yield;
+pub(crate) use instructions::initialize::__client_accounts_initialize;
+pub(crate) use instructions::stake::__client_accounts_stake;
+pub(crate) use instructions::unstake::__client_accounts_unstake;
 
 // Replace with: solana address -k target/deploy/staking_vault-keypair.json
 declare_id!("Bhmqob5GG4gBjEpJSYN17bGhWXnDS7rsrDH4UF7SduQ4");

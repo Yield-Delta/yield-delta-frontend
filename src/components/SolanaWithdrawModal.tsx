@@ -37,6 +37,8 @@ const getVaultColor = (strategy: string) => {
     margin: '#ff6b6b',
     leveraged: '#ffd93d',
     staked_sol: '#8b5cf6',
+    delta_neutral: '#22d3ee',
+    experimental: '#ff6ef7',
   }
   return colors[strategy] || '#9945ff'
 }
