@@ -1,7 +1,7 @@
 [package]
 name = "staking-vault"
 version = "0.1.0"
-description = "Yield Delta — SOL Liquid Staking Vault (Marinade CPI, mSOL yield, Strategy 2)"
+description = "Yield Delta — SOL liquid staking vault with simulated yield accrual"
 edition = "2021"
 
 [lib]
@@ -18,3 +18,4 @@ default = []
 [dependencies]
 anchor-lang = "0.30.1"
 anchor-spl = { version = "0.30.1", features = ["token", "associated_token"] }
+yield-vault-core = { path = "../yield_vault_core" }

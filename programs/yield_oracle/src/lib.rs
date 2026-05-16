@@ -1,13 +1,11 @@
-// yield_oracle — AI Signal Oracle Program
+// yield_oracle — admin-updatable on-chain price oracle + AI signal board for devnet
 //
-// An authorised keeper (off-chain AI/ML process) posts strategy signals on-chain.
-// Vault programs read SignalAccount PDAs before triggering rebalances.
+// Provides SOL/USD and USDC/USD prices at 6-decimal precision.
+// An authorised admin (or AI keeper) posts price updates and strategy signals on-chain.
+// Vault programs and off-chain clients read the oracle PDA directly.
 //
-// Staleness guard: signal older than 2 hours causes vault programs to reject
-// rebalance requests — enforced by vault programs reading signal.posted_at.
-//
-// PDA seeds (oracle config): ["oracle_config"]
-// PDA seeds (signal):        ["signal", strategy_id_byte]
+// PDA seeds (oracle state): ["oracle_config"]
+// PDA seeds (signal):       ["signal", strategy_id (1 byte)]
 
 use anchor_lang::prelude::*;
 
@@ -15,26 +13,47 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
-use instructions::initialize_oracle::*;
-use instructions::mark_rebalanced::*;
-use instructions::post_signal::*;
-use state::VolatilityRegime;
+use errors::OracleError;
+pub use state::{OracleState, SignalAccount, VolatilityRegime};
+use instructions::initialize_oracle::InitializeOracle;
+use instructions::mark_rebalanced::MarkRebalanced;
+use instructions::post_signal::PostSignal;
+// Re-export client account modules so #[program] macro can find them at crate root
+pub(crate) use instructions::initialize_oracle::__client_accounts_initialize_oracle;
+pub(crate) use instructions::mark_rebalanced::__client_accounts_mark_rebalanced;
+pub(crate) use instructions::post_signal::__client_accounts_post_signal;
 
 // Replace with: solana address -k target/deploy/yield_oracle-keypair.json
-declare_id!("PLACEHOLDER_YIELD_ORACLE");
+declare_id!("CRZ13p9bH4hVcStuGFUZ1sjPf94J1q9H2fsGs5nCeoqG");
 
 #[program]
 pub mod yield_oracle {
     use super::*;
 
-    /// Create the global oracle configuration PDA.
-    /// Call once per deployment.
+    /// Creates the singleton oracle PDA.
+    /// Call once per deployment — the signer becomes the oracle authority.
     pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> Result<()> {
         instructions::initialize_oracle::handler(ctx)
     }
 
-    /// Post (or overwrite) an AI signal for a strategy.
-    /// Sets rebalance_needed = true and updates all signal fields.
+    /// Update SOL/USD and USDC/USD prices (authority-gated).
+    ///
+    /// Prices are expressed with 6 decimal places of precision.
+    /// e.g. sol_usd = 150_000_000 means $150.000000
+    pub fn update_prices(
+        ctx: Context<UpdatePrices>,
+        sol_usd: u64,
+        usdc_usd: u64,
+    ) -> Result<()> {
+        let oracle = &mut ctx.accounts.oracle_state;
+        oracle.sol_usd_price  = sol_usd;
+        oracle.usdc_usd_price = usdc_usd;
+        oracle.last_updated   = Clock::get()?.unix_timestamp;
+        msg!("Oracle prices updated: sol_usd={} usdc_usd={}", sol_usd, usdc_usd);
+        Ok(())
+    }
+
+    /// Post an AI-generated rebalancing signal for a given strategy.
     pub fn post_signal(
         ctx: Context<PostSignal>,
         strategy_id: u8,
@@ -55,8 +74,49 @@ pub mod yield_oracle {
         )
     }
 
-    /// Clear rebalance_needed after the associated vault has acted on the signal.
+    /// Mark a strategy signal as rebalanced (clears the `rebalance_needed` flag).
     pub fn mark_rebalanced(ctx: Context<MarkRebalanced>, strategy_id: u8) -> Result<()> {
         instructions::mark_rebalanced::handler(ctx, strategy_id)
     }
+
+    /// Returns the current SOL/USD price (view helper — logs the price).
+    pub fn get_sol_price(ctx: Context<GetPrice>) -> Result<u64> {
+        let oracle = &ctx.accounts.oracle_state;
+        let now = Clock::get()?.unix_timestamp;
+        require!(oracle.is_fresh(now), OracleError::StalePrice);
+        let price = oracle.sol_usd_price;
+        msg!("Oracle SOL/USD price: {}", price);
+        Ok(price)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// UpdatePrices account context (authority-gated price update)
+// ---------------------------------------------------------------------------
+
+#[derive(Accounts)]
+pub struct UpdatePrices<'info> {
+    #[account(
+        constraint = authority.key() == oracle_state.authority @ OracleError::Unauthorized
+    )]
+    pub authority: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [b"oracle_config"],
+        bump = oracle_state.bump,
+    )]
+    pub oracle_state: Account<'info, OracleState>,
+}
+
+// ---------------------------------------------------------------------------
+// GetPrice account context (view-only, no mutation needed)
+// ---------------------------------------------------------------------------
+
+#[derive(Accounts)]
+pub struct GetPrice<'info> {
+    #[account(
+        seeds = [b"oracle_config"],
+        bump = oracle_state.bump,
+    )]
+    pub oracle_state: Account<'info, OracleState>,
 }

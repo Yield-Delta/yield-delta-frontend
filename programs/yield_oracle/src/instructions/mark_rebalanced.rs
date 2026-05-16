@@ -26,7 +26,7 @@ pub struct MarkRebalanced<'info> {
     /// Seeds: ["signal", strategy_id (1 byte)]
     #[account(
         mut,
-        seeds = [b"signal", &[strategy_id]],
+        seeds = [b"signal".as_ref(), strategy_id.to_le_bytes().as_ref()],
         bump = signal_account.bump,
     )]
     pub signal_account: Account<'info, SignalAccount>,

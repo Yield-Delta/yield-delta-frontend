@@ -1,13 +1,11 @@
-// staking_vault — SOL Liquid Staking Vault (Strategy 2)
+// staking_vault — SOL liquid staking vault (Strategy 2)
 //
-// Accepts native SOL (wrapped to wSOL), delegates to Marinade Finance for mSOL,
-// and issues proportional share tokens.  Yield accrues via mSOL exchange-rate
-// appreciation (no explicit harvest required by users).
+// Users deposit SOL and receive stSOL share tokens.  On devnet, staking yield is
+// simulated: the admin calls `accrue_yield` which adds a configurable bps yield
+// to total_sol_staked based on elapsed time since the last accrual.
 //
-// Marinade devnet program: MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD
-//
-// PDA seeds (vault):    ["staking_vault", wsol_mint]
-// PDA seeds (position): ["user_stake", vault_state, user]
+// PDA seeds (vault):    ["staking_vault"]
+// PDA seeds (position): ["user_position", vault_state, user]
 
 use anchor_lang::prelude::*;
 
@@ -15,44 +13,36 @@ pub mod errors;
 pub mod instructions;
 pub mod state;
 
+use instructions::accrue_yield::*;
 use instructions::initialize::*;
 use instructions::stake::*;
 use instructions::unstake::*;
 
 // Replace with: solana address -k target/deploy/staking_vault-keypair.json
-declare_id!("PLACEHOLDER_STAKING_VAULT");
+declare_id!("Bhmqob5GG4gBjEpJSYN17bGhWXnDS7rsrDH4UF7SduQ4");
 
 #[program]
 pub mod staking_vault {
     use super::*;
 
-    /// Initialise the staking vault — create state PDA, share mint, wSOL and
-    /// mSOL ATAs.  Called once per deployment.
-    pub fn initialize(
-        ctx: Context<InitializeStakingVault>,
-        performance_fee_bps: u16,
-    ) -> Result<()> {
-        instructions::initialize::handler(ctx, performance_fee_bps)
+    /// Creates the vault PDA and the stSOL share mint.
+    /// `yield_bps` sets the simulated annual APY (e.g. 700 = 7 %).
+    pub fn initialize(ctx: Context<Initialize>, yield_bps: u16) -> Result<()> {
+        instructions::initialize::handler(ctx, yield_bps)
     }
 
-    /// Deposit wSOL → receive share tokens.
-    /// Keeper follows up with Marinade deposit to receive mSOL.
-    pub fn stake(ctx: Context<Stake>, lamports: u64) -> Result<()> {
-        instructions::stake::handler(ctx, lamports)
+    /// Deposit SOL (lamports) → receive stSOL share tokens.
+    pub fn stake(ctx: Context<Stake>, amount_lamports: u64) -> Result<()> {
+        instructions::stake::handler(ctx, amount_lamports)
     }
 
-    /// Burn share tokens → receive wSOL.
-    /// Keeper follows up with Marinade liquidUnstake if vault lacks liquidity.
+    /// Burn stSOL share tokens → receive SOL back.
     pub fn unstake(ctx: Context<Unstake>, shares: u64) -> Result<()> {
         instructions::unstake::handler(ctx, shares)
     }
 
-    /// Called by keeper after Marinade deposit / unstake completes to sync
-    /// mSOL balance and exchange rate.
-    pub fn update_msol_balance(
-        ctx: Context<UpdateMsolBalance>,
-        new_msol_price_lamports: u64,
-    ) -> Result<()> {
-        instructions::stake::handler_update_msol(ctx, new_msol_price_lamports)
+    /// Admin-only: simulate yield accrual based on elapsed time × yield_bps.
+    pub fn accrue_yield(ctx: Context<AccrueYield>) -> Result<()> {
+        instructions::accrue_yield::handler(ctx)
     }
 }

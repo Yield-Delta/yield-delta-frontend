@@ -37,7 +37,7 @@ pub struct PostSignal<'info> {
         init_if_needed,
         payer = authority,
         space = SignalAccount::LEN,
-        seeds = [b"signal", &[strategy_id]],
+        seeds = [b"signal".as_ref(), strategy_id.to_le_bytes().as_ref()],
         bump,
     )]
     pub signal_account: Account<'info, SignalAccount>,
@@ -70,7 +70,7 @@ pub fn handler(
     signal.strategy_id                 = strategy_id;
     signal.recommended_allocation_bps  = allocation_bps;
     signal.confidence                  = confidence;
-    signal.volatility_regime           = volatility_regime;
+    signal.volatility_regime           = volatility_regime.clone();
     signal.posted_at                   = now;
     signal.rebalance_needed            = true;
     signal.suggested_lower_tick        = suggested_lower_tick;

@@ -1,6 +1,10 @@
 [workspace]
 members = ["programs/*"]
-resolver = "2"
+resolver = "1"
+rust-version = "1.75"
+
+[patch.crates-io]
+wasip2 = { path = "vendor/wasip2" }
 
 [profile.release]
 overflow-checks = true

@@ -3,23 +3,22 @@ anchor_version = "0.30.1"
 solana_version = "1.18.26"
 
 [features]
-seeds = true
+resolution = true
 skip-lint = false
 
 [programs.devnet]
-yield_vault          = "PLACEHOLDER_YIELD_VAULT"
-yield_vault_core     = "PLACEHOLDER_YIELD_VAULT_CORE"
-yield_oracle         = "PLACEHOLDER_YIELD_ORACLE"
-staking_vault        = "PLACEHOLDER_STAKING_VAULT"
-lp_vault             = "PLACEHOLDER_LP_VAULT"
-delta_neutral_vault  = "PLACEHOLDER_DELTA_NEUTRAL_VAULT"
-meta_vault           = "PLACEHOLDER_META_VAULT"
+delta_neutral_vault = "C48TJDYWpws9dKu8bo8nq679w9vfCd7D1Emi9Abbhfyf"
+lp_vault = "7UWS2aFyvNXiCHj1BTuWC7QU9iMBZcvjGBNABi7ByN4A"
+meta_vault = "F4x55MUt2WXxqmtVQNyXBxg822pGUdge8KoYvuH6fLDQ"
+staking_vault = "Bhmqob5GG4gBjEpJSYN17bGhWXnDS7rsrDH4UF7SduQ4"
+yield_oracle = "CRZ13p9bH4hVcStuGFUZ1sjPf94J1q9H2fsGs5nCeoqG"
+yield_vault = "5hp22e1bv9HG8QXZKE1YC48pgWZc1zNWdh3v1Z65h4zD"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/devnet-deployer.json"
 
 [scripts]

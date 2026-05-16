@@ -1,18 +1,10 @@
 use anchor_lang::prelude::*;
-
 use crate::state::OracleState;
-
-// ---------------------------------------------------------------------------
-// Accounts
-// PDA seeds: ["oracle_config"]
-// ---------------------------------------------------------------------------
 
 #[derive(Accounts)]
 pub struct InitializeOracle<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-
-    /// Global oracle configuration PDA.
     #[account(
         init,
         payer = authority,
@@ -21,24 +13,17 @@ pub struct InitializeOracle<'info> {
         bump,
     )]
     pub oracle_state: Account<'info, OracleState>,
-
     pub system_program: Program<'info, System>,
 }
 
-// ---------------------------------------------------------------------------
-// Handler
-// ---------------------------------------------------------------------------
-
 pub fn handler(ctx: Context<InitializeOracle>) -> Result<()> {
     let oracle = &mut ctx.accounts.oracle_state;
-    oracle.authority    = ctx.accounts.authority.key();
-    oracle.signal_count = 0;
-    oracle.bump         = ctx.bumps.oracle_state;
-
-    msg!(
-        "Oracle initialized: authority={} pda={}",
-        ctx.accounts.authority.key(),
-        ctx.accounts.oracle_state.key(),
-    );
+    oracle.authority      = ctx.accounts.authority.key();
+    oracle.sol_usd_price  = 0;
+    oracle.usdc_usd_price = 1_000_000;
+    oracle.last_updated   = Clock::get()?.unix_timestamp;
+    oracle.signal_count   = 0;
+    oracle.bump           = ctx.bumps.oracle_state;
+    msg!("Oracle initialized: authority={}", ctx.accounts.authority.key());
     Ok(())
 }
