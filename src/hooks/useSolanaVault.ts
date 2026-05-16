@@ -76,7 +76,6 @@ export function useSolanaVault(): UseSolanaVaultReturn {
         const userShareAccount = await getAssociatedTokenAddress(vaultMint, userPubkey)
         const [userPositionPDA] = getUserPositionPDA(vaultPDA, userPubkey)
 
-        // @ts-expect-error - program.methods is dynamically generated from IDL
         const sig = await program.methods
           .deposit(amountRaw)
           .accounts({
@@ -127,7 +126,6 @@ export function useSolanaVault(): UseSolanaVaultReturn {
         const userShareAccount = await getAssociatedTokenAddress(vaultMint, userPubkey)
         const [userPositionPDA] = getUserPositionPDA(vaultPDA, userPubkey)
 
-        // @ts-expect-error - program.methods is dynamically generated from IDL
         const sig = await program.methods
           .withdraw(sharesRaw)
           .accounts({
