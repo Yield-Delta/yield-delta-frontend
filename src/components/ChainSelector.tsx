@@ -32,6 +32,7 @@ export function ChainSelector({
 
   const [isOpen, setIsOpen] = useState(false)
   const [triggerHovered, setTriggerHovered] = useState(false)
+  const [alignLeft, setAlignLeft] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const activeMetadata = activeChain ? getChainMetadata(activeChain) : null
@@ -45,6 +46,16 @@ export function ChainSelector({
     }
     if (isOpen) document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [isOpen])
+
+  // Decide dropdown alignment when opening so it stays inside the viewport
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const PANEL_WIDTH = 272
+      // If there isn't enough room to the left (right-anchored panel), align left instead
+      setAlignLeft(rect.right - PANEL_WIDTH < 8)
+    }
   }, [isOpen])
 
   useEffect(() => {
@@ -195,9 +206,10 @@ export function ChainSelector({
             style={{
               position: 'absolute',
               top: 'calc(100% + 7px)',
-              right: 0,
+              ...(alignLeft ? { left: 0 } : { right: 0 }),
               zIndex: 9999,
               width: '272px',
+              maxWidth: 'calc(100vw - 16px)',
               background: 'linear-gradient(158deg, #07080f 0%, #0b0d1c 100%)',
               borderRadius: '16px',
               overflow: 'hidden',
