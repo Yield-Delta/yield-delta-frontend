@@ -27,6 +27,9 @@ export interface VaultData {
     tokensOwed0: string
     tokensOwed1: string
   }
+  // Solana on-chain addresses (set after vault initialization; enables real transactions)
+  tokenMint?: string
+  vaultMint?: string
   // UI-specific properties
   color?: string
   description?: string

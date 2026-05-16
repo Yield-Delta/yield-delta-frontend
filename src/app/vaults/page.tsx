@@ -53,6 +53,8 @@ const toSolanaDepositVault = (vault: VaultData | null) => {
     strategy: vault.strategy,
     depositToken,
     tokenDecimals: depositToken.toUpperCase().includes('USDC') ? 6 : 9,
+    tokenMint: vault.tokenMint,
+    vaultMint: vault.vaultMint,
   }
 }
 

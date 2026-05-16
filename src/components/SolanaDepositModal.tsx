@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
+import { useSolanaVault } from '@/hooks/useSolanaVault'
 import styles from './SolanaDepositModal.module.css'
 
 interface SolanaVaultData {
@@ -26,6 +27,7 @@ interface SolanaVaultData {
   depositToken: string
   tokenMint?: string
   tokenDecimals?: number
+  vaultMint?: string
 }
 
 interface SolanaDepositModalProps {
@@ -92,6 +94,7 @@ export default function SolanaDepositModal({
   const openedAtRef = useRef(0)
 
   const { address: walletAddress, isConnected: isWalletConnected, balance } = useSolanaWallet()
+  const { deposit, isDepositing } = useSolanaVault()
 
   const vaultColor = vault ? getVaultColor(vault.strategy) : '#9945ff'
   const riskLevel = vault ? getRiskLevel(vault.apy) : 'Medium'
@@ -101,7 +104,7 @@ export default function SolanaDepositModal({
   const maxAmount = Math.max(0, numericBalance - 0.01)
   const isValidAmount = Number.isFinite(numericAmount) && numericAmount > 0
   const exceedsBalance = isWalletConnected && isValidAmount && numericAmount > maxAmount
-  const canDeposit = isValidAmount && !exceedsBalance && transactionStatus !== 'pending' && isWalletConnected
+  const canDeposit = isValidAmount && !exceedsBalance && transactionStatus !== 'pending' && !isDepositing && isWalletConnected
 
   const projectedValue = useMemo(() => numericAmount * SOL_PRICE_USD, [numericAmount])
   const projectedDailyYield = useMemo(() => {
@@ -136,16 +139,37 @@ export default function SolanaDepositModal({
     setErrorMessage(null)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      let signature: string
 
-      const mockSignature = `${walletAddress.slice(0, 8)}...${walletAddress.slice(-8)}-${Date.now()}`
-      setTxSignature(mockSignature)
+      if (vault.tokenMint && vault.vaultMint) {
+        const result = await deposit(
+          {
+            address: vault.address,
+            name: vault.name,
+            apy: vault.apy,
+            tvl: vault.tvl,
+            strategy: vault.strategy,
+            depositToken: vault.depositToken,
+            tokenMint: vault.tokenMint,
+            tokenDecimals: vault.tokenDecimals ?? 9,
+            vaultMint: vault.vaultMint,
+          },
+          depositAmount
+        )
+        signature = result.signature
+      } else {
+        // Vault not yet initialized on-chain — simulate for UI testing
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        signature = `sim-${walletAddress.slice(0, 8)}-${Date.now()}`
+      }
+
+      setTxSignature(signature)
       setTransactionStatus('success')
       setShowSuccess(true)
-      onSuccess(mockSignature)
-    } catch {
+      onSuccess(signature)
+    } catch (err) {
       setTransactionStatus('error')
-      setErrorMessage('Transaction failed. Please try again.')
+      setErrorMessage(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
     }
   }
 
@@ -363,7 +387,7 @@ export default function SolanaDepositModal({
                       boxShadow: canDeposit ? `0 18px 44px ${vaultColor}30` : 'none',
                     }}
                   >
-                    {transactionStatus === 'pending' ? (
+                    {transactionStatus === 'pending' || isDepositing ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
                         Confirming Deposit

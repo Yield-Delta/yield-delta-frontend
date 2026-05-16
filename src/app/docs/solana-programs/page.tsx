@@ -73,7 +73,7 @@ pub fn accrue_simple_interest(principal, yield_bps, elapsed_secs) -> Result<u64>
       <h2 className="text-2xl font-semibold mb-6">Anchor.toml — Devnet Program IDs</h2>
 
       <CodeBlock language="toml" code={`[programs.devnet]
-adaptive_yield_vault = "AdpYv1tXoQ3k2JqMm2BhwRrF3i6qVSrVBoCXVomQvpD"
+adaptive_yield_vault = "StyNEoSmEPwNUgJDE4bjbp6FbPoHEwHYnRySdQLCM64"
 delta_neutral_vault  = "C48TJDYWpws9dKu8bo8nq679w9vfCd7D1Emi9Abbhfyf"
 lp_vault             = "7UWS2aFyvNXiCHj1BTuWC7QU9iMBZcvjGBNABi7ByN4A"
 meta_vault           = "F4x55MUt2WXxqmtVQNyXBxg822pGUdge8KoYvuH6fLDQ"

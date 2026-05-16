@@ -94,7 +94,7 @@ export const SOLANA_DEVNET_VAULTS: VaultData[] = [
     performance: { totalReturn: 0.0256, sharpeRatio: 1.95, maxDrawdown: 0.052, winRate: 0.78 },
   },
   {
-    address: 'AdpYv1tXoQ3k2JqMm2BhwRrF3i6qVSrVBoCXVomQvpD',
+    address: 'StyNEoSmEPwNUgJDE4bjbp6FbPoHEwHYnRySdQLCM64',
     name: 'Adaptive Yield Vault',
     strategy: 'experimental',
     tokenA: 'USDC-test',
