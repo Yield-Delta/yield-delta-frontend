@@ -1,25 +1,5 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# ── Rust / Anchor / Solana ───────────────────────────────────────────────────
-# Build artifacts (cargo build, anchor build)
-/target/
-programs/*/fuzz/target/
-
-# Solana program keypairs — generated at build time, NEVER commit signing keys.
-# Back up target/deploy/*.json somewhere safe before wiping this directory.
-target/deploy/*.json
-
-# Compiled Solana programs (rebuilt via anchor build --no-idl)
-*.so
-
-# Anchor local test ledger and cache
-.anchor/
-test-ledger/
-
-# IDL / type artifacts (generated; omitted when using --no-idl flag)
-/idl/
-/types/
-
 # ── Node / Next.js ───────────────────────────────────────────────────────────
 # dependencies
 /node_modules
