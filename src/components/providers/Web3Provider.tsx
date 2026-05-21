@@ -12,6 +12,7 @@ import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { DAppKitProvider } from '@mysten/dapp-kit-react'
 import { suiDAppKit } from '@/lib/sui/dapp-kit'
+import { SuiWalletSync } from '@/components/SuiWalletSync'
 import { config } from '@/lib/web3'
 import { ReactNode, useEffect, useState } from 'react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
@@ -106,6 +107,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           >
             <SeiGlobalWalletProvider>
               <DAppKitProvider dAppKit={suiDAppKit}>
+                <SuiWalletSync />
                 {children}
               </DAppKitProvider>
             </SeiGlobalWalletProvider>

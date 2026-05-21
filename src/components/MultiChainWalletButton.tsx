@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ChainSelector } from './ChainSelector'
 import { SolanaWalletModal } from './SolanaWalletModal'
+import { SuiWalletModal } from './SuiWalletModal'
 import { useAccount } from 'wagmi'
 import { useMultiChainStore } from '@/stores/multiChainStore'
 import { useSolanaWallet } from '@/hooks/useSolanaWallet'
+import { useSuiWallet } from '@/hooks/useSuiWallet'
 import { ChainId, ChainType, WalletStatus } from '@/types/chain'
 import { getDefaultChain } from '@/lib/chainConfig'
 import { formatBalance, evmChainIdToChainId } from '@/lib/chainUtils'
@@ -22,6 +24,7 @@ import { Wallet, Power } from 'lucide-react'
 
 export function MultiChainWalletButton() {
   const [showSolanaModal, setShowSolanaModal] = useState(false)
+  const [showSuiModal, setShowSuiModal] = useState(false)
   const [solanaModalChain, setSolanaModalChain] = useState<ChainId>(ChainId.SOLANA_DEVNET)
   const [mounted, setMounted] = useState(false)
 
@@ -34,6 +37,14 @@ export function MultiChainWalletButton() {
     isConnected: isSolanaConnected,
     disconnect: disconnectSolana,
   } = useSolanaWallet()
+
+  // Sui wallet state
+  const {
+    address: suiAddress,
+    isConnected: isSuiConnected,
+    balance: suiBalance,
+    disconnect: disconnectSui,
+  } = useSuiWallet()
 
   // Multi-chain store
   const {
@@ -95,8 +106,10 @@ export function MultiChainWalletButton() {
       case ChainType.SOLANA:
         await disconnectSolana()
         break
+      case ChainType.SUI:
+        disconnectSui()
+        break
       // EVM handled by RainbowKit
-      // SUI - future implementation
     }
   }
 
@@ -226,11 +239,41 @@ export function MultiChainWalletButton() {
             </Button>
           )
         ) : activeMetadata?.type === ChainType.SUI ? (
-          // Sui Chains (Future)
-          <Button className="btn-cyber" disabled>
-            <Wallet className="w-4 h-4 mr-2" />
-            Sui Coming Soon
-          </Button>
+          // Sui Chains — dApp Kit wallet
+          isSuiConnected && suiAddress ? (
+            <div className="flex items-center gap-2">
+              <Button className="btn-cyber relative">
+                <div className="flex items-center gap-2">
+                  <span className="hidden sm:inline">
+                    {suiAddress.slice(0, 6)}...{suiAddress.slice(-4)}
+                  </span>
+                  <span className="sm:hidden">
+                    {suiAddress.slice(0, 6)}...
+                  </span>
+                  {suiBalance && (
+                    <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/30">
+                      {suiBalance} SUI
+                    </Badge>
+                  )}
+                </div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="btn-cyber-outline"
+                onClick={handleDisconnect}
+              >
+                <Power className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button className="btn-cyber" onClick={() => setShowSuiModal(true)}>
+              <Wallet className="w-4 h-4 mr-1.5" />
+              <span className="hidden xl:inline">Connect Sui Wallet</span>
+              <span className="xl:hidden">Connect</span>
+            </Button>
+          )
         ) : (
           <Button className="btn-cyber" disabled>
             Select Chain
@@ -251,6 +294,12 @@ export function MultiChainWalletButton() {
         isOpen={showSolanaModal}
         onClose={() => setShowSolanaModal(false)}
         chainId={solanaModalChain}
+      />
+
+      {/* Sui Wallet Modal */}
+      <SuiWalletModal
+        isOpen={showSuiModal}
+        onClose={() => setShowSuiModal(false)}
       />
     </>
   )

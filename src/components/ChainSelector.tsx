@@ -234,6 +234,7 @@ export function ChainSelector({
                     walletState={getWalletStateForChain(chain.id)}
                     showBalance={showBalances}
                     onSelect={() => handleChainSelect(chain.id)}
+                    disabled={!chain.isTestnet}
                   />
                 ))}
               </ChainGroup>
@@ -251,24 +252,25 @@ export function ChainSelector({
                     walletState={getWalletStateForChain(chain.id)}
                     showBalance={showBalances}
                     onSelect={() => handleChainSelect(chain.id)}
+                    disabled={!chain.isTestnet}
                   />
                 ))}
               </ChainGroup>
 
               <Divider />
 
-              <ChainGroup label="Sui" soon>
+              <ChainGroup label="Sui">
                 {suiChains.map((chain, i) => (
                   <ChainRow
                     key={chain.id}
                     index={i}
                     chain={chain}
-                    isActive={false}
-                    isConnected={false}
-                    walletState={null}
-                    showBalance={false}
-                    onSelect={() => {}}
-                    disabled
+                    isActive={activeChain === chain.id}
+                    isConnected={isWalletConnectedForChain(chain.id)}
+                    walletState={getWalletStateForChain(chain.id)}
+                    showBalance={showBalances}
+                    onSelect={() => handleChainSelect(chain.id)}
+                    disabled={!chain.isTestnet}
                   />
                 ))}
               </ChainGroup>
@@ -448,25 +450,35 @@ function ChainRow({
 
       {/* Status indicators */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexShrink: 0 }}>
-        {isConnected && (
+        {disabled ? (
           <span style={{
-            width: '5px',
-            height: '5px',
-            borderRadius: '50%',
-            background: '#10b981',
-            boxShadow: '0 0 6px #10b981',
-            display: 'block',
-          }} />
-        )}
-        {isActive && (
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            style={{ color: 'rgba(0,245,212,0.8)', display: 'flex' }}
-          >
-            <Check size={13} strokeWidth={2.5} />
-          </motion.span>
+            fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em',
+            color: 'rgba(245,158,11,0.7)',
+            background: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.18)',
+            borderRadius: '999px', padding: '1px 5px',
+          }}>
+            SOON
+          </span>
+        ) : (
+          <>
+            {isConnected && (
+              <span style={{
+                width: '5px', height: '5px', borderRadius: '50%',
+                background: '#10b981', boxShadow: '0 0 6px #10b981', display: 'block',
+              }} />
+            )}
+            {isActive && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                style={{ color: 'rgba(0,245,212,0.8)', display: 'flex' }}
+              >
+                <Check size={13} strokeWidth={2.5} />
+              </motion.span>
+            )}
+          </>
         )}
       </div>
     </motion.button>
