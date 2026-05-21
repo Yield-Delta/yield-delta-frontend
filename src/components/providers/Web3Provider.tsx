@@ -10,6 +10,8 @@ import { SeiGlobalWalletProvider } from './SeiGlobalWalletProvider'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
+import { DAppKitProvider } from '@mysten/dapp-kit-react'
+import { suiDAppKit } from '@/lib/sui/dapp-kit'
 import { config } from '@/lib/web3'
 import { ReactNode, useEffect, useState } from 'react'
 import { useMultiChainStore } from '@/stores/multiChainStore'
@@ -96,14 +98,16 @@ export function Web3Provider({ children }: Web3ProviderProps) {
             {children}
           </div>
         ) : (
-          <RainbowKitProvider 
-            initialChain={1328} 
+          <RainbowKitProvider
+            initialChain={1328}
             showRecentTransactions={false}
             // Prevent account switching issues
             modalSize="compact"
           >
             <SeiGlobalWalletProvider>
-              {children}
+              <DAppKitProvider dAppKit={suiDAppKit}>
+                {children}
+              </DAppKitProvider>
             </SeiGlobalWalletProvider>
           </RainbowKitProvider>
         )}

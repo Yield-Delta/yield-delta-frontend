@@ -5,7 +5,7 @@ import { ChainId } from '@/types/chain'
 export interface VaultData {
   address: string
   name: string
-  strategy: 'concentrated_liquidity' | 'yield_farming' | 'arbitrage' | 'hedge' | 'stable_max' | 'sei_hypergrowth' | 'blue_chip' | 'delta_neutral' | 'experimental'
+  strategy: 'concentrated_liquidity' | 'yield_farming' | 'arbitrage' | 'hedge' | 'stable_max' | 'sei_hypergrowth' | 'blue_chip' | 'delta_neutral' | 'experimental' | 'layered_yield'
   tokenA: string
   tokenB: string
   fee: number

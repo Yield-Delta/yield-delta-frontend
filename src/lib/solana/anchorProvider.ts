@@ -2,12 +2,14 @@ import { AnchorProvider, Program, type Idl } from '@coral-xyz/anchor'
 import { PublicKey, type Transaction, type VersionedTransaction } from '@solana/web3.js'
 import { getSolanaConnection, type SolanaCluster } from './connection'
 import idlData from './idl/yield_vault.json'
+import { SOLANA_PROGRAM_IDS, YIELD_VAULT_PROGRAM_ID } from './programIds'
 
-const idl = idlData as Idl
+const idl = {
+  ...idlData,
+  address: SOLANA_PROGRAM_IDS.yieldVault,
+} as Idl
 
-export const VAULT_PROGRAM_ID = new PublicKey(
-  process.env.NEXT_PUBLIC_VAULT_PROGRAM_ID || '11111111111111111111111111111111'
-)
+export const VAULT_PROGRAM_ID = YIELD_VAULT_PROGRAM_ID
 
 interface AnchorWallet {
   publicKey: PublicKey

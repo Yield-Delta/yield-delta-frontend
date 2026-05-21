@@ -7,6 +7,7 @@ import DemoBanner from '@/components/DemoBanner';
 import AIChat from '@/components/AIChat';
 import DepositModal from '@/components/DepositModal';
 import SolanaDepositModal from '@/components/SolanaDepositModal';
+import SuiDepositModal, { SuiVaultData } from '@/components/SuiDepositModal';
 import { MessageCircle, X, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -16,7 +17,7 @@ import { useVaultTVL } from '@/hooks/useVaultTVL';
 import { useTotalTVLInUSD } from '@/hooks/useTotalTVLInUSD';
 import { useMultiChainStore } from '@/stores/multiChainStore';
 import { ChainId } from '@/types/chain';
-import { getVaultsForChain, isSolanaChain } from '@/lib/vaultCatalog';
+import { getVaultsForChain, isSolanaChain, isSuiChain } from '@/lib/vaultCatalog';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -58,6 +59,19 @@ const toSolanaDepositVault = (vault: VaultData | null) => {
   }
 }
 
+const toSuiDepositVault = (vault: VaultData | null): SuiVaultData | null => {
+  if (!vault) return null
+  return {
+    address: vault.address,
+    name: vault.name,
+    apy: vault.apy,
+    tvl: vault.tvl,
+    strategy: vault.strategy,
+    depositToken: vault.tokenA,
+    description: vault.description,
+  }
+}
+
 const getRiskLevel = (apy: number, strategy?: string): 'Low' | 'Medium' | 'High' => {
   const modifier: Record<string, number> = {
     stable_max: -5, concentrated_liquidity: 5, arbitrage: 3,
@@ -77,7 +91,8 @@ const getVaultColor = (strategy: string) => ({
   stable_max: '#10b981',
   sei_hypergrowth: '#f59e0b',
   blue_chip: '#3b82f6',
-  delta_neutral: '#8b5cf6',
+  delta_neutral: '#4ca2ff',
+  layered_yield: '#fb923c',
 } as Record<string, string>)[strategy] || '#00f5d4'
 
 const RISK_BADGE_STYLES = {
@@ -218,13 +233,15 @@ export default function VaultsPage() {
 
   const { data: marketData } = useSeiMarketData()
   const isSolanaVaultChain = isSolanaChain(vaultChain)
+  const isSuiVaultChain = isSuiChain(vaultChain)
+  const skipOnChainTVL = isSolanaVaultChain || isSuiVaultChain
   const vaultAddresses = React.useMemo(() => (
-    isSolanaVaultChain ? [] : vaultsData?.map(v => v.address) || []
-  ), [isSolanaVaultChain, vaultsData])
+    skipOnChainTVL ? [] : vaultsData?.map(v => v.address) || []
+  ), [skipOnChainTVL, vaultsData])
   const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
   const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
 
-  const isLoading = vaultLoading || queryLoading || (!isSolanaVaultChain && tvlLoading)
+  const isLoading = vaultLoading || queryLoading || (!skipOnChainTVL && tvlLoading)
   const filteredVaults = React.useMemo(
     () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
     [vaultsData, getFilteredVaults]
@@ -712,21 +729,30 @@ export default function VaultsPage() {
       )}
 
       {/* ── DEPOSIT MODAL ─────────────────────────────────── */}
-      {showDepositModal && depositVault && (isSolanaVaultChain ? (
-        <SolanaDepositModal
-          vault={toSolanaDepositVault(depositVault)}
-          isOpen={showDepositModal}
-          onClose={handleCloseModal}
-          onSuccess={handleDepositSuccess}
-        />
-      ) : (
-        <DepositModal
-          vault={depositVault}
-          isOpen={showDepositModal}
-          onClose={handleCloseModal}
-          onSuccess={handleDepositSuccess}
-        />
-      ))}
+      {showDepositModal && depositVault && (
+        isSuiVaultChain ? (
+          <SuiDepositModal
+            vault={toSuiDepositVault(depositVault)}
+            isOpen={showDepositModal}
+            onClose={handleCloseModal}
+            onSuccess={handleDepositSuccess}
+          />
+        ) : isSolanaVaultChain ? (
+          <SolanaDepositModal
+            vault={toSolanaDepositVault(depositVault)}
+            isOpen={showDepositModal}
+            onClose={handleCloseModal}
+            onSuccess={handleDepositSuccess}
+          />
+        ) : (
+          <DepositModal
+            vault={depositVault}
+            isOpen={showDepositModal}
+            onClose={handleCloseModal}
+            onSuccess={handleDepositSuccess}
+          />
+        )
+      )}
 
       {/* ── FLOATING AI BUTTON ────────────────────────────── */}
       <div style={{

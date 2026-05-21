@@ -1,5 +1,6 @@
 import { DocsBackButton } from '@/components/docs/DocsBackButton'
 import { CodeBlock } from '@/components/docs/CodeBlock'
+import { SOLANA_PROGRAM_IDS } from '@/lib/solana/programIds'
 import Link from 'next/link'
 
 export const metadata = {
@@ -73,13 +74,13 @@ pub fn accrue_simple_interest(principal, yield_bps, elapsed_secs) -> Result<u64>
       <h2 className="text-2xl font-semibold mb-6">Anchor.toml — Devnet Program IDs</h2>
 
       <CodeBlock language="toml" code={`[programs.devnet]
-adaptive_yield_vault = "StyNEoSmEPwNUgJDE4bjbp6FbPoHEwHYnRySdQLCM64"
-delta_neutral_vault  = "C48TJDYWpws9dKu8bo8nq679w9vfCd7D1Emi9Abbhfyf"
-lp_vault             = "7UWS2aFyvNXiCHj1BTuWC7QU9iMBZcvjGBNABi7ByN4A"
-meta_vault           = "F4x55MUt2WXxqmtVQNyXBxg822pGUdge8KoYvuH6fLDQ"
-staking_vault        = "Bhmqob5GG4gBjEpJSYN17bGhWXnDS7rsrDH4UF7SduQ4"
-yield_oracle         = "CRZ13p9bH4hVcStuGFUZ1sjPf94J1q9H2fsGs5nCeoqG"
-yield_vault          = "5hp22e1bv9HG8QXZKE1YC48pgWZc1zNWdh3v1Z65h4zD"
+adaptive_yield_vault = "${SOLANA_PROGRAM_IDS.adaptiveYieldVault}"
+delta_neutral_vault  = "${SOLANA_PROGRAM_IDS.deltaNeutralVault}"
+lp_vault             = "${SOLANA_PROGRAM_IDS.lpVault}"
+meta_vault           = "${SOLANA_PROGRAM_IDS.metaVault}"
+staking_vault        = "${SOLANA_PROGRAM_IDS.stakingVault}"
+yield_oracle         = "${SOLANA_PROGRAM_IDS.yieldOracle}"
+yield_vault          = "${SOLANA_PROGRAM_IDS.yieldVault}"
 
 # NOTE: After first deploy run
 #   solana address -k target/deploy/<program>-keypair.json

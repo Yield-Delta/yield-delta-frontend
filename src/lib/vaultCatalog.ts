@@ -1,6 +1,8 @@
 import { ChainId, ChainType } from '@/types/chain'
 import { getChainMetadata } from '@/lib/chainConfig'
 import { VaultData } from '@/stores/vaultStore'
+import { SOLANA_PROGRAM_IDS } from '@/lib/solana/programIds'
+import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
 
 export const SOLANA_DEVNET_VAULTS: VaultData[] = [
   {
@@ -94,7 +96,7 @@ export const SOLANA_DEVNET_VAULTS: VaultData[] = [
     performance: { totalReturn: 0.0256, sharpeRatio: 1.95, maxDrawdown: 0.052, winRate: 0.78 },
   },
   {
-    address: 'StyNEoSmEPwNUgJDE4bjbp6FbPoHEwHYnRySdQLCM64',
+    address: SOLANA_PROGRAM_IDS.adaptiveYieldVault,
     name: 'Adaptive Yield Vault',
     strategy: 'experimental',
     tokenA: 'USDC-test',
@@ -111,8 +113,79 @@ export const SOLANA_DEVNET_VAULTS: VaultData[] = [
   },
 ]
 
+export const SUI_TESTNET_VAULTS: VaultData[] = [
+  {
+    address: SUI_VAULT_PROGRAMS.deltaNeutralVault,
+    name: 'Delta-Neutral DeepBook Vault',
+    strategy: 'delta_neutral',
+    tokenA: 'SUI',
+    tokenB: 'suiUSDC',
+    fee: 0.001,
+    tickSpacing: 1,
+    tvl: 0,
+    apy: 0.086,
+    chainId: ChainId.SUI_TESTNET,
+    active: true,
+    description:
+      'Enforces |Δp| ≤ ε atomically via Hot Potato DeltaReceipt. Long SUI/suiUSDC LP on DeepBook CLMM hedged with a synthetic short via DeepBook Perps. Owned BalanceManager routes all swaps on Sui\'s parallel execution fast-path.',
+    performance: { totalReturn: 0.021, sharpeRatio: 2.8, maxDrawdown: 0.024, winRate: 0.88 },
+  },
+  {
+    address: SUI_VAULT_PROGRAMS.hedgeRatioVault,
+    name: 'GBM Hedge-Ratio Vault',
+    strategy: 'hedge',
+    tokenA: 'SUI',
+    tokenB: 'suiUSDC',
+    fee: 0.001,
+    tickSpacing: 10,
+    tvl: 0,
+    apy: 0.124,
+    chainId: ChainId.SUI_TESTNET,
+    active: true,
+    description:
+      'Implements h** = min(h*, h̄(α)) via GBM moment-matching. Rebalancing frequency T scales down with realized volatility σ̃, keeping P(LTV > ℓ_max) < 1−α. Collateral managed via owned MarginManager on DeepBook Margin.',
+    performance: { totalReturn: 0.031, sharpeRatio: 1.85, maxDrawdown: 0.048, winRate: 0.74 },
+  },
+  {
+    address: SUI_VAULT_PROGRAMS.lvrOffsetVault,
+    name: 'LVR Offset Options Vault',
+    strategy: 'concentrated_liquidity',
+    tokenA: 'SUI',
+    tokenB: 'suiUSDT',
+    fee: 0.003,
+    tickSpacing: 64,
+    tvl: 0,
+    apy: 0.187,
+    chainId: ChainId.SUI_TESTNET,
+    active: true,
+    description:
+      'CLMM position boundaries replicate a Continuous Installment option strip. Buys/writes CI puts via DeepBook Predict to convert pathwise LVR cost into a predictable funding rate q priced from market implied volatility.',
+    performance: { totalReturn: 0.045, sharpeRatio: 1.22, maxDrawdown: 0.11, winRate: 0.65 },
+  },
+  {
+    address: SUI_VAULT_PROGRAMS.suiUsdeMetaVault,
+    name: 'suiUSDe Layered Meta Vault',
+    strategy: 'layered_yield',
+    tokenA: 'suiUSDe',
+    tokenB: 'USDC',
+    fee: 0,
+    tickSpacing: 1,
+    tvl: 0,
+    apy: 0.223,
+    chainId: ChainId.SUI_TESTNET,
+    active: true,
+    description:
+      'Uses suiUSDe as core margin collateral on DeepBook Margin. Simultaneously captures staking rewards, perpetual funding rates, money market deposit yields, and CLOB trading fees for maximum capital efficiency.',
+    performance: { totalReturn: 0.055, sharpeRatio: 1.45, maxDrawdown: 0.062, winRate: 0.79 },
+  },
+]
+
 export function isSolanaChain(chainId: ChainId | null | undefined) {
   return chainId ? getChainMetadata(chainId).type === ChainType.SOLANA : false
+}
+
+export function isSuiChain(chainId: ChainId | null | undefined) {
+  return chainId ? getChainMetadata(chainId).type === ChainType.SUI : false
 }
 
 export function isEvmChain(chainId: ChainId | null | undefined) {
@@ -121,5 +194,6 @@ export function isEvmChain(chainId: ChainId | null | undefined) {
 
 export function getVaultsForChain(chainId: ChainId | null | undefined): VaultData[] | null {
   if (isSolanaChain(chainId)) return SOLANA_DEVNET_VAULTS
+  if (isSuiChain(chainId)) return SUI_TESTNET_VAULTS
   return null
 }
