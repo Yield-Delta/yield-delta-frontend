@@ -20,11 +20,11 @@ const syne = Syne({
 // Metadata for SEO and social sharing
 export const metadata = {
   title: 'Yield Delta',
-  description: 'AI-driven dynamic liquidity vaults on SEI EVM',
+  description: 'AI-driven dynamic liquidity vaults across chains',
   metadataBase: new URL('https://yielddelta.xyz'),
   openGraph: {
     title: 'Yield Delta',
-    description: 'AI-driven dynamic liquidity vaults on SEI EVM',
+    description: 'AI-driven dynamic liquidity vaults across chains',
     url: 'https://yielddelta.xyz',
     siteName: 'Yield Delta',
     images: [
@@ -32,7 +32,7 @@ export const metadata = {
         url: '/api/og',
         width: 1200,
         height: 630,
-        alt: 'Yield Delta - Dynamic Liquidity Vaults on SEI',
+        alt: 'Yield Delta - Multichain Dynamic Liquidity Vaults',
         type: 'image/png',
       }
     ],
@@ -42,7 +42,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Yield Delta',
-    description: 'AI-driven dynamic liquidity vaults on SEI EVM',
+    description: 'AI-driven dynamic liquidity vaults across chains',
     images: ['/api/og'],
     creator: '@yielddelta',
   },

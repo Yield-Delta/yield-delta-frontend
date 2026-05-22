@@ -5,7 +5,7 @@ export default function LogoShowcase() {
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">SEI DLP Logo Showcase</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">Yield Delta Logo Showcase</h1>
         
         {/* Logo Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
@@ -17,7 +17,7 @@ export default function LogoShowcase() {
               <Logo variant="default" size={120} animated={false} />
             </div>
             <p className="text-sm text-muted-foreground">
-              Standard logo with SEI DLP theme colors, no animations
+              Three routed chain lanes around a neutral vault aperture
             </p>
           </div>
           
@@ -28,7 +28,7 @@ export default function LogoShowcase() {
               <Logo variant="3d" size={120} />
             </div>
             <p className="text-sm text-muted-foreground">
-              3D perspective with pulsing AI core and animated elements
+              Dimensional mark with liquidity flow moving through each lane
             </p>
           </div>
           
@@ -88,67 +88,48 @@ export default function LogoShowcase() {
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <svg width="64" height="64" viewBox="0 0 120 120">
-                  <path d="M60 20 L35 80 L85 80 Z" 
-                        fill="url(#elementGradient)" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth="2"/>
+                  <path d="M60 13 C46 35 34 59 20 96" stroke="hsl(var(--primary))" strokeWidth="18" strokeLinecap="round"/>
+                  <path d="M60 13 C74 36 86 61 100 96" stroke="hsl(var(--accent))" strokeWidth="18" strokeLinecap="round"/>
+                  <path d="M20 96 C45 82 75 82 100 96" stroke="hsl(var(--secondary))" strokeWidth="18" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <h3 className="font-semibold mb-2">Tri-chain Delta</h3>
+              <p className="text-sm text-muted-foreground">
+                Three distinct routes resolve into one delta-neutral system
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <svg width="64" height="64" viewBox="0 0 120 120">
                   <defs>
-                    <linearGradient id="elementGradient">
-                      <stop offset="0%" stopColor="hsl(var(--primary))"/>
-                      <stop offset="100%" stopColor="hsl(var(--secondary))"/>
+                    <linearGradient id="showcaseAperture" x1="40" y1="39" x2="80" y2="79">
+                      <stop stopColor="hsl(var(--primary))"/>
+                      <stop offset="0.5" stopColor="hsl(var(--secondary))"/>
+                      <stop offset="1" stopColor="hsl(var(--accent))"/>
                     </linearGradient>
                   </defs>
+                  <path d="M60 30 L89 59 L60 88 L31 59 Z" fill="hsl(var(--background))" stroke="url(#showcaseAperture)" strokeWidth="7"/>
+                  <path d="M60 48 L71 59 L60 70 L49 59 Z" fill="url(#showcaseAperture)"/>
                 </svg>
               </div>
-              <h3 className="font-semibold mb-2">Greek Delta (Δ)</h3>
+              <h3 className="font-semibold mb-2">Vault Aperture</h3>
               <p className="text-sm text-muted-foreground">
-                Represents change, transformation, and mathematical precision
+                A protected center gives the mark a recognizable vault signature
               </p>
             </div>
             
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                 <svg width="64" height="64" viewBox="0 0 120 120">
-                  <path d="M20 60 L35 45 L50 35 L65 25 L80 15 L95 10" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth="3" 
-                        fill="none" 
-                        strokeLinecap="round"/>
-                  <circle cx="20" cy="60" r="3" fill="hsl(var(--primary))"/>
-                  <circle cx="35" cy="45" r="3" fill="hsl(var(--secondary))"/>
-                  <circle cx="50" cy="35" r="3" fill="hsl(var(--accent))"/>
-                  <circle cx="65" cy="25" r="3" fill="hsl(var(--primary))"/>
-                  <circle cx="80" cy="15" r="3" fill="hsl(var(--secondary))"/>
-                  <circle cx="95" cy="10" r="3" fill="hsl(var(--accent))"/>
+                  <path d="M18 93 C33 66 41 43 58 17" stroke="hsl(var(--primary))" strokeWidth="12" strokeLinecap="round"/>
+                  <path d="M62 17 C78 43 88 67 102 93" stroke="hsl(var(--accent))" strokeWidth="12" strokeLinecap="round"/>
+                  <path d="M18 93 C42 80 78 80 102 93" stroke="hsl(var(--secondary))" strokeWidth="12" strokeLinecap="round"/>
                 </svg>
               </div>
-              <h3 className="font-semibold mb-2">Growth Chart</h3>
+              <h3 className="font-semibold mb-2">Liquidity Lanes</h3>
               <p className="text-sm text-muted-foreground">
-                Shows upward trajectory and yield optimization
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <svg width="64" height="64" viewBox="0 0 120 120">
-                  <g opacity="0.6">
-                    <path d="M25 35 L45 25 L65 40 L85 30" stroke="hsl(var(--primary))" strokeWidth="1" fill="none"/>
-                    <path d="M20 65 L40 55 L60 70 L80 60" stroke="hsl(var(--secondary))" strokeWidth="1" fill="none"/>
-                    <circle cx="25" cy="35" r="2" fill="hsl(var(--primary))"/>
-                    <circle cx="45" cy="25" r="2" fill="hsl(var(--secondary))"/>
-                    <circle cx="65" cy="40" r="2" fill="hsl(var(--accent))"/>
-                    <circle cx="85" cy="30" r="2" fill="hsl(var(--primary))"/>
-                    <circle cx="20" cy="65" r="2" fill="hsl(var(--secondary))"/>
-                    <circle cx="40" cy="55" r="2" fill="hsl(var(--accent))"/>
-                    <circle cx="60" cy="70" r="2" fill="hsl(var(--primary))"/>
-                    <circle cx="80" cy="60" r="2" fill="hsl(var(--secondary))"/>
-                  </g>
-                  <circle cx="60" cy="50" r="8" fill="hsl(var(--secondary))" opacity="0.8"/>
-                </svg>
-              </div>
-              <h3 className="font-semibold mb-2">Neural Network</h3>
-              <p className="text-sm text-muted-foreground">
-                AI-driven optimization with interconnected nodes
+                Broad flowing rails stay legible from favicon to hero scale
               </p>
             </div>
           </div>
@@ -170,7 +151,7 @@ export default function LogoShowcase() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-secondary"></div>
               <h3 className="font-semibold mb-2">Secondary</h3>
               <p className="text-sm text-muted-foreground font-mono">#9b5de5</p>
-              <p className="text-sm text-muted-foreground">SEI Purple - AI Core</p>
+              <p className="text-sm text-muted-foreground">Violet - Base route</p>
             </div>
             
             <div className="text-center">

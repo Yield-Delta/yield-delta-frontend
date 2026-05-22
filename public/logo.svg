@@ -1,113 +1,22 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Gradients for Yield Delta theme -->
-    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f5d4"/>
-      <stop offset="100%" stop-color="#9b5de5"/>
+    <linearGradient id="aperture" x1="39" y1="38" x2="82" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00f5d4"/>
+      <stop offset="0.48" stop-color="#9b5de5"/>
+      <stop offset="1" stop-color="#ff206e"/>
     </linearGradient>
-    
-    <radialGradient id="coreGradient" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#9b5de5"/>
-      <stop offset="50%" stop-color="#ff206e"/>
-      <stop offset="100%" stop-color="#00f5d4"/>
-    </radialGradient>
-    
-    <linearGradient id="chartGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#00f5d4" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#ff206e" stop-opacity="1"/>
-    </linearGradient>
-    
-    <!-- Pulsing animation for AI core -->
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge> 
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="depth" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#02030b" flood-opacity="0.52"/>
     </filter>
   </defs>
-  
-  <!-- Neural Network Particles (Background Layer) -->
-  <g opacity="0.6">
-    <!-- Connection lines -->
-    <path d="M25 35 L45 25 L65 40 L85 30 L95 50" stroke="#00f5d4" stroke-width="1" opacity="0.4" fill="none"/>
-    <path d="M20 65 L40 55 L60 70 L80 60 L100 80" stroke="#9b5de5" stroke-width="1" opacity="0.4" fill="none"/>
-    <path d="M30 85 L50 75 L70 90 L90 80" stroke="#ff206e" stroke-width="1" opacity="0.3" fill="none"/>
-    
-    <!-- Neural nodes -->
-    <circle cx="25" cy="35" r="2" fill="#00f5d4" opacity="0.7">
-      <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="45" cy="25" r="1.5" fill="#9b5de5" opacity="0.6">
-      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="65" cy="40" r="2" fill="#ff206e" opacity="0.5">
-      <animate attributeName="opacity" values="0.2;0.6;0.2" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="85" cy="30" r="1.5" fill="#00f5d4" opacity="0.6"/>
-    <circle cx="95" cy="50" r="2" fill="#9b5de5" opacity="0.5"/>
-    
-    <circle cx="20" cy="65" r="1.5" fill="#9b5de5" opacity="0.6"/>
-    <circle cx="40" cy="55" r="2" fill="#ff206e" opacity="0.5"/>
-    <circle cx="60" cy="70" r="1.5" fill="#00f5d4" opacity="0.7"/>
-    <circle cx="80" cy="60" r="2" fill="#9b5de5" opacity="0.6"/>
-    <circle cx="100" cy="80" r="1.5" fill="#ff206e" opacity="0.5"/>
-    
-    <circle cx="30" cy="85" r="2" fill="#00f5d4" opacity="0.6"/>
-    <circle cx="50" cy="75" r="1.5" fill="#9b5de5" opacity="0.7"/>
-    <circle cx="70" cy="90" r="2" fill="#ff206e" opacity="0.5"/>
-    <circle cx="90" cy="80" r="1.5" fill="#00f5d4" opacity="0.6"/>
+  <g filter="url(#depth)">
+    <path d="M60 13 C46 35 34 59 20 96" stroke="#00f5d4" stroke-width="18" stroke-linecap="round"/>
+    <path d="M60 13 C74 36 86 61 100 96" stroke="#ff206e" stroke-width="18" stroke-linecap="round"/>
+    <path d="M20 96 C45 82 75 82 100 96" stroke="#9b5de5" stroke-width="18" stroke-linecap="round"/>
+    <path d="M60 13 C46 35 34 59 20 96" stroke="white" stroke-opacity="0.34" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 13 C74 36 86 61 100 96" stroke="white" stroke-opacity="0.24" stroke-width="3" stroke-linecap="round"/>
+    <path d="M20 96 C45 82 75 82 100 96" stroke="white" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round"/>
   </g>
-  
-  <!-- Greek Delta (Solid Triangle) -->
-  <path d="M60 20 L35 80 L85 80 Z" 
-        fill="url(#primaryGradient)" 
-        opacity="0.9"
-        stroke="#00f5d4" 
-        stroke-width="1"/>
-  
-  <!-- Stock Growth Chart (Line with points) -->
-  <g stroke-width="2.5" fill="none">
-    <path d="M30 75 L42 65 L54 55 L66 45 L78 35 L90 25" 
-          stroke="url(#chartGradient)" 
-          stroke-linecap="round"
-          stroke-linejoin="round">
-      <animate attributeName="stroke-dasharray" values="0,200;200,200" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="stroke-dashoffset" values="200;0" dur="3s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Chart points -->
-    <circle cx="30" cy="75" r="3" fill="#00f5d4" stroke="#00f5d4" stroke-width="1"/>
-    <circle cx="42" cy="65" r="3" fill="#9b5de5" stroke="#9b5de5" stroke-width="1"/>
-    <circle cx="54" cy="55" r="3" fill="#ff206e" stroke="#ff206e" stroke-width="1"/>
-    <circle cx="66" cy="45" r="3" fill="#00f5d4" stroke="#00f5d4" stroke-width="1"/>
-    <circle cx="78" cy="35" r="3" fill="#9b5de5" stroke="#9b5de5" stroke-width="1"/>
-    <circle cx="90" cy="25" r="3" fill="#ff206e" stroke="#ff206e" stroke-width="1"/>
-  </g>
-  
-  <!-- AI Core (Pulsing center) -->
-  <g filter="url(#glow)">
-    <circle cx="60" cy="50" r="8" fill="url(#coreGradient)">
-      <animate attributeName="r" values="6;12;6" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    
-    <!-- Inner core -->
-    <circle cx="60" cy="50" r="4" fill="#9b5de5">
-      <animate attributeName="r" values="3;6;3" dur="2s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-  
-  <!-- Connecting energy beams -->
-  <g opacity="0.4">
-    <path d="M60 50 L60 20" stroke="#9b5de5" stroke-width="1" stroke-dasharray="2,2">
-      <animate attributeName="stroke-dashoffset" values="0;-10" dur="1s" repeatCount="indefinite"/>
-    </path>
-    <path d="M60 50 L30 75" stroke="#00f5d4" stroke-width="1" stroke-dasharray="2,2">
-      <animate attributeName="stroke-dashoffset" values="0;-10" dur="1.2s" repeatCount="indefinite"/>
-    </path>
-    <path d="M60 50 L90 25" stroke="#ff206e" stroke-width="1" stroke-dasharray="2,2">
-      <animate attributeName="stroke-dashoffset" values="0;-10" dur="0.8s" repeatCount="indefinite"/>
-    </path>
-  </g>
+  <path d="M60 39 L80 59 L60 79 L40 59 Z" fill="#070914" stroke="url(#aperture)" stroke-width="5"/>
+  <path d="M60 51 L68 59 L60 67 L52 59 Z" fill="url(#aperture)"/>
 </svg>

@@ -1,38 +1,8 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f5d4"/>
-      <stop offset="50%" stop-color="#9b5de5"/>
-      <stop offset="100%" stop-color="#ff206e"/>
-    </linearGradient>
-    
-    <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#9b5de5"/>
-      <stop offset="100%" stop-color="#00f5d4"/>
-    </radialGradient>
-  </defs>
-  
-  <!-- Greek Delta -->
-  <path d="M16 6 L8 22 L24 22 Z" fill="url(#faviconGradient)" opacity="0.9"/>
-  
-  <!-- Growth line -->
-  <path d="M6 24 L12 18 L16 14 L20 10 L26 6" 
-        stroke="#00f5d4" 
-        stroke-width="1.5" 
-        fill="none" 
-        stroke-linecap="round"/>
-  
-  <!-- Neural dots -->
-  <circle cx="8" cy="10" r="1" fill="#00f5d4" opacity="0.8"/>
-  <circle cx="24" cy="8" r="1" fill="#9b5de5" opacity="0.7"/>
-  <circle cx="10" cy="26" r="1" fill="#ff206e" opacity="0.8"/>
-  <circle cx="22" cy="24" r="1" fill="#00f5d4" opacity="0.7"/>
-  
-  <!-- AI Core -->
-  <circle cx="16" cy="16" r="3" fill="url(#coreGlow)">
-    <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
-  </circle>
-  
-  <circle cx="16" cy="16" r="1.5" fill="#9b5de5"/>
+<svg width="32" height="32" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs><linearGradient id="ring" x1="18" y1="19" x2="100" y2="101" gradientUnits="userSpaceOnUse"><stop stop-color="#00f5d4"/><stop offset="0.5" stop-color="#9b5de5"/><stop offset="1" stop-color="#ff206e"/></linearGradient></defs>
+  <path d="M60 18 C48 37 37 58 25 91" stroke="#00f5d4" stroke-width="17" stroke-linecap="round"/>
+  <path d="M60 18 C71 37 83 60 95 91" stroke="#ff206e" stroke-width="17" stroke-linecap="round"/>
+  <path d="M25 91 C47 80 73 80 95 91" stroke="#9b5de5" stroke-width="17" stroke-linecap="round"/>
+  <path d="M60 43 L76 59 L60 75 L44 59 Z" fill="#070914" stroke="url(#ring)" stroke-width="4"/>
+  <path d="M60 51 L68 59 L60 67 L52 59 Z" fill="url(#ring)"/>
 </svg>

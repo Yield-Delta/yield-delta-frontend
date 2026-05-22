@@ -1,54 +1,23 @@
-<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="224" height="60" viewBox="0 0 224 60" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="horizontalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#00f5d4"/>
-      <stop offset="50%" stop-color="#9b5de5"/>
-      <stop offset="100%" stop-color="#ff206e"/>
+    <linearGradient id="word" x1="66" y1="0" x2="210" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f6fbff"/>
+      <stop offset="0.58" stop-color="#d5ddfb"/>
+      <stop offset="1" stop-color="#00f5d4"/>
     </linearGradient>
-    
-    <radialGradient id="horizontalCore" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#9b5de5"/>
-      <stop offset="100%" stop-color="#00f5d4"/>
-    </radialGradient>
+    <linearGradient id="core" x1="21" y1="14" x2="54" y2="52" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00f5d4"/>
+      <stop offset="0.48" stop-color="#9b5de5"/>
+      <stop offset="1" stop-color="#ff206e"/>
+    </linearGradient>
   </defs>
-  
-  <!-- Logo section (left) -->
-  <g transform="translate(5, 5)">
-    <!-- Neural background -->
-    <g opacity="0.4">
-      <path d="M5 15 L15 10 L25 20 L35 15 L45 25" stroke="#00f5d4" stroke-width="0.8" fill="none"/>
-      <path d="M5 35 L15 30 L25 40 L35 35 L45 45" stroke="#9b5de5" stroke-width="0.8" fill="none"/>
-      <circle cx="5" cy="15" r="1" fill="#00f5d4" opacity="0.7"/>
-      <circle cx="15" cy="10" r="1" fill="#9b5de5" opacity="0.6"/>
-      <circle cx="25" cy="20" r="1" fill="#ff206e" opacity="0.7"/>
-      <circle cx="35" cy="15" r="1" fill="#00f5d4" opacity="0.6"/>
-      <circle cx="45" cy="25" r="1" fill="#9b5de5" opacity="0.7"/>
-    </g>
-    
-    <!-- Greek Delta -->
-    <path d="M25 5 L12 40 L38 40 Z" fill="url(#horizontalGradient)" opacity="0.8"/>
-    
-    <!-- Growth chart -->
-    <path d="M8 38 L16 32 L24 26 L32 20 L40 14" 
-          stroke="url(#horizontalGradient)" 
-          stroke-width="2" 
-          fill="none" 
-          stroke-linecap="round"/>
-    
-    <!-- AI Core -->
-    <circle cx="25" cy="25" r="4" fill="url(#horizontalCore)">
-      <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="25" cy="25" r="2" fill="#9b5de5"/>
+  <g transform="translate(4 3)">
+    <path d="M28 7 C22 17 16 29 9 47" stroke="#00f5d4" stroke-width="8" stroke-linecap="round"/>
+    <path d="M28 7 C34 17 40 30 47 47" stroke="#ff206e" stroke-width="8" stroke-linecap="round"/>
+    <path d="M9 47 C20 41 36 41 47 47" stroke="#9b5de5" stroke-width="8" stroke-linecap="round"/>
+    <path d="M28 20 L39 31 L28 42 L17 31 Z" fill="#070914" stroke="url(#core)" stroke-width="2.5"/>
+    <path d="M28 27 L32 31 L28 35 L24 31 Z" fill="url(#core)"/>
   </g>
-  
-  <!-- Text section (right) -->
-  <g transform="translate(65, 15)">
-    <text x="0" y="15" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="url(#horizontalGradient)">
-      Yield Delta
-    </text>
-    <text x="0" y="32" font-family="Arial, sans-serif" font-size="10" fill="#666" opacity="0.8">
-      Dynamic Liquidity Vaults
-    </text>
-  </g>
+  <text x="66" y="29" fill="url(#word)" font-family="ui-sans-serif, system-ui, sans-serif" font-size="21" font-weight="800" letter-spacing="0">Yield Delta</text>
+  <text x="67" y="45" fill="#9ba8c9" font-family="ui-sans-serif, system-ui, sans-serif" font-size="9" font-weight="700" letter-spacing="0">MULTICHAIN VAULTS</text>
 </svg>

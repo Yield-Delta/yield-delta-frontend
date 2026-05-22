@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import Image from 'next/image';
 import { Logo3D, LogoHorizontal3D } from './Logo3D';
 
@@ -15,6 +15,7 @@ export function Logo({
   animated = true, 
   className = '' 
 }: LogoProps) {
+  const id = useId().replace(/:/g, '');
   
   if (variant === 'horizontal') {
     return <LogoHorizontal3D height={size} className={className} />;
@@ -22,7 +23,7 @@ export function Logo({
   
   if (variant === 'horizontal-svg') {
     const height = size;
-    const width = (height / 60) * 200; // Maintain aspect ratio from original SVG
+    const width = (height / 60) * 224; // Maintain aspect ratio from horizontal SVG
     return (
       <Image
         src="/logo-horizontal.svg"
@@ -44,33 +45,32 @@ export function Logo({
       <svg 
         width={size} 
         height={size} 
-        viewBox="0 0 32 32" 
+        viewBox="0 0 120 120" 
         className={className}
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="iconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--primary))"/>
-            <stop offset="50%" stopColor="hsl(var(--secondary))"/>
-            <stop offset="100%" stopColor="hsl(var(--accent))"/>
+          <linearGradient id={`${id}-icon-ring`} x1="18" y1="19" x2="100" y2="101">
+            <stop stopColor="hsl(var(--primary))"/>
+            <stop offset="0.5" stopColor="hsl(var(--secondary))"/>
+            <stop offset="1" stopColor="hsl(var(--accent))"/>
           </linearGradient>
-          
-          <radialGradient id="iconCore" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="hsl(var(--secondary))"/>
-            <stop offset="100%" stopColor="hsl(var(--primary))"/>
-          </radialGradient>
+          <filter id={`${id}-icon-shadow`} x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="6" stdDeviation="7" floodColor="#02030b" floodOpacity="0.6"/>
+          </filter>
         </defs>
-        
-        <circle cx="16" cy="16" r="15" fill="hsl(var(--background))" stroke="url(#iconGradient)" strokeWidth="1"/>
-        <path d="M16 6 L8 22 L24 22 Z" fill="url(#iconGradient)" opacity="0.8"/>
-        <path d="M6 24 L12 18 L16 14 L20 10 L26 6" stroke="hsl(var(--primary))" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-        <circle cx="8" cy="10" r="1" fill="hsl(var(--primary))" opacity="0.7"/>
-        <circle cx="24" cy="8" r="1" fill="hsl(var(--secondary))" opacity="0.6"/>
-        <circle cx="10" cy="26" r="1" fill="hsl(var(--accent))" opacity="0.7"/>
-        <circle cx="22" cy="24" r="1" fill="hsl(var(--primary))" opacity="0.6"/>
-        <circle cx="16" cy="16" r="3" fill="url(#iconCore)"/>
-        <circle cx="16" cy="16" r="1.5" fill="hsl(var(--secondary))"/>
+        <g filter={`url(#${id}-icon-shadow)`}>
+          <path d="M60 8 L107 34 V86 L60 112 L13 86 V34 Z" fill="hsl(var(--background))" stroke={`url(#${id}-icon-ring)`} strokeWidth="3"/>
+          <path d="M60 18 C48 37 37 58 25 91" stroke="hsl(var(--primary))" strokeWidth="17" strokeLinecap="round"/>
+          <path d="M60 18 C71 37 83 60 95 91" stroke="hsl(var(--accent))" strokeWidth="17" strokeLinecap="round"/>
+          <path d="M25 91 C47 80 73 80 95 91" stroke="hsl(var(--secondary))" strokeWidth="17" strokeLinecap="round"/>
+          <path d="M60 18 C48 37 37 58 25 91" stroke="rgba(255,255,255,0.32)" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M60 18 C71 37 83 60 95 91" stroke="rgba(255,255,255,0.22)" strokeWidth="3" strokeLinecap="round"/>
+          <path d="M25 91 C47 80 73 80 95 91" stroke="rgba(255,255,255,0.24)" strokeWidth="3" strokeLinecap="round"/>
+        </g>
+        <path d="M60 43 L76 59 L60 75 L44 59 Z" fill="hsl(var(--background))" stroke={`url(#${id}-icon-ring)`} strokeWidth="4"/>
+        <path d="M60 51 L68 59 L60 67 L52 59 Z" fill={`url(#${id}-icon-ring)`}/>
       </svg>
     );
   }
@@ -85,38 +85,11 @@ export function Logo({
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
-        <g opacity="0.3" stroke="currentColor" strokeWidth="0.5" fill="currentColor">
-          <path d="M25 35 L45 25 L65 40 L85 30 L95 50" fill="none"/>
-          <path d="M20 65 L40 55 L60 70 L80 60 L100 80" fill="none"/>
-          <circle cx="25" cy="35" r="1.5"/>
-          <circle cx="45" cy="25" r="1"/>
-          <circle cx="65" cy="40" r="1.5"/>
-          <circle cx="85" cy="30" r="1"/>
-          <circle cx="95" cy="50" r="1.5"/>
-          <circle cx="20" cy="65" r="1"/>
-          <circle cx="40" cy="55" r="1.5"/>
-          <circle cx="60" cy="70" r="1"/>
-          <circle cx="80" cy="60" r="1.5"/>
-          <circle cx="100" cy="80" r="1"/>
-        </g>
-        
-        <path d="M60 20 L35 80 L85 80 Z" fill="currentColor" opacity="0.8"/>
-        
-        <path d="M30 75 L42 65 L54 55 L66 45 L78 35 L90 25" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              fill="none"
-              strokeLinecap="round"/>
-        
-        <circle cx="30" cy="75" r="2" fill="currentColor"/>
-        <circle cx="42" cy="65" r="2" fill="currentColor"/>
-        <circle cx="54" cy="55" r="2" fill="currentColor"/>
-        <circle cx="66" cy="45" r="2" fill="currentColor"/>
-        <circle cx="78" cy="35" r="2" fill="currentColor"/>
-        <circle cx="90" cy="25" r="2" fill="currentColor"/>
-        
-        <circle cx="60" cy="50" r="6" fill="currentColor"/>
-        <circle cx="60" cy="50" r="3" fill="hsl(var(--background))"/>
+        <path d="M60 13 C46 35 34 59 20 96" stroke="currentColor" strokeWidth="18" strokeLinecap="round"/>
+        <path d="M60 13 C74 36 86 61 100 96" stroke="currentColor" strokeWidth="18" strokeLinecap="round" opacity="0.84"/>
+        <path d="M20 96 C45 82 75 82 100 96" stroke="currentColor" strokeWidth="18" strokeLinecap="round" opacity="0.68"/>
+        <path d="M60 39 L80 59 L60 79 L40 59 Z" fill="hsl(var(--background))" stroke="currentColor" strokeWidth="5"/>
+        <path d="M60 51 L68 59 L60 67 L52 59 Z" fill="currentColor"/>
       </svg>
     );
   }
@@ -132,50 +105,25 @@ export function Logo({
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id="defaultGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(var(--primary))"/>
-          <stop offset="100%" stopColor="hsl(var(--secondary))"/>
+        <linearGradient id={`${id}-default-aperture`} x1="39" y1="38" x2="82" y2="80">
+          <stop stopColor="hsl(var(--primary))"/>
+          <stop offset="0.48" stopColor="hsl(var(--secondary))"/>
+          <stop offset="1" stopColor="hsl(var(--accent))"/>
         </linearGradient>
-        
-        <radialGradient id="defaultCore" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="hsl(var(--secondary))"/>
-          <stop offset="50%" stopColor="hsl(var(--accent))"/>
-          <stop offset="100%" stopColor="hsl(var(--primary))"/>
-        </radialGradient>
+        <filter id={`${id}-default-depth`} x="-25%" y="-25%" width="150%" height="150%">
+          <feDropShadow dx="0" dy="8" stdDeviation="9" floodColor="#02030b" floodOpacity="0.52"/>
+        </filter>
       </defs>
-      
-      <g opacity="0.6">
-        <path d="M25 35 L45 25 L65 40 L85 30 L95 50" stroke="hsl(var(--primary))" strokeWidth="1" opacity="0.4" fill="none"/>
-        <path d="M20 65 L40 55 L60 70 L80 60 L100 80" stroke="hsl(var(--secondary))" strokeWidth="1" opacity="0.4" fill="none"/>
-        <circle cx="25" cy="35" r="2" fill="hsl(var(--primary))" opacity="0.7"/>
-        <circle cx="45" cy="25" r="1.5" fill="hsl(var(--secondary))" opacity="0.6"/>
-        <circle cx="65" cy="40" r="2" fill="hsl(var(--accent))" opacity="0.5"/>
-        <circle cx="85" cy="30" r="1.5" fill="hsl(var(--primary))" opacity="0.6"/>
-        <circle cx="95" cy="50" r="2" fill="hsl(var(--secondary))" opacity="0.5"/>
+      <g filter={`url(#${id}-default-depth)`}>
+        <path d="M60 13 C46 35 34 59 20 96" stroke="hsl(var(--primary))" strokeWidth="18" strokeLinecap="round"/>
+        <path d="M60 13 C74 36 86 61 100 96" stroke="hsl(var(--accent))" strokeWidth="18" strokeLinecap="round"/>
+        <path d="M20 96 C45 82 75 82 100 96" stroke="hsl(var(--secondary))" strokeWidth="18" strokeLinecap="round"/>
+        <path d="M60 13 C46 35 34 59 20 96" stroke="rgba(255,255,255,0.34)" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M60 13 C74 36 86 61 100 96" stroke="rgba(255,255,255,0.24)" strokeWidth="3" strokeLinecap="round"/>
+        <path d="M20 96 C45 82 75 82 100 96" stroke="rgba(255,255,255,0.22)" strokeWidth="3" strokeLinecap="round"/>
       </g>
-      
-      <path d="M60 20 L35 80 L85 80 Z" 
-            fill="url(#defaultGradient)" 
-            opacity="0.9"
-            stroke="hsl(var(--primary))" 
-            strokeWidth="1"/>
-      
-      <g strokeWidth="2.5" fill="none">
-        <path d="M30 75 L42 65 L54 55 L66 45 L78 35 L90 25" 
-              stroke="url(#defaultGradient)" 
-              strokeLinecap="round"
-              strokeLinejoin="round"/>
-        
-        <circle cx="30" cy="75" r="3" fill="hsl(var(--primary))"/>
-        <circle cx="42" cy="65" r="3" fill="hsl(var(--secondary))"/>
-        <circle cx="54" cy="55" r="3" fill="hsl(var(--accent))"/>
-        <circle cx="66" cy="45" r="3" fill="hsl(var(--primary))"/>
-        <circle cx="78" cy="35" r="3" fill="hsl(var(--secondary))"/>
-        <circle cx="90" cy="25" r="3" fill="hsl(var(--accent))"/>
-      </g>
-      
-      <circle cx="60" cy="50" r="8" fill="url(#defaultCore)"/>
-      <circle cx="60" cy="50" r="4" fill="hsl(var(--secondary))"/>
+      <path d="M60 39 L80 59 L60 79 L40 59 Z" fill="hsl(var(--background))" stroke={`url(#${id}-default-aperture)`} strokeWidth="5"/>
+      <path d="M60 51 L68 59 L60 67 L52 59 Z" fill={`url(#${id}-default-aperture)`}/>
     </svg>
   );
 }

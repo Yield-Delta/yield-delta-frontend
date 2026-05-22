@@ -1,232 +1,119 @@
-import React from 'react';
+import React, { useId } from 'react';
 
-export function Logo3D({ size = 120, className = "" }) {
+interface Logo3DProps {
+  size?: number;
+  className?: string;
+}
+
+interface LogoHorizontal3DProps {
+  height?: number;
+  className?: string;
+}
+
+export function Logo3D({ size = 120, className = '' }: Logo3DProps) {
+  const id = useId().replace(/:/g, '');
+
   return (
     <div className={`relative ${className}`} style={{ width: size, height: size }}>
-      <svg 
-        width={size} 
-        height={size} 
-        viewBox="0 0 120 120" 
-        className="absolute inset-0 drop-shadow-lg"
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 120 120"
+        className="absolute inset-0"
         style={{
-          filter: 'drop-shadow(0 0 20px rgba(155, 93, 229, 0.5))',
-          transform: 'perspective(1000px) rotateX(10deg) rotateY(-10deg)'
+          filter: 'drop-shadow(0 10px 20px rgba(3, 5, 18, 0.52))',
+          transform: 'perspective(900px) rotateX(9deg) rotateY(-11deg)',
         }}
       >
         <defs>
-          <linearGradient id="logo3d-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#00f5d4"/>
-            <stop offset="50%" stopColor="#9b5de5"/>
-            <stop offset="100%" stopColor="#ff206e"/>
+          <linearGradient id={`${id}-aperture`} x1="39" y1="38" x2="82" y2="80">
+            <stop stopColor="#00f5d4" />
+            <stop offset="0.48" stopColor="#9b5de5" />
+            <stop offset="1" stopColor="#ff206e" />
           </linearGradient>
-          
-          <radialGradient id="logo3d-core" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#9b5de5"/>
-            <stop offset="50%" stopColor="#ff206e"/>
-            <stop offset="100%" stopColor="#00f5d4"/>
-          </radialGradient>
-          
-          <filter id="logo3d-glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge> 
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
+          <filter id={`${id}-glow`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="4.5" />
           </filter>
-          
-          <filter id="logo3d-depth">
-            <feDropShadow dx="2" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3"/>
+          <filter id={`${id}-depth`} x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#02030b" floodOpacity="0.55" />
           </filter>
         </defs>
-        
-        {/* Neural Network Layer */}
-        <g opacity="0.6" filter="url(#logo3d-depth)">
-          <path d="M25 35 L45 25 L65 40 L85 30 L95 50" 
-                stroke="#00f5d4" 
-                strokeWidth="1.5" 
-                opacity="0.4" 
-                fill="none"/>
-          <path d="M20 65 L40 55 L60 70 L80 60 L100 80" 
-                stroke="#9b5de5" 
-                strokeWidth="1.5" 
-                opacity="0.4" 
-                fill="none"/>
-          
-          {/* Animated neural nodes */}
-          <circle cx="25" cy="35" r="2.5" fill="#00f5d4" opacity="0.8">
-            <animate attributeName="r" values="2;3.5;2" dur="3s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="45" cy="25" r="2" fill="#9b5de5" opacity="0.7">
-            <animate attributeName="r" values="1.5;3;1.5" dur="2.5s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="65" cy="40" r="2.5" fill="#ff206e" opacity="0.6">
-            <animate attributeName="r" values="2;3.5;2" dur="3.5s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="85" cy="30" r="2" fill="#00f5d4" opacity="0.7"/>
-          <circle cx="95" cy="50" r="2.5" fill="#9b5de5" opacity="0.6"/>
+
+        <g opacity="0.55" filter={`url(#${id}-glow)`}>
+          <path d="M60 13 C46 35 34 59 20 96" stroke="#00f5d4" strokeWidth="20" strokeLinecap="round" />
+          <path d="M60 13 C74 36 86 61 100 96" stroke="#ff206e" strokeWidth="20" strokeLinecap="round" />
+          <path d="M20 96 C45 82 75 82 100 96" stroke="#9b5de5" strokeWidth="20" strokeLinecap="round" />
         </g>
-        
-        {/* Greek Delta with 3D effect */}
-        <g filter="url(#logo3d-depth)">
-          <path d="M60 20 L35 80 L85 80 Z" 
-                fill="url(#logo3d-primary)" 
-                opacity="0.9"
-                stroke="#00f5d4" 
-                strokeWidth="1.5"/>
-          
-          {/* 3D depth lines */}
-          <path d="M60 20 L62 18 L87 78 L85 80 Z" 
-                fill="#9b5de5" 
-                opacity="0.6"/>
-          <path d="M85 80 L87 78 L37 78 L35 80 Z" 
-                fill="#00f5d4" 
-                opacity="0.4"/>
-        </g>
-        
-        {/* Stock Growth Chart with animation */}
-        <g strokeWidth="3" fill="none" filter="url(#logo3d-depth)">
-          <path d="M30 75 L42 65 L54 55 L66 45 L78 35 L90 25" 
-                stroke="url(#logo3d-primary)" 
-                strokeLinecap="round"
-                strokeLinejoin="round">
-            <animate 
-              attributeName="strokeDasharray" 
-              values="0,200;200,200" 
-              dur="4s" 
-              repeatCount="indefinite"/>
-            <animate 
-              attributeName="strokeDashoffset" 
-              values="200;0" 
-              dur="4s" 
-              repeatCount="indefinite"/>
+
+        <g filter={`url(#${id}-depth)`}>
+          <path d="M60 13 C46 35 34 59 20 96" stroke="#00f5d4" strokeWidth="18" strokeLinecap="round" />
+          <path d="M60 13 C74 36 86 61 100 96" stroke="#ff206e" strokeWidth="18" strokeLinecap="round" />
+          <path d="M20 96 C45 82 75 82 100 96" stroke="#9b5de5" strokeWidth="18" strokeLinecap="round" />
+          <path d="M60 13 C46 35 34 59 20 96" stroke="rgba(255,255,255,0.38)" strokeWidth="3.5" strokeLinecap="round">
+            <animate attributeName="stroke-dasharray" values="0 170;56 114;0 170" dur="4.4s" repeatCount="indefinite" />
           </path>
-          
-          {/* 3D chart points */}
-          <circle cx="30" cy="75" r="4" fill="#00f5d4" stroke="#00f5d4" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="42" cy="65" r="4" fill="#9b5de5" stroke="#9b5de5" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="2.5s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="54" cy="55" r="4" fill="#ff206e" stroke="#ff206e" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="66" cy="45" r="4" fill="#00f5d4" stroke="#00f5d4" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="2.2s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="78" cy="35" r="4" fill="#9b5de5" stroke="#9b5de5" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="2.8s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="90" cy="25" r="4" fill="#ff206e" stroke="#ff206e" strokeWidth="2">
-            <animate attributeName="r" values="3;5;3" dur="3.2s" repeatCount="indefinite"/>
-          </circle>
-        </g>
-        
-        {/* AI Core with intense glow */}
-        <g filter="url(#logo3d-glow)">
-          <circle cx="60" cy="50" r="10" fill="url(#logo3d-core)">
-            <animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/>
-            <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="60" cy="50" r="6" fill="#9b5de5">
-            <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite"/>
-          </circle>
-          
-          <circle cx="60" cy="50" r="3" fill="#ffffff" opacity="0.9">
-            <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite"/>
-          </circle>
-        </g>
-        
-        {/* Energy beams connecting elements */}
-        <g opacity="0.5">
-          <path d="M60 50 L60 20" 
-                stroke="#9b5de5" 
-                strokeWidth="2" 
-                strokeDasharray="3,3">
-            <animate attributeName="strokeDashoffset" values="0;-15" dur="1s" repeatCount="indefinite"/>
+          <path d="M60 13 C74 36 86 61 100 96" stroke="rgba(255,255,255,0.28)" strokeWidth="3.5" strokeLinecap="round">
+            <animate attributeName="stroke-dasharray" values="0 170;56 114;0 170" dur="4.4s" begin="0.35s" repeatCount="indefinite" />
           </path>
-          <path d="M60 50 L30 75" 
-                stroke="#00f5d4" 
-                strokeWidth="2" 
-                strokeDasharray="3,3">
-            <animate attributeName="strokeDashoffset" values="0;-15" dur="1.2s" repeatCount="indefinite"/>
-          </path>
-          <path d="M60 50 L90 25" 
-                stroke="#ff206e" 
-                strokeWidth="2" 
-                strokeDasharray="3,3">
-            <animate attributeName="strokeDashoffset" values="0;-15" dur="0.8s" repeatCount="indefinite"/>
+          <path d="M20 96 C45 82 75 82 100 96" stroke="rgba(255,255,255,0.24)" strokeWidth="3.5" strokeLinecap="round">
+            <animate attributeName="stroke-dasharray" values="0 170;56 114;0 170" dur="4.4s" begin="0.7s" repeatCount="indefinite" />
           </path>
         </g>
+
+        <path d="M60 39 L80 59 L60 79 L40 59 Z" fill="#070914" stroke={`url(#${id}-aperture)`} strokeWidth="5" />
+        <path d="M60 51 L68 59 L60 67 L52 59 Z" fill={`url(#${id}-aperture)`}>
+          <animate attributeName="opacity" values="0.72;1;0.72" dur="2.2s" repeatCount="indefinite" />
+        </path>
       </svg>
     </div>
   );
 }
 
-export function LogoHorizontal3D({ height = 60, className = "" }) {
-  const width = (height / 60) * 200;
-  
+export function LogoHorizontal3D({ height = 60, className = '' }: LogoHorizontal3DProps) {
+  const id = useId().replace(/:/g, '');
+  const width = (height / 60) * 224;
+
   return (
     <div className={`relative ${className}`} style={{ width, height }}>
-      <svg 
-        width={width} 
-        height={height} 
-        viewBox="0 0 200 60" 
+      <svg
+        width={width}
+        height={height}
+        viewBox="0 0 224 60"
         className="absolute inset-0"
         style={{
-          filter: 'drop-shadow(0 0 15px rgba(155, 93, 229, 0.3))',
-          transform: 'perspective(800px) rotateX(5deg)'
+          filter: 'drop-shadow(0 8px 14px rgba(3, 5, 18, 0.42))',
+          transform: 'perspective(800px) rotateX(4deg)',
         }}
       >
         <defs>
-          <linearGradient id="horizontal3d-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#00f5d4"/>
-            <stop offset="50%" stopColor="#9b5de5"/>
-            <stop offset="100%" stopColor="#ff206e"/>
+          <linearGradient id={`${id}-word`} x1="62" y1="0" x2="208" y2="0">
+            <stop stopColor="#f6fbff" />
+            <stop offset="0.58" stopColor="#d5ddfb" />
+            <stop offset="1" stopColor="#00f5d4" />
+          </linearGradient>
+          <linearGradient id={`${id}-core`} x1="18" y1="11" x2="50" y2="49">
+            <stop stopColor="#00f5d4" />
+            <stop offset="0.48" stopColor="#9b5de5" />
+            <stop offset="1" stopColor="#ff206e" />
           </linearGradient>
         </defs>
-        
-        {/* Logo section */}
-        <g transform="translate(5, 5)">
-          {/* Mini Delta */}
-          <path d="M25 5 L12 40 L38 40 Z" 
-                fill="url(#horizontal3d-gradient)" 
-                opacity="0.9"/>
-          
-          {/* Mini growth chart */}
-          <path d="M8 38 L16 32 L24 26 L32 20 L40 14" 
-                stroke="url(#horizontal3d-gradient)" 
-                strokeWidth="2.5" 
-                fill="none" 
-                strokeLinecap="round"/>
-          
-          {/* AI Core */}
-          <circle cx="25" cy="25" r="5" fill="#9b5de5">
-            <animate attributeName="r" values="4;6;4" dur="2s" repeatCount="indefinite"/>
-          </circle>
-          <circle cx="25" cy="25" r="2.5" fill="#ffffff" opacity="0.9"/>
+
+        <g transform="translate(4 3)">
+          <path d="M28 7 C22 17 16 29 9 47" stroke="#00f5d4" strokeWidth="8" strokeLinecap="round" />
+          <path d="M28 7 C34 17 40 30 47 47" stroke="#ff206e" strokeWidth="8" strokeLinecap="round" />
+          <path d="M9 47 C20 41 36 41 47 47" stroke="#9b5de5" strokeWidth="8" strokeLinecap="round" />
+          <path d="M28 20 L39 31 L28 42 L17 31 Z" fill="#070914" stroke={`url(#${id}-core)`} strokeWidth="2.5" />
+          <path d="M28 27 L32 31 L28 35 L24 31 Z" fill={`url(#${id}-core)`}>
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="2.2s" repeatCount="indefinite" />
+          </path>
         </g>
-        
-        {/* 3D Text */}
-        <g transform="translate(65, 15)">
-          <text x="0" y="18" 
-                fontFamily="Arial, sans-serif" 
-                fontSize="18" 
-                fontWeight="bold" 
-                fill="url(#horizontal3d-gradient)"
-                style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.3))' }}>
-            SEI DLP
-          </text>
-          <text x="0" y="35" 
-                fontFamily="Arial, sans-serif" 
-                fontSize="11" 
-                fill="#666" 
-                opacity="0.8">
-            Dynamic Liquidity Protocol
-          </text>
-        </g>
+
+        <text x="66" y="29" fontFamily="inherit" fontSize="21" fontWeight="800" letterSpacing="0" fill={`url(#${id}-word)`}>
+          Yield Delta
+        </text>
+        <text x="67" y="45" fontFamily="inherit" fontSize="9" fontWeight="700" letterSpacing="0" fill="#9ba8c9">
+          MULTICHAIN VAULTS
+        </text>
       </svg>
     </div>
   );

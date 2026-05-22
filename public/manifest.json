@@ -1,7 +1,7 @@
 {
-  "name": "Yield Delta - Dynamic Liquidity Vaults on SEI",
+  "name": "Yield Delta - Multichain Dynamic Liquidity Vaults",
   "short_name": "Yield Delta",
-  "description": "Yield Delta: AI-driven yield aggregation, concentrated liquidity optimization, and impermanent loss hedging on SEI EVM.",
+  "description": "Yield Delta: AI-driven yield aggregation, concentrated liquidity optimization, and impermanent loss hedging across chains.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",

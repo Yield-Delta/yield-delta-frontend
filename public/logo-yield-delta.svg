@@ -1,170 +1,25 @@
 <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Enhanced Yield Delta gradients -->
-    <linearGradient id="yieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f5d4"/>
-      <stop offset="50%" stop-color="#9b5de5"/>
-      <stop offset="100%" stop-color="#ff206e"/>
+    <linearGradient id="aperture" x1="39" y1="38" x2="82" y2="80" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00f5d4"/>
+      <stop offset="0.48" stop-color="#9b5de5"/>
+      <stop offset="1" stop-color="#ff206e"/>
     </linearGradient>
-    
-    <radialGradient id="deltaCore" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#9b5de5"/>
-      <stop offset="50%" stop-color="#ff206e"/>
-      <stop offset="100%" stop-color="#00f5d4"/>
-    </radialGradient>
-    
-    <linearGradient id="yieldFlow" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#00f5d4" stop-opacity="0.8"/>
-      <stop offset="50%" stop-color="#9b5de5" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="#ff206e" stop-opacity="1"/>
-    </linearGradient>
-    
-    <!-- Enhanced glow filter -->
-    <filter id="deltaGlow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-      <feMerge> 
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-    
-    <!-- Pulse filter -->
-    <filter id="pulse">
-      <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
-      <feMerge> 
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="4.5"/>
     </filter>
   </defs>
-  
-  <!-- Yield Flow Background (representing liquidity flows) -->
-  <g opacity="0.4">
-    <!-- Curved yield streams -->
-    <path d="M10 80 Q30 60 50 65 T90 55" stroke="#00f5d4" stroke-width="2" fill="none" opacity="0.6">
-      <animate attributeName="stroke-dasharray" values="0,100;50,50;100,0" dur="4s" repeatCount="indefinite"/>
-    </path>
-    <path d="M15 90 Q35 70 55 75 T95 65" stroke="#9b5de5" stroke-width="1.5" fill="none" opacity="0.5">
-      <animate attributeName="stroke-dasharray" values="0,100;50,50;100,0" dur="3.5s" repeatCount="indefinite"/>
-    </path>
-    <path d="M20 100 Q40 80 60 85 T100 75" stroke="#ff206e" stroke-width="1" fill="none" opacity="0.4">
-      <animate attributeName="stroke-dasharray" values="0,100;50,50;100,0" dur="3s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Yield particles -->
-    <circle cx="25" cy="75" r="2" fill="#00f5d4" opacity="0.7">
-      <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="translate" values="0,0;10,-5;20,-10" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="45" cy="65" r="1.5" fill="#9b5de5" opacity="0.6">
-      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="2.5s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="translate" values="0,0;8,-4;16,-8" dur="3.5s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="65" cy="70" r="2" fill="#ff206e" opacity="0.5">
-      <animate attributeName="opacity" values="0.2;0.7;0.2" dur="3s" repeatCount="indefinite"/>
-      <animateTransform attributeName="transform" type="translate" values="0,0;6,-3;12,-6" dur="4s" repeatCount="indefinite"/>
-    </circle>
+  <g opacity="0.42" filter="url(#glow)">
+    <path d="M60 13 C46 35 34 59 20 96" stroke="#00f5d4" stroke-width="22" stroke-linecap="round"/>
+    <path d="M60 13 C74 36 86 61 100 96" stroke="#ff206e" stroke-width="22" stroke-linecap="round"/>
+    <path d="M20 96 C45 82 75 82 100 96" stroke="#9b5de5" stroke-width="22" stroke-linecap="round"/>
   </g>
-  
-  <!-- Enhanced Greek Delta (representing change/delta) -->
-  <g filter="url(#deltaGlow)">
-    <!-- Outer delta with gradient -->
-    <path d="M60 15 L30 85 L90 85 Z" 
-          fill="url(#yieldGradient)" 
-          opacity="0.9"
-          stroke="#00f5d4" 
-          stroke-width="1.5"/>
-    
-    <!-- Inner delta for depth -->
-    <path d="M60 25 L40 75 L80 75 Z" 
-          fill="none"
-          stroke="url(#yieldGradient)" 
-          stroke-width="1" 
-          opacity="0.6"/>
-  </g>
-  
-  <!-- Advanced Yield Chart (multi-layer growth) -->
-  <g stroke-width="2.5" fill="none">
-    <!-- Main yield curve -->
-    <path d="M25 80 L35 70 L45 60 L55 45 L65 35 L75 25 L85 15" 
-          stroke="url(#yieldFlow)" 
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          filter="url(#pulse)">
-      <animate attributeName="stroke-dasharray" values="0,200;100,100;200,0" dur="4s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Secondary yield curve -->
-    <path d="M30 85 L40 75 L50 65 L60 50 L70 40 L80 30" 
-          stroke="#00f5d4" 
-          stroke-width="1.5"
-          stroke-linecap="round" 
-          opacity="0.7">
-      <animate attributeName="stroke-dasharray" values="0,150;75,75;150,0" dur="3.5s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Yield data points -->
-    <circle cx="25" cy="80" r="3" fill="#00f5d4" stroke="#00f5d4" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="35" cy="70" r="3" fill="#9b5de5" stroke="#9b5de5" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="2.2s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="45" cy="60" r="3" fill="#ff206e" stroke="#ff206e" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="2.4s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="55" cy="45" r="3" fill="#00f5d4" stroke="#00f5d4" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="2.6s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="65" cy="35" r="3" fill="#9b5de5" stroke="#9b5de5" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="2.8s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="75" cy="25" r="3" fill="#ff206e" stroke="#ff206e" stroke-width="1">
-      <animate attributeName="r" values="2;4;2" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="85" cy="15" r="4" fill="url(#yieldGradient)" stroke="url(#yieldGradient)" stroke-width="1">
-      <animate attributeName="r" values="3;5;3" dur="2s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-  
-  <!-- Enhanced AI Core (pulsing optimization engine) -->
-  <g filter="url(#deltaGlow)">
-    <circle cx="60" cy="50" r="10" fill="url(#deltaCore)" opacity="0.8">
-      <animate attributeName="r" values="8;14;8" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite"/>
-    </circle>
-    
-    <!-- Core layers -->
-    <circle cx="60" cy="50" r="6" fill="#9b5de5" opacity="0.9">
-      <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    
-    <circle cx="60" cy="50" r="3" fill="#00f5d4" opacity="1">
-      <animate attributeName="r" values="2;4;2" dur="1.5s" repeatCount="indefinite"/>
-    </circle>
-  </g>
-  
-  <!-- Delta connections (showing optimization pathways) -->
-  <g opacity="0.5">
-    <!-- Connection from core to delta peak -->
-    <path d="M60 50 L60 15" stroke="#9b5de5" stroke-width="2" stroke-dasharray="3,3">
-      <animate attributeName="stroke-dashoffset" values="0;-12" dur="1s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Connections to yield points -->
-    <path d="M60 50 L25 80" stroke="#00f5d4" stroke-width="1.5" stroke-dasharray="2,2">
-      <animate attributeName="stroke-dashoffset" values="0;-8" dur="1.2s" repeatCount="indefinite"/>
-    </path>
-    <path d="M60 50 L85 15" stroke="#ff206e" stroke-width="1.5" stroke-dasharray="2,2">
-      <animate attributeName="stroke-dashoffset" values="0;-8" dur="0.8s" repeatCount="indefinite"/>
-    </path>
-    
-    <!-- Orbital rings around core -->
-    <circle cx="60" cy="50" r="15" fill="none" stroke="url(#yieldGradient)" stroke-width="0.5" opacity="0.3">
-      <animate attributeName="r" values="15;18;15" dur="4s" repeatCount="indefinite"/>
-    </circle>
-    <circle cx="60" cy="50" r="20" fill="none" stroke="url(#yieldGradient)" stroke-width="0.5" opacity="0.2">
-      <animate attributeName="r" values="20;23;20" dur="5s" repeatCount="indefinite"/>
-    </circle>
-  </g>
+  <path d="M60 13 C46 35 34 59 20 96" stroke="#00f5d4" stroke-width="18" stroke-linecap="round"/>
+  <path d="M60 13 C74 36 86 61 100 96" stroke="#ff206e" stroke-width="18" stroke-linecap="round"/>
+  <path d="M20 96 C45 82 75 82 100 96" stroke="#9b5de5" stroke-width="18" stroke-linecap="round"/>
+  <path d="M60 13 C46 35 34 59 20 96" stroke="white" stroke-opacity="0.34" stroke-width="3" stroke-linecap="round"/>
+  <path d="M60 13 C74 36 86 61 100 96" stroke="white" stroke-opacity="0.24" stroke-width="3" stroke-linecap="round"/>
+  <path d="M20 96 C45 82 75 82 100 96" stroke="white" stroke-opacity="0.22" stroke-width="3" stroke-linecap="round"/>
+  <path d="M60 39 L80 59 L60 79 L40 59 Z" fill="#070914" stroke="url(#aperture)" stroke-width="5"/>
+  <path d="M60 51 L68 59 L60 67 L52 59 Z" fill="url(#aperture)"/>
 </svg>
