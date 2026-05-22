@@ -66,15 +66,6 @@ const getVaultColor = (strategy: string) =>
     arbitrage: '#f87171',
   } as Record<string, string>)[strategy] ?? '#4ca2ff'
 
-const coinTypeForVault = (depositToken: string): string => {
-  const t = depositToken.toLowerCase()
-  if (t === 'sui') return SUI_VAULT_PROGRAMS.suiType
-  if (t.includes('usdc')) return SUI_VAULT_PROGRAMS.suiUsdcType
-  if (t.includes('usdt')) return SUI_VAULT_PROGRAMS.suiUsdtType
-  if (t.includes('usd')) return SUI_VAULT_PROGRAMS.suiUsdeType
-  return SUI_VAULT_PROGRAMS.suiType
-}
-
 export default function SuiDepositModal({
   vault,
   isOpen,
@@ -94,7 +85,8 @@ export default function SuiDepositModal({
 
   const vaultColor = vault ? getVaultColor(vault.strategy) : '#4ca2ff'
   const riskLevel = vault ? getRiskLevel(vault.apy) : 'Medium'
-  const depositToken = vault?.depositToken || 'SUI'
+  // The current Sui testnet Move package uses SUI as its settlement coin.
+  const depositToken = 'SUI'
 
   const numericBalance = parseFloat(balance || '0')
   const numericAmount = parseFloat(depositAmount || '0')
@@ -146,7 +138,7 @@ export default function SuiDepositModal({
         {
           vaultObjectId: vault.address,
           depositToken: vault.depositToken,
-          coinType: coinTypeForVault(vault.depositToken),
+          coinType: SUI_VAULT_PROGRAMS.suiType,
         },
         depositAmount
       )

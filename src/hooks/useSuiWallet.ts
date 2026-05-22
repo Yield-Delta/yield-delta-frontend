@@ -3,21 +3,27 @@
 import {
   useWalletConnection,
   useCurrentAccount,
+  useCurrentNetwork,
   useDAppKit,
   useCurrentClient,
 } from '@mysten/dapp-kit-react'
 import { useQuery } from '@tanstack/react-query'
+import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
 
 export function useSuiWallet() {
   const { status, wallet } = useWalletConnection()
   const account = useCurrentAccount()
   const dAppKit = useDAppKit()
   const client = useCurrentClient()
+  const network = useCurrentNetwork()
 
   const { data: balanceData } = useQuery({
-    queryKey: ['suiBalance', account?.address],
+    queryKey: ['suiBalance', network, account?.address],
     queryFn: async () => {
-      const result = await client.core.listBalances({ owner: account!.address })
+      const result = await client.core.getBalance({
+        owner: account!.address,
+        coinType: SUI_VAULT_PROGRAMS.suiType,
+      })
       return result
     },
     enabled: !!account,
@@ -25,11 +31,9 @@ export function useSuiWallet() {
     refetchInterval: 60_000,
   })
 
-  const suiBalance = balanceData?.balances?.find(
-    (b) => b.coinType === '0x2::sui::SUI'
-  )
-  const formattedBalance = suiBalance
-    ? (Number(suiBalance.coinBalance) / 1_000_000_000).toFixed(4)
+  // Use total balance: testnet funds can live in coin objects or address balance.
+  const formattedBalance = balanceData?.balance
+    ? (Number(balanceData.balance.balance) / 1_000_000_000).toFixed(4)
     : '0'
 
   const isConnected = status === 'connected'

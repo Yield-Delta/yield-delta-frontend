@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDAppKit, useCurrentAccount, useCurrentClient } from '@mysten/dapp-kit-react'
-import { Transaction, coinWithBalance } from '@mysten/sui/transactions'
+import { Transaction } from '@mysten/sui/transactions'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
 
 // Maps each vault shared-object ID → its Move module name
@@ -51,20 +51,14 @@ export function useSuiVault() {
     setIsDepositing(true)
     try {
       const coinType = params.coinType ?? SUI_VAULT_PROGRAMS.suiType
-      const isSui = coinType === SUI_VAULT_PROGRAMS.suiType
+      if (coinType !== SUI_VAULT_PROGRAMS.suiType) {
+        throw new Error('The deployed Sui testnet vaults currently accept SUI deposits only')
+      }
+
       const amountMist = BigInt(Math.round(amountRaw * 1_000_000_000))
 
       const tx = new Transaction()
-      tx.setSender(account.address) // required when using coinWithBalance
-
-      let depositCoin
-      if (isSui) {
-        // Split from gas coin — standard SUI pattern
-        ;[depositCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)])
-      } else {
-        // coinWithBalance auto-selects, merges, and splits non-SUI tokens
-        depositCoin = coinWithBalance({ balance: amountMist, type: coinType })
-      }
+      const [depositCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)])
 
       // deposit(vault: &mut VaultT, coin_in: Coin<SUI>, ctx: &mut TxContext): u64
       // Returned u64 (shares) has `drop` ability — safe to ignore in the PTB
