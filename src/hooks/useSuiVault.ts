@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDAppKit, useCurrentAccount, useCurrentClient } from '@mysten/dapp-kit-react'
-import { Transaction } from '@mysten/sui/transactions'
+import { Transaction, coinWithBalance } from '@mysten/sui/transactions'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
 
 // Maps each vault shared-object ID → its Move module name
@@ -58,7 +58,8 @@ export function useSuiVault() {
       const amountMist = BigInt(Math.round(amountRaw * 1_000_000_000))
 
       const tx = new Transaction()
-      const [depositCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)])
+      tx.setSender(account.address)
+      const depositCoin = coinWithBalance({ balance: amountMist })
 
       // deposit(vault: &mut VaultT, coin_in: Coin<SUI>, ctx: &mut TxContext): u64
       // Returned u64 (shares) has `drop` ability — safe to ignore in the PTB
