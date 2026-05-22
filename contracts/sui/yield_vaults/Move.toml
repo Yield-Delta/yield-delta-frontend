@@ -1,8 +1,5 @@
 [package]
 name = "yield_vaults"
-edition = "2026"
+edition = "2024"
 
 [dependencies]
-# Sui framework and stdlib are implicit in Sui CLI 1.45+
-
-[dev-dependencies]
