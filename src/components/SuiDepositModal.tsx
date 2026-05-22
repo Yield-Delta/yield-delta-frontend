@@ -446,7 +446,7 @@ export default function SuiDepositModal({
                 <div className={styles.feeNoteInner}>
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-300/60" />
                   <p>
-                    Deposits are simulated on Sui testnet. Owned BalanceManager objects route swaps on Sui&#39;s parallel execution fast-path, minimising latency during market events.
+                    Transactions execute on Sui testnet. Owned BalanceManager objects route swaps on Sui&#39;s parallel execution fast-path, minimising latency during market events.
                   </p>
                 </div>
               </div>

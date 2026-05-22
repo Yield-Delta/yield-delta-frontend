@@ -24,12 +24,10 @@ use sui::event;
 #[error]
 const EZeroAmount: vector<u8> = b"Amount must be greater than zero";
 #[error]
-#[allow(unused_const)]
 const EHedgeRatioExceedsMax: vector<u8> = b"Proposed h* exceeds h_bar(alpha) constraint";
 #[error]
 const EInsufficientShares: vector<u8> = b"Insufficient shares to withdraw";
 #[error]
-#[allow(unused_const)]
 const ETooEarlyToRebalance: vector<u8> = b"Rebalance interval T has not elapsed yet";
 #[error]
 const EVaultPaused: vector<u8> = b"Vault is paused";
@@ -171,7 +169,7 @@ public fun deposit(
     let shares = if (vault.total_shares == 0 || vault.total_deposited == 0) {
         amount
     } else {
-        amount * vault.total_shares / vault.total_deposited
+        (((amount as u128) * (vault.total_shares as u128) / (vault.total_deposited as u128)) as u64)
     };
 
     vault.total_shares = vault.total_shares + shares;
@@ -197,7 +195,7 @@ public fun withdraw(
     assert!(shares > 0, EZeroAmount);
     assert!(shares <= vault.total_shares, EInsufficientShares);
 
-    let amount_out = shares * vault.total_deposited / vault.total_shares;
+    let amount_out = (((shares as u128) * (vault.total_deposited as u128) / (vault.total_shares as u128)) as u64);
     vault.total_shares = vault.total_shares - shares;
     vault.total_deposited = vault.total_deposited - amount_out;
 
@@ -224,6 +222,11 @@ public fun update_hedge_ratio(
     h_star_proposed: u64,
     clock: &Clock,
 ) {
+    let now = clock.timestamp_ms();
+    assert!(
+        now >= vault.last_rebalance_ms + vault.rebalance_interval_ms,
+        ETooEarlyToRebalance,
+    );
     let was_clipped = h_star_proposed > vault.h_bar;
     let h_effective = if (was_clipped) { vault.h_bar } else { h_star_proposed };
     let old = vault.h_star;

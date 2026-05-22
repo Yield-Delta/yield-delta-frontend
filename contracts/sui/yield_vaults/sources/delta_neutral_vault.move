@@ -163,7 +163,7 @@ public fun deposit(
     let shares = if (vault.total_shares == 0 || vault.total_deposited == 0) {
         amount
     } else {
-        amount * vault.total_shares / vault.total_deposited
+        (((amount as u128) * (vault.total_shares as u128) / (vault.total_deposited as u128)) as u64)
     };
 
     vault.total_shares = vault.total_shares + shares;
@@ -190,7 +190,7 @@ public fun withdraw(
     assert!(shares > 0, EZeroAmount);
     assert!(shares <= vault.total_shares, EInsufficientShares);
 
-    let amount_out = shares * vault.total_deposited / vault.total_shares;
+    let amount_out = (((shares as u128) * (vault.total_deposited as u128) / (vault.total_shares as u128)) as u64);
     vault.total_shares = vault.total_shares - shares;
     vault.total_deposited = vault.total_deposited - amount_out;
 
@@ -213,8 +213,9 @@ public fun withdraw(
 public fun open_rebalance(
     vault: &DeltaNeutralVault,
     clock: &Clock,
-    _manager: &BalanceManager,
+    manager: &BalanceManager,
 ): DeltaReceipt {
+    assert!(manager.vault_id == object::id(vault), EWrongVault);
     let opened_at_ms = clock.timestamp_ms();
 
     event::emit(RebalanceOpened {

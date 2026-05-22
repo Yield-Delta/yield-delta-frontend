@@ -134,7 +134,9 @@ fun inv_hedge_ratio_clipped_to_h_bar() {
     {
         let mut vault = ts::take_shared<HedgeRatioVault>(&scenario);
         let cap2 = ts::take_from_sender<AdminCap>(&scenario);
-        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        let mut clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        // Advance past the default 1-hour rebalance interval so the guard passes
+        clock::increment_for_testing(&mut clock, 3_600_001);
 
         // Set h_bar = 0.8
         hedge_ratio_vault::set_h_bar(&cap2, &mut vault, 800_000_000);
