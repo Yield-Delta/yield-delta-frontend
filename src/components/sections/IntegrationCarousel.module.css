@@ -150,7 +150,7 @@
 .subtitle {
     font-size: 1.25rem;
     color: hsl(var(--muted-foreground));
-    max-width: 600px;
+    max-width: 720px;
     margin: 0 auto;
     line-height: 1.6;
 }

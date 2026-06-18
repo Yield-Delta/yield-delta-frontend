@@ -22,58 +22,77 @@ interface Integration {
 
 const integrations: Integration[] = [
     {
-        id: 'sui',
-        name: 'Sui',
+        id: 'dragonswap',
+        name: 'DragonSwap',
         logo: (
-            <Image src="/chains/sui.svg" alt="Sui" width={100} height={100} className={styles.partnerLogo} />
+            <Image src="/drago.png" alt="DragonSwap" width={100} height={100} className={styles.partnerLogo} />
         ),
-        tagline: 'Object-Native DeFi',
-        description: 'Yield Delta is adding Sui wallet connectivity and vault flows for object-native assets, giving the Sui Overflow 2026 build a direct path into AI-managed liquidity strategies.',
+        tagline: 'Premier SEI DEX',
+        description: 'Yield Delta routes liquidity through DragonSwap\'s concentrated pools on SEI. AI-managed vaults auto-rebalance LP ranges to capture trading fees while minimizing impermanent loss.',
         features: [
-            'Sui wallet support',
-            'Object-aware vault flows',
-            'Fast transaction finality',
-            'Overflow 2026 ready'
+            'Concentrated liquidity pools',
+            'Automated range rebalancing',
+            'Fee yield compounding',
+            'MEV-resistant routing'
         ],
-        color: '#4DA2FF',
-        gradient: 'linear-gradient(135deg, #4DA2FF 0%, #7DD3FC 100%)',
-        link: 'https://sui.io'
+        color: '#FF6B6B',
+        gradient: 'linear-gradient(135deg, #FF6B6B 0%, #FE5196 100%)',
+        link: 'https://dragonswap.app'
     },
     {
-        id: 'solana',
-        name: 'Solana',
+        id: 'raydium',
+        name: 'Raydium',
         logo: (
-            <Image src="/chains/solana.svg" alt="Solana" width={100} height={100} className={styles.partnerLogo} />
+            <svg viewBox="0 0 100 100" className={styles.partnerLogo} fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="#0d1117" stroke="#1de9b6" strokeWidth="2" />
+                <polygon points="50,18 72,38 72,62 50,82 28,62 28,38" fill="none" stroke="#1de9b6" strokeWidth="2.5" />
+                <circle cx="50" cy="50" r="10" fill="#1de9b6" opacity="0.9" />
+                <line x1="50" y1="18" x2="50" y2="40" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+                <line x1="72" y1="38" x2="58" y2="45" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+                <line x1="72" y1="62" x2="58" y2="55" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+                <line x1="50" y1="82" x2="50" y2="60" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+                <line x1="28" y1="62" x2="42" y2="55" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+                <line x1="28" y1="38" x2="42" y2="45" stroke="#1de9b6" strokeWidth="2" opacity="0.6" />
+            </svg>
         ),
-        tagline: 'High-Throughput Execution',
-        description: 'Solana additions connect deposit, withdrawal, and vault routing flows to a high-throughput execution environment for active liquidity strategies.',
+        tagline: 'Solana\'s Leading DEX',
+        description: 'Yield Delta taps Raydium\'s CLMM pools and order-book hybrid liquidity on Solana. Vaults deploy capital into high-volume pairs and auto-harvest swap fees for continuous compounding.',
         features: [
-            'Wallet adapter support',
-            'Vault PDA integration',
-            'Low-latency markets',
-            'Cross-chain portfolio views'
+            'CLMM concentrated pools',
+            'Hybrid AMM + order book',
+            'High-volume pair routing',
+            'Auto-compounding fees'
         ],
-        color: '#14F195',
-        gradient: 'linear-gradient(135deg, #14F195 0%, #9945FF 100%)',
-        link: 'https://solana.com'
+        color: '#1de9b6',
+        gradient: 'linear-gradient(135deg, #1de9b6 0%, #0070f3 100%)',
+        link: 'https://raydium.io'
     },
     {
-        id: 'pyth',
-        name: 'Pyth Network',
+        id: 'cetus',
+        name: 'Cetus Protocol',
         logo: (
-            <Image src="/pyth-logo.svg" alt="Pyth Network" width={100} height={100} className={styles.partnerLogo} />
+            <svg viewBox="0 0 100 100" className={styles.partnerLogo} fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="46" fill="#0d1117" stroke="#29b6f6" strokeWidth="2" />
+                <path d="M50 22 C34 22, 22 34, 22 50 C22 66, 34 78, 50 78" stroke="#29b6f6" strokeWidth="3" fill="none" strokeLinecap="round" />
+                <path d="M50 30 C38 30, 30 38, 30 50 C30 62, 38 70, 50 70" stroke="#29b6f6" strokeWidth="2.5" fill="none" strokeLinecap="round" opacity="0.7" />
+                <path d="M50 38 C42 38, 38 43, 38 50 C38 57, 42 62, 50 62" stroke="#29b6f6" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.5" />
+                <circle cx="50" cy="50" r="5" fill="#29b6f6" />
+                <circle cx="72" cy="36" r="4" fill="#29b6f6" opacity="0.8" />
+                <circle cx="72" cy="64" r="4" fill="#29b6f6" opacity="0.8" />
+                <line x1="72" y1="36" x2="72" y2="64" stroke="#29b6f6" strokeWidth="2" opacity="0.4" />
+            </svg>
         ),
-        tagline: 'Real-Time Oracle Data',
-        description: 'Powered by Pyth Network\'s high-fidelity, low-latency price feeds. Our vaults leverage real-time market data from 450+ price feeds across crypto, equities, and commodities.',
+        tagline: 'Sui\'s Premier DEX',
+        description: 'On Sui, Yield Delta connects to Cetus Protocol\'s concentrated liquidity engine. Strategies target deep pools in high-fee tiers, with tick-level precision for maximum capital utilization.',
         features: [
-            'Sub-second price updates',
-            '450+ asset price feeds',
-            'Institutional-grade accuracy',
-            'Cross-chain compatible'
+            'Tick-level CLMM positions',
+            'Multi-fee-tier pool access',
+            'Sui object-native LP tokens',
+            'Auto tick-range adjustment'
         ],
-        color: '#6B47ED',
-        gradient: 'linear-gradient(135deg, #6B47ED 0%, #E6DAFE 100%)',
-        link: 'https://pyth.network'
+        color: '#29b6f6',
+        gradient: 'linear-gradient(135deg, #29b6f6 0%, #4DA2FF 100%)',
+        link: 'https://app.cetus.zone'
     },
     {
         id: 'yei',
@@ -82,34 +101,52 @@ const integrations: Integration[] = [
             <Image src="/yei-logo.jpeg" alt="Yei Finance" width={100} height={100} className={styles.partnerLogo} />
         ),
         tagline: 'SEI Native Lending',
-        description: 'Deep integration with Yei Finance, the leading lending protocol on SEI. Our strategies optimize borrowing and lending positions to maximize capital efficiency.',
+        description: 'Vaults on SEI use Yei Finance as the borrowing layer — strategies can collateralize assets, borrow stables, and redeploy into DEX positions to unlock leveraged yield loops.',
         features: [
-            'Optimized lending rates',
+            'Collateral-backed borrowing',
+            'Leveraged yield loops',
             'Flash loan strategies',
-            'Collateral management',
-            'Yield aggregation'
+            'Health factor monitoring'
         ],
         color: '#00F5D4',
         gradient: 'linear-gradient(135deg, #00F5D4 0%, #00B4A0 100%)',
         link: 'https://yei.finance'
     },
     {
-        id: 'dragonswap',
-        name: 'DragonSwap',
+        id: 'pyth',
+        name: 'Pyth Network',
         logo: (
-            <Image src="/drago.png" alt="DragonSwap" width={100} height={100} className={styles.partnerLogo} />
+            <Image src="/pyth-logo.svg" alt="Pyth Network" width={100} height={100} className={styles.partnerLogo} />
         ),
-        tagline: 'Premier SEI DEX',
-        description: 'Seamless integration with DragonSwap, SEI\'s leading decentralized exchange. Our vaults leverage concentrated liquidity positions to maximize trading fees and optimize capital efficiency.',
+        tagline: 'Real-Time Price Oracle',
+        description: 'Every vault decision is priced against Pyth\'s sub-second feeds. Rebalances, liquidation guards, and fee-capture thresholds all trigger from live on-chain data — never stale prices.',
         features: [
-            'Concentrated liquidity pools',
-            'Automated range optimization',
-            'MEV protection',
-            'Cross-pool arbitrage'
+            'Sub-second price updates',
+            '450+ asset price feeds',
+            'Pull-model on-demand pricing',
+            'Cross-chain feed compatibility'
         ],
-        color: '#FF6B6B',
-        gradient: 'linear-gradient(135deg, #FF6B6B 0%, #FE5196 100%)',
-        link: 'https://dragonswap.app'
+        color: '#6B47ED',
+        gradient: 'linear-gradient(135deg, #6B47ED 0%, #E6DAFE 100%)',
+        link: 'https://pyth.network'
+    },
+    {
+        id: 'sei',
+        name: 'SEI Network',
+        logo: (
+            <Image src="/chains/sei.svg" alt="SEI Network" width={100} height={100} className={styles.partnerLogo} />
+        ),
+        tagline: 'DeFi-Optimized L1',
+        description: 'SEI is Yield Delta\'s primary settlement chain — purpose-built for DeFi with native order-matching, parallel execution, and sub-400ms finality that keeps vault rebalancing costs low.',
+        features: [
+            'Native order-book matching',
+            'Parallel EVM + Cosmos execution',
+            'Sub-400ms finality',
+            'Low gas for frequent rebalances'
+        ],
+        color: '#E84142',
+        gradient: 'linear-gradient(135deg, #E84142 0%, #FF8C69 100%)',
+        link: 'https://sei.io'
     }
 ];
 
@@ -284,14 +321,15 @@ export default function IntegrationCarousel() {
                 <div className={styles.sectionHeader}>
                     <div className={styles.badge}>
                         <span className={styles.badgeDot} />
-                        Powered By Industry Leaders
+                        DeFi Ecosystem Connections
                     </div>
                     <h2 className={`${styles.title} holo-text`}>
-                        Chain and Protocol Integrations
+                        DEXes, Lending & Oracles
                     </h2>
                     <p className={styles.subtitle}>
-                        Built around Sui and Solana expansion while keeping the oracle,
-                        lending, and DEX integrations that power automated liquidity management.
+                        Yield Delta plugs directly into the top DEXes on SEI, Solana, and Sui —
+                        routing vault capital through concentrated liquidity pools, lending markets,
+                        and real-time oracle feeds to maximize yield automatically.
                     </p>
                 </div>
 
@@ -432,17 +470,22 @@ export default function IntegrationCarousel() {
                 <div className={styles.trustSection}>
                     <div className={styles.trustItem}>
                         <span className={styles.trustValue}>3</span>
-                        <span className={styles.trustLabel}>Supported Chains</span>
+                        <span className={styles.trustLabel}>DEX Integrations</span>
                     </div>
                     <div className={styles.trustDivider} />
                     <div className={styles.trustItem}>
                         <span className={styles.trustValue}>450+</span>
-                        <span className={styles.trustLabel}>Oracle Feeds</span>
+                        <span className={styles.trustLabel}>Oracle Price Feeds</span>
                     </div>
                     <div className={styles.trustDivider} />
                     <div className={styles.trustItem}>
-                        <span className={styles.trustValue}>2026</span>
-                        <span className={styles.trustLabel}>Sui Overflow Track</span>
+                        <span className={styles.trustValue}>SEI · SOL · SUI</span>
+                        <span className={styles.trustLabel}>Supported Chains</span>
+                    </div>
+                    <div className={styles.trustDivider} />
+                    <div className={styles.trustItem}>
+                        <span className={styles.trustValue}>2</span>
+                        <span className={styles.trustLabel}>Lending Protocols</span>
                     </div>
                 </div>
             </div>
