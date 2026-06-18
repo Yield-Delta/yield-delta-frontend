@@ -27,6 +27,9 @@ import {
   LineSeries,
   HistogramSeries,
 } from 'lightweight-charts';
+import { useMultiChainStore } from '@/stores/multiChainStore';
+import { getChainMetadata } from '@/lib/chainConfig';
+import { ChainType } from '@/types/chain';
 
 // Types for technical indicators
 interface OHLCData {
@@ -69,6 +72,8 @@ const getFallbackPrice = (coingeckoId: string): number => {
     'ethereum': 2340.50,
     'bitcoin': 43250.00,
     'usd-coin': 1.00,
+    'solana': 145.00,
+    'sui': 1.85,
   };
   return fallbackPrices[coingeckoId] || 1.0;
 };
@@ -250,12 +255,37 @@ const calculateBollingerBands = (data: OHLCData[], period: number = 20, stdDev: 
   return { middle: sma, upper, lower };
 };
 
-const TOKENS = [
-  { symbol: 'SEI', name: 'SEI Network', color: '#dc2626', coingeckoId: 'sei-network' },
-  { symbol: 'ETH', name: 'Ethereum', color: '#6366f1', coingeckoId: 'ethereum' },
-  { symbol: 'BTC', name: 'Bitcoin', color: '#f59e0b', coingeckoId: 'bitcoin' },
-  { symbol: 'USDC', name: 'USD Coin', color: '#2563eb', coingeckoId: 'usd-coin' },
-];
+type TokenConfig = { symbol: string; name: string; color: string; coingeckoId: string };
+
+const CHAIN_OPTIONS = [
+  { type: ChainType.EVM, label: 'SEI', color: '#dc2626' },
+  { type: ChainType.SOLANA, label: 'Solana', color: '#9945FF' },
+  { type: ChainType.SUI, label: 'Sui', color: '#4DA2FF' },
+] as const;
+
+const formatPrice = (price: number): string => {
+  if (price >= 1) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return price.toFixed(4);
+};
+
+const CHAIN_TOKENS: Record<ChainType, TokenConfig[]> = {
+  [ChainType.EVM]: [
+    { symbol: 'SEI', name: 'SEI Network', color: '#dc2626', coingeckoId: 'sei-network' },
+    { symbol: 'ETH', name: 'Ethereum', color: '#6366f1', coingeckoId: 'ethereum' },
+    { symbol: 'BTC', name: 'Bitcoin', color: '#f59e0b', coingeckoId: 'bitcoin' },
+    { symbol: 'USDC', name: 'USD Coin', color: '#2563eb', coingeckoId: 'usd-coin' },
+  ],
+  [ChainType.SOLANA]: [
+    { symbol: 'SOL', name: 'Solana', color: '#9945FF', coingeckoId: 'solana' },
+    { symbol: 'ETH', name: 'Ethereum', color: '#6366f1', coingeckoId: 'ethereum' },
+    { symbol: 'BTC', name: 'Bitcoin', color: '#f59e0b', coingeckoId: 'bitcoin' },
+    { symbol: 'USDC', name: 'USD Coin', color: '#2563eb', coingeckoId: 'usd-coin' },
+  ],
+  [ChainType.SUI]: [
+    { symbol: 'SUI', name: 'Sui', color: '#4DA2FF', coingeckoId: 'sui' },
+    { symbol: 'USDC', name: 'USD Coin', color: '#2563eb', coingeckoId: 'usd-coin' },
+  ],
+};
 
 const TIMEFRAMES = [
   { label: '1H', value: '1h', days: 7 },
@@ -276,7 +306,13 @@ const ChartsPage = () => {
   const candleSeriesRef = useRef<ISeriesApi<'Candlestick', Time> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram', Time> | null>(null);
 
-  const [selectedToken, setSelectedToken] = useState(TOKENS[0]);
+  const { activeChain } = useMultiChainStore();
+  const activeChainType = activeChain ? getChainMetadata(activeChain).type : ChainType.EVM;
+
+  const [selectedChainType, setSelectedChainType] = useState<ChainType>(activeChainType);
+  const availableTokens = CHAIN_TOKENS[selectedChainType];
+
+  const [selectedToken, setSelectedToken] = useState(availableTokens[0]);
   const [selectedTimeframe, setSelectedTimeframe] = useState(TIMEFRAMES[2]);
   const [ohlcData, setOhlcData] = useState<OHLCData[]>([]);
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
@@ -302,6 +338,16 @@ const ChartsPage = () => {
   const high24h = ohlcData.length > 0 ? Math.max(...ohlcData.slice(-24).map(d => d.high)) : 0;
   const low24h = ohlcData.length > 0 ? Math.min(...ohlcData.slice(-24).map(d => d.low)) : 0;
   const volume24h = ohlcData.length > 0 ? ohlcData.slice(-24).reduce((sum, d) => sum + (d.volume || 0), 0) : 0;
+
+  // Follow wallet's active chain automatically
+  useEffect(() => {
+    setSelectedChainType(activeChainType);
+  }, [activeChainType]);
+
+  // Reset selected token whenever the displayed chain changes
+  useEffect(() => {
+    setSelectedToken(CHAIN_TOKENS[selectedChainType][0]);
+  }, [selectedChainType]);
 
   // Load data with real prices from API
   useEffect(() => {
@@ -690,6 +736,19 @@ const ChartsPage = () => {
               <span />
               MARKET SIGNALS
             </div>
+            <div className={styles.chainTabs}>
+              {CHAIN_OPTIONS.map(opt => (
+                <button
+                  key={opt.type}
+                  onClick={() => setSelectedChainType(opt.type)}
+                  className={selectedChainType === opt.type ? styles.chainTabActive : styles.chainTab}
+                  style={{ '--chain': opt.color } as React.CSSProperties}
+                >
+                  <span className={styles.chainTabDot} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
             <h1 className={styles.title}>
               Institutional charts for <span>{selectedToken.symbol}</span> liquidity timing
             </h1>
@@ -720,7 +779,7 @@ const ChartsPage = () => {
 
                   {showTokenDropdown && (
                   <div className={styles.dropdown}>
-                      {TOKENS.map(token => (
+                      {availableTokens.map(token => (
                         <button
                           key={token.symbol}
                           onClick={() => {
@@ -747,7 +806,7 @@ const ChartsPage = () => {
 
               <div className={styles.priceBlock}>
                 <div className={styles.price}>
-                      ${currentPrice.toFixed(4)}
+                      ${formatPrice(currentPrice)}
                 </div>
                 <div className={priceChange >= 0 ? styles.priceUp : styles.priceDown}>
                       {priceChange >= 0 ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
@@ -758,8 +817,8 @@ const ChartsPage = () => {
 
             <div className={styles.statGrid}>
                 {[
-                { label: '24h High', value: `$${high24h.toFixed(4)}`, icon: TrendingUp, accent: '#10b981' },
-                { label: '24h Low', value: `$${low24h.toFixed(4)}`, icon: TrendingDown, accent: '#ff206e' },
+                { label: '24h High', value: `$${formatPrice(high24h)}`, icon: TrendingUp, accent: '#10b981' },
+                { label: '24h Low', value: `$${formatPrice(low24h)}`, icon: TrendingDown, accent: '#ff206e' },
                 { label: '24h Volume', value: `$${(volume24h / 1000000).toFixed(2)}M`, icon: BarChart3, accent: '#00f5d4' },
                 ].map((stat, i) => (
                   <div
@@ -856,6 +915,9 @@ const ChartsPage = () => {
               <h2>{selectedToken.symbol}/USD execution view</h2>
             </div>
             <div className={styles.chartMeta}>
+              <span style={{ color: CHAIN_OPTIONS.find(o => o.type === selectedChainType)?.color }}>
+                {CHAIN_OPTIONS.find(o => o.type === selectedChainType)?.label}
+              </span>
               <span>{selectedTimeframe.label} timeframe</span>
               <span>{ohlcData.length} candles</span>
                 </div>

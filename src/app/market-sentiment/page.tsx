@@ -7,8 +7,17 @@ import { TrendingUp, TrendingDown, Brain, Target, Activity, Eye, Clock } from 'l
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useMultiChainStore } from '@/stores/multiChainStore';
+import { getChainMetadata } from '@/lib/chainConfig';
+import { ChainType } from '@/types/chain';
 
 gsap.registerPlugin(ScrollTrigger);
+
+const CHAIN_OPTIONS = [
+  { type: ChainType.EVM,     label: 'SEI',    color: '#dc2626', apiKey: 'sei' as const },
+  { type: ChainType.SOLANA,  label: 'Solana', color: '#9945FF', apiKey: 'sol' as const },
+  { type: ChainType.SUI,     label: 'Sui',    color: '#4DA2FF', apiKey: 'sui' as const },
+] as const;
 
 interface SentimentData {
   metric: string;
@@ -20,6 +29,11 @@ interface SentimentData {
 }
 
 const MarketSentimentPage = () => {
+  const { activeChain } = useMultiChainStore();
+  const activeChainType = activeChain ? getChainMetadata(activeChain).type : ChainType.EVM;
+  const [selectedChainType, setSelectedChainType] = useState<ChainType>(activeChainType);
+  const selectedChainOpt = CHAIN_OPTIONS.find(o => o.type === selectedChainType) ?? CHAIN_OPTIONS[0];
+
   const [selectedTimeframe, setSelectedTimeframe] = useState('24h');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'fundamental' | 'technical' | 'social'>('all');
   const mountRef = useRef<HTMLDivElement>(null);
@@ -39,12 +53,17 @@ const MarketSentimentPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
+  // Follow wallet's active chain
+  useEffect(() => {
+    setSelectedChainType(activeChainType);
+  }, [activeChainType]);
+
   // Fetch sentiment data from API
   useEffect(() => {
     const fetchSentimentData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/market/sentiment?timeframe=${selectedTimeframe}`);
+        const response = await fetch(`/api/market/sentiment?timeframe=${selectedTimeframe}&chain=${selectedChainOpt.apiKey}`);
 
         if (!response.ok) {
           throw new Error('Failed to fetch sentiment data');
@@ -71,7 +90,7 @@ const MarketSentimentPage = () => {
     const interval = setInterval(fetchSentimentData, 15 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [selectedTimeframe]);
+  }, [selectedTimeframe, selectedChainOpt.apiKey]);
 
   const getSentimentColor = (trend: string) => {
     switch (trend) {
@@ -280,8 +299,21 @@ const MarketSentimentPage = () => {
               <span />
               AI SENTIMENT ENGINE
             </div>
+            <div className={styles.chainTabs}>
+              {CHAIN_OPTIONS.map(opt => (
+                <button
+                  key={opt.type}
+                  onClick={() => setSelectedChainType(opt.type)}
+                  className={selectedChainType === opt.type ? styles.chainTabActive : styles.chainTab}
+                  style={{ '--chain': opt.color } as React.CSSProperties}
+                >
+                  <span className={styles.chainTabDot} />
+                  {opt.label}
+                </button>
+              ))}
+            </div>
             <h1 className={styles.title}>
-              Market psychology for <span>SEI liquidity</span> decisions
+              Market psychology for <span>{selectedChainOpt.label} liquidity</span> decisions
             </h1>
             <p className={styles.subtitle}>
               A blended signal layer for technical pressure, on-chain fundamentals, and social market tone.
@@ -451,8 +483,14 @@ const MarketSentimentPage = () => {
               <p>Based on price action indicators including RSI (14-period), MACD signals, and moving averages (SMA 50/200). These reflect chart patterns and trading signals, not fundamental value.</p>
             </div>
             <div>
-              <h4>Fundamental Analysis</h4>
-              <p>Evaluates ecosystem health through on-chain metrics: TVL, trading volume, network performance (TPS, validators), and DeFi protocol adoption. Measures intrinsic value and growth potential.</p>
+              <h4>{selectedChainOpt.label} Fundamentals</h4>
+              <p>
+                {selectedChainType === ChainType.SOLANA
+                  ? 'Evaluates Solana ecosystem health through network volume, DeFi TVL (Orca, Raydium, Jupiter), NFT marketplace activity on Tensor and Magic Eden, and institutional flow indicators.'
+                  : selectedChainType === ChainType.SUI
+                  ? 'Evaluates Sui ecosystem health through Move VM developer adoption, gaming and NFT activity leveraging the object-centric model, and DeFi protocol traction on Cetus, Turbos, and Aftermath.'
+                  : 'Evaluates SEI ecosystem health through on-chain metrics: TVL, trading volume, network performance (TPS, validators), and DeFi protocol adoption. Measures intrinsic value and growth potential.'}
+              </p>
             </div>
             <div>
               <h4>Social Sentiment</h4>

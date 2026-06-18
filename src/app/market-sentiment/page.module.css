@@ -97,13 +97,63 @@
   font-size: 0.68rem;
 }
 
-.liveBadge span {
+.liveBadge > span:first-child {
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 50%;
   background: var(--yd-emerald);
   box-shadow: 0 0 18px rgba(16, 185, 129, 0.8);
   animation: ydLivePulse 1.8s ease-in-out infinite;
+}
+
+.chainTabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.chainTab,
+.chainTabActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 0;
+  transition: all 160ms ease;
+}
+
+.chainTab {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--yd-text-2);
+}
+
+.chainTab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.chainTabActive {
+  background: color-mix(in srgb, var(--chain) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chain) 42%, transparent);
+  color: var(--chain);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--chain) 18%, transparent);
+}
+
+.chainTabDot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 .title {
