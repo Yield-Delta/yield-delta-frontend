@@ -80,6 +80,11 @@ export default function HeroSection() {
                 {/* Left Column: Text Content */}
                 <div className={heroStyles.heroTextContainer}>
                     <div ref={heroTextRef}>
+                        <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary-glow backdrop-blur-md">
+                            <span className="h-2 w-2 rounded-full bg-primary shadow-[0_0_18px_hsl(var(--primary))]" />
+                            Sui Overflow 2026 build
+                        </div>
+
                         <h1 className="text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 lg:mb-8 leading-tight mobile-responsive-heading">
                             <span
                                 className={`${heroStyles.heroTitleAnimated} gradient-text-fallback`}
@@ -94,7 +99,7 @@ export default function HeroSection() {
                                     display: 'inline-block'
                                 }}
                             >
-                                Your Liquidity,
+                                AI Liquidity,
                             </span>
                             <br />
                             <span
@@ -110,14 +115,14 @@ export default function HeroSection() {
                                     display: 'inline-block'
                                 }}
                             >
-                                Evolved
+                                Across Sui + Solana
                             </span>
                         </h1>
 
                         <p className="text-base sm:text-lg md:text-xl lg:text-xl xl:text-2xl text-primary-glow mb-6 sm:mb-8 lg:mb-8 mobile-responsive-subheading leading-relaxed">
-                            Harness the power of AI-driven liquidity optimization on SEI.
-                            Maximize yields, minimize risk, and let ElizaOS handle the
-                            complexity.
+                            Yield Delta is expanding into a multichain liquidity layer for Sui, Solana, and SEI.
+                            Route capital into AI-managed vaults, compare risk-adjusted yield, and keep execution
+                            ready for fast-moving DeFi markets.
                         </p>
 
                         <div
@@ -155,9 +160,9 @@ export default function HeroSection() {
                     <div className={heroStyles.heroFeaturesContainer}>
                         <div className={heroStyles.heroFeaturesGrid}>
                             {[
-                                { icon: '⚡', text: 'AI optimization' },
-                                { icon: '🛡️', text: 'Over 50% less IL' },
-                                { icon: '🚀', text: 'SEI integration' },
+                                { icon: '⚡', text: 'Sui-native execution' },
+                                { icon: '🛡️', text: 'Solana vault routing' },
+                                { icon: '🚀', text: 'SEI strategy base' },
                             ].map((feature, i) => (
                                 <div
                                     key={i}
@@ -176,8 +181,8 @@ export default function HeroSection() {
                             <div className={heroStyles.heroStatsContainer}>
                                 {[
                                     { value: isLoading ? 'Loading...' : formatTVL(totalTVL), label: 'Total TVL' },
+                                    { value: '3', label: 'Supported Chains' },
                                     { value: isLoading ? 'Loading...' : formatAPY(averageAPY), label: 'Avg APY' },
-                                    { value: '400ms', label: 'Block Time' },
                                 ].map((stat, i) => (
                                     <Card key={i} className={`${glassCardStyles.heroStatsCard} ${heroStyles.heroStatsCard}`}>
                                         <div className={`${heroStyles.heroStatsValue} text-primary-glow`}>
@@ -205,18 +210,18 @@ export default function HeroSection() {
                             <div className="grid grid-cols-2 gap-3">
                                 <Card className={`${glassCardStyles.heroStatsCard} ${heroStyles.heroSecondaryStatsCard}`}>
                                     <div className={`${heroStyles.heroSecondaryStatsValue} text-primary-glow`}>
-                                        {isLoading ? 'Loading...' : formatAPY(averageAPY)}
+                                        3
                                     </div>
                                     <div className={`${heroStyles.heroSecondaryStatsLabel} text-primary-glow`}>
-                                        Avg APY
+                                        Chains
                                     </div>
                                 </Card>
                                 <Card className={`${glassCardStyles.heroStatsCard} ${heroStyles.heroSecondaryStatsCard}`}>
                                     <div className={`${heroStyles.heroSecondaryStatsValue} text-primary-glow`}>
-                                        400ms
+                                        {isLoading ? 'Loading...' : formatAPY(averageAPY)}
                                     </div>
                                     <div className={`${heroStyles.heroSecondaryStatsLabel} text-primary-glow`}>
-                                        Block Time
+                                        Avg APY
                                     </div>
                                 </Card>
                             </div>

@@ -22,6 +22,42 @@ interface Integration {
 
 const integrations: Integration[] = [
     {
+        id: 'sui',
+        name: 'Sui',
+        logo: (
+            <Image src="/chains/sui.svg" alt="Sui" width={100} height={100} className={styles.partnerLogo} />
+        ),
+        tagline: 'Object-Native DeFi',
+        description: 'Yield Delta is adding Sui wallet connectivity and vault flows for object-native assets, giving the Sui Overflow 2026 build a direct path into AI-managed liquidity strategies.',
+        features: [
+            'Sui wallet support',
+            'Object-aware vault flows',
+            'Fast transaction finality',
+            'Overflow 2026 ready'
+        ],
+        color: '#4DA2FF',
+        gradient: 'linear-gradient(135deg, #4DA2FF 0%, #7DD3FC 100%)',
+        link: 'https://sui.io'
+    },
+    {
+        id: 'solana',
+        name: 'Solana',
+        logo: (
+            <Image src="/chains/solana.svg" alt="Solana" width={100} height={100} className={styles.partnerLogo} />
+        ),
+        tagline: 'High-Throughput Execution',
+        description: 'Solana additions connect deposit, withdrawal, and vault routing flows to a high-throughput execution environment for active liquidity strategies.',
+        features: [
+            'Wallet adapter support',
+            'Vault PDA integration',
+            'Low-latency markets',
+            'Cross-chain portfolio views'
+        ],
+        color: '#14F195',
+        gradient: 'linear-gradient(135deg, #14F195 0%, #9945FF 100%)',
+        link: 'https://solana.com'
+    },
+    {
         id: 'pyth',
         name: 'Pyth Network',
         logo: (
@@ -251,11 +287,11 @@ export default function IntegrationCarousel() {
                         Powered By Industry Leaders
                     </div>
                     <h2 className={`${styles.title} holo-text`}>
-                        Integrated Protocols
+                        Chain and Protocol Integrations
                     </h2>
                     <p className={styles.subtitle}>
-                        Built on the most trusted infrastructure in DeFi, ensuring reliable
-                        data feeds and optimal capital efficiency for your investments.
+                        Built around Sui and Solana expansion while keeping the oracle,
+                        lending, and DEX integrations that power automated liquidity management.
                     </p>
                 </div>
 
@@ -395,18 +431,18 @@ export default function IntegrationCarousel() {
                 {/* Trust Indicators */}
                 <div className={styles.trustSection}>
                     <div className={styles.trustItem}>
-                        <span className={styles.trustValue}>$50B+</span>
-                        <span className={styles.trustLabel}>Total Value Secured</span>
+                        <span className={styles.trustValue}>3</span>
+                        <span className={styles.trustLabel}>Supported Chains</span>
                     </div>
                     <div className={styles.trustDivider} />
                     <div className={styles.trustItem}>
                         <span className={styles.trustValue}>450+</span>
-                        <span className={styles.trustLabel}>Price Feeds</span>
+                        <span className={styles.trustLabel}>Oracle Feeds</span>
                     </div>
                     <div className={styles.trustDivider} />
                     <div className={styles.trustItem}>
-                        <span className={styles.trustValue}>400ms</span>
-                        <span className={styles.trustLabel}>Update Latency</span>
+                        <span className={styles.trustValue}>2026</span>
+                        <span className={styles.trustLabel}>Sui Overflow Track</span>
                     </div>
                 </div>
             </div>

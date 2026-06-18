@@ -43,8 +43,7 @@ const getRiskLevel = (strategy: string): 'Low' | 'Medium' | 'High' => {
 export default function VaultShowcase() {
     const { data: vaults, isLoading } = useVaults();
 
-    // Only show 3 featured vaults on landing page (single-chain SEI vaults)
-    // Excluding multi-chain vaults (Blue Chip, SEI Hypergrowth)
+    // Show the active strategy base while the landing page highlights Sui and Solana expansion.
     const featuredStrategies = ['stable_max', 'yield_farming', 'arbitrage'];
     const activeVaults = vaults?.filter(v =>
         v.active && featuredStrategies.includes(v.strategy)
@@ -74,7 +73,7 @@ export default function VaultShowcase() {
                             lineHeight: '1.1'
                         }}
                     >
-                        Intelligent Vault Ecosystem
+                        Multichain Vault Ecosystem
                     </h2>
                     <p
                         className="text-2xl text-muted-foreground max-w-4xl mx-auto"
@@ -85,8 +84,8 @@ export default function VaultShowcase() {
                             margin: '2rem auto 0'
                         }}
                     >
-                        Choose from our curated selection of AI-optimized vaults,
-                        each designed for different risk profiles and market conditions.
+                        Start with curated AI-optimized vaults, then extend the same
+                        risk-aware experience across Sui, Solana, and SEI positions.
                     </p>
                 </div>
 

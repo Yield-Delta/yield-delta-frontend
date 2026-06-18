@@ -27,22 +27,22 @@ const STATIC_LINE_ENDPOINTS = [
 
 const features = [
     {
-        title: 'Advanced Risk Management',
-        description: 'Sophisticated algorithms continuously monitor and adjust positions to minimize impermanent loss while maximizing yield opportunities.',
+        title: 'Sui Vault Expansion',
+        description: 'Sui wallet support and vault plumbing bring object-native assets into the same AI strategy engine used for automated yield routing.',
         icon: '🛡️',
         color: '#00f5d4',
         gradient: 'from-cyan-400/20 to-emerald-400/20'
     },
     {
-        title: 'Lightning-Fast Execution',
-        description: 'Leverage SEI\'s 400ms block times for instant rebalancing and optimal trade execution across DeFi protocols.',
+        title: 'Solana Execution Path',
+        description: 'Solana vault adapters connect high-throughput markets to deposit, withdrawal, and portfolio views for faster multichain capital movement.',
         icon: '⚡',
         color: '#9b5de5',
         gradient: 'from-purple-400/20 to-violet-400/20'
     },
     {
-        title: 'Intelligent Portfolio Optimization',
-        description: 'AI-driven analysis identifies the most profitable liquidity provision opportunities and automatically allocates capital.',
+        title: 'AI Portfolio Control',
+        description: 'Risk scoring, simulated yield, and market signals help allocate liquidity across Sui, Solana, and SEI without forcing users to manage every position manually.',
         icon: '🧠',
         color: '#ff206e',
         gradient: 'from-pink-400/20 to-rose-400/20'
@@ -165,7 +165,7 @@ export default function FeatureHighlight() {
                             lineHeight: '1.1'
                         }}
                     >
-                        Next-Generation DeFi Features
+                        Multichain Yield Infrastructure
                     </h2>
                     <p 
                         className="max-w-4xl mx-auto"
@@ -175,7 +175,7 @@ export default function FeatureHighlight() {
                             lineHeight: '1.4'
                         }}
                     >
-                        Experience the future of decentralized finance with cutting-edge technology built for the SEI ecosystem
+                        Built for Sui Overflow 2026 with Sui and Solana additions layered into Yield Delta's existing AI vault experience.
                     </p>
                 </div>
 
@@ -359,7 +359,7 @@ export default function FeatureHighlight() {
                                 textAlign: 'center'
                             }}
                         >
-                            Ready to experience the future?
+                            Sui, Solana, and SEI vault intelligence in one interface.
                         </span>
                         <div 
                             className="animate-pulse"
