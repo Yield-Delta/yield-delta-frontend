@@ -175,7 +175,7 @@ export default function FeatureHighlight() {
                             lineHeight: '1.4'
                         }}
                     >
-                        Built for Sui Overflow 2026 with Sui and Solana additions layered into Yield Delta's existing AI vault experience.
+                        Built for Sui Overflow 2026 with Sui and Solana additions layered into Yield Delta&apos;s existing AI vault experience.
                     </p>
                 </div>
 
