@@ -30,12 +30,12 @@ const formatAmount = (amount: number, token: string = 'SEI') => {
   return `${amount.toFixed(4)} ${token}`
 }
 
-const getVaultToken = (vault: VaultData) =>
+const getVaultToken = (vault: VaultData, chainLabel: string = 'SEI') =>
   vault.strategy === 'stable_max' || vault.tokenA.toUpperCase().includes('USDC')
     ? 'USDC'
     : vault.tokenA.toUpperCase().includes('SOL')
       ? 'SOL'
-      : 'SEI'
+      : chainLabel
 
 const toSolanaDepositVault = (vault: VaultData | null) => {
   if (!vault) return null
@@ -472,7 +472,7 @@ export default function VaultsPage() {
               const risk = getRiskLevel(vault.apy, vault.strategy)
               const riskStyle = RISK_BADGE_STYLES[risk]
               const tvl = getVaultTVL(vault)
-              const token = getVaultToken(vault)
+              const token = getVaultToken(vault, chainLabel)
 
               return (
                 <div
