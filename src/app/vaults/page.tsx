@@ -31,12 +31,14 @@ const formatAmount = (amount: number, token: string = 'SEI') => {
   return `${amount.toFixed(4)} ${token}`
 }
 
-const getVaultToken = (vault: VaultData, chainLabel: string = 'SEI') =>
-  vault.strategy === 'stable_max' || vault.tokenA.toUpperCase().includes('USDC')
-    ? 'USDC'
-    : vault.tokenA.toUpperCase().includes('SOL')
-      ? 'SOL'
-      : chainLabel
+const getVaultToken = (vault: VaultData, chainLabel: string = 'SEI') => {
+  const tA = vault.tokenA.toUpperCase()
+  if (vault.strategy === 'stable_max' || tA.includes('USDC')) return 'USDC'
+  if (tA.includes('SOL')) return 'SOL'
+  if (tA === 'SUIUSDE' || tA.includes('USDE')) return 'suiUSDe'
+  if (tA.includes('USDT')) return 'suiUSDT'
+  return chainLabel
+}
 
 const toSolanaDepositVault = (vault: VaultData | null) => {
   if (!vault) return null
@@ -244,6 +246,19 @@ export default function VaultsPage() {
   const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
   const { tvlMap: suiTVLMap, isLoading: suiTVLLoading } = useSuiVaultTVL()
 
+  const suiTotalTVL = React.useMemo(() => {
+    if (!isSuiVaultChain) return null
+    return Object.values(suiTVLMap).reduce((sum, v) => sum + v, 0)
+  }, [isSuiVaultChain, suiTVLMap])
+
+  const totalTVLDisplay = React.useMemo(() => {
+    if (isSuiVaultChain) {
+      if (suiTVLLoading) return '...'
+      return formatAmount(suiTotalTVL ?? 0, 'SUI')
+    }
+    return totalTVLInUSD
+  }, [isSuiVaultChain, suiTVLLoading, suiTotalTVL, totalTVLInUSD])
+
   const isLoading = vaultLoading || queryLoading || (!skipOnChainTVL && tvlLoading) || (isSuiVaultChain && suiTVLLoading)
   const filteredVaults = React.useMemo(
     () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
@@ -393,9 +408,9 @@ export default function VaultsPage() {
           <div className="yd-hero-stats">
             <StatPillar
               label="Total TVL"
-              value={isLoading || tvlUSDLoading ? '...' : totalTVLInUSD}
+              value={isLoading || (!isSuiVaultChain && tvlUSDLoading) ? '...' : totalTVLDisplay}
               color="#00f5d4"
-              loading={isLoading || tvlUSDLoading}
+              loading={isLoading || (!isSuiVaultChain && tvlUSDLoading)}
             />
             <StatPillar
               label="Vaults"

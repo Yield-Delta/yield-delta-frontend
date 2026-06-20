@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+J#!/usr/bin/env bash
 # Deploy yield_vault program to Solana devnet.
 # Run from the repo root: ./scripts/deploy-devnet.sh
 set -euo pipefail
