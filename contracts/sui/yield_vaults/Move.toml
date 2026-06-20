@@ -1,6 +1,0 @@
-[package]
-name = "yield_vaults"
-edition = "2024"
-published-at = "0xdcdbb87eeeb9ea5ab945313458b4e95f0d9cee27e980de57443ee60a34bda092"
-
-[dependencies]
