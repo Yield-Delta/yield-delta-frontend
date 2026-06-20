@@ -15,6 +15,7 @@ import { useSeiMarketData } from '@/hooks/useMarketData';
 import { useVaultStore, VaultData } from '@/stores/vaultStore';
 import { useVaultTVL } from '@/hooks/useVaultTVL';
 import { useTotalTVLInUSD } from '@/hooks/useTotalTVLInUSD';
+import { useSuiVaultTVL } from '@/hooks/useSuiVaultTVL';
 import { useMultiChainStore } from '@/stores/multiChainStore';
 import { ChainId } from '@/types/chain';
 import { getVaultsForChain, isSolanaChain, isSuiChain } from '@/lib/vaultCatalog';
@@ -241,8 +242,9 @@ export default function VaultsPage() {
   ), [skipOnChainTVL, vaultsData])
   const { tvlMap, isLoading: tvlLoading } = useVaultTVL(vaultAddresses)
   const { formattedUSD: totalTVLInUSD, isLoading: tvlUSDLoading } = useTotalTVLInUSD(vaultsData || [], tvlMap)
+  const { tvlMap: suiTVLMap, isLoading: suiTVLLoading } = useSuiVaultTVL()
 
-  const isLoading = vaultLoading || queryLoading || (!skipOnChainTVL && tvlLoading)
+  const isLoading = vaultLoading || queryLoading || (!skipOnChainTVL && tvlLoading) || (isSuiVaultChain && suiTVLLoading)
   const filteredVaults = React.useMemo(
     () => (vaultsData?.length > 0 ? vaultsData : getFilteredVaults()),
     [vaultsData, getFilteredVaults]
@@ -259,9 +261,13 @@ export default function VaultsPage() {
   }, [displayVaults])
 
   const getVaultTVL = React.useCallback((vault: VaultData) => {
+    if (isSuiVaultChain) {
+      const sui = suiTVLMap[vault.address]
+      return sui !== undefined ? sui : vault.tvl
+    }
     const on = tvlMap.get(vault.address.toLowerCase())
     return on !== undefined ? on : vault.tvl
-  }, [tvlMap])
+  }, [isSuiVaultChain, suiTVLMap, tvlMap])
 
   const handleDeposit = React.useCallback((vault: VaultData) => {
     if (!vault) return
