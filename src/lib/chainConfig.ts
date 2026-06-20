@@ -168,14 +168,14 @@ export function getTestnetChains(): ChainMetadata[] {
 // Default chain based on environment
 export function getDefaultChain(): ChainId {
   const env = process.env.NEXT_PUBLIC_ENVIRONMENT || 'testnet'
-  
+
   switch (env) {
     case 'mainnet':
-      return ChainId.SEI_MAINNET
+      return ChainId.SUI_MAINNET
     case 'devnet':
-      return ChainId.SEI_DEVNET
+      return ChainId.SOLANA_DEVNET
     default:
-      return ChainId.SEI_TESTNET
+      return ChainId.SUI_TESTNET
   }
 }
 

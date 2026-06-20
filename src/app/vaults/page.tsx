@@ -200,7 +200,7 @@ export default function VaultsPage() {
 
   const { selectedVault, setSelectedVault, getFilteredVaults, isLoading: vaultLoading } = useVaultStore()
   const activeChain = useMultiChainStore((state) => state.activeChain)
-  const vaultChain = activeChain || ChainId.SEI_TESTNET
+  const vaultChain = activeChain || ChainId.SUI_TESTNET
   const [vaultsData, setVaultsData] = React.useState<VaultData[]>([])
   const [queryLoading, setQueryLoading] = React.useState(true)
   const [queryError, setQueryError] = React.useState<Error | null>(null)
@@ -234,6 +234,7 @@ export default function VaultsPage() {
   const { data: marketData } = useSeiMarketData()
   const isSolanaVaultChain = isSolanaChain(vaultChain)
   const isSuiVaultChain = isSuiChain(vaultChain)
+  const chainLabel = isSuiVaultChain ? 'SUI' : isSolanaVaultChain ? 'SOLANA' : 'SEI'
   const skipOnChainTVL = isSolanaVaultChain || isSuiVaultChain
   const vaultAddresses = React.useMemo(() => (
     skipOnChainTVL ? [] : vaultsData?.map(v => v.address) || []
@@ -374,7 +375,7 @@ export default function VaultsPage() {
               <span style={{ color: '#00f5d4', textShadow: '0 0 50px rgba(0,245,212,0.35)' }}>YIELD</span>
               {' '}OPTIMIZATION
               <br />
-              ON SEI
+              ON {chainLabel}
             </h1>
 
             <p className="yd-hero-sub yd-hero-animate">
