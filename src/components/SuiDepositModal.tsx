@@ -83,6 +83,7 @@ export default function SuiDepositModal({
   const [useSimulationFallback, setUseSimulationFallback] = useState(false)
   const [wasSimulated, setWasSimulated] = useState(false)
   const openedAtRef = useRef(0)
+  const submissionInFlightRef = useRef(false)
 
   const { address, isConnected, balance } = useSuiWallet()
   const { deposit, simulateDeposit, isDepositing } = useSuiVault()
@@ -135,7 +136,9 @@ export default function SuiDepositModal({
   }, [isOpen])
 
   const handleDeposit = async () => {
-    if (!canDeposit || !address || !vault) return
+    if (!canDeposit || !address || !vault || submissionInFlightRef.current) return
+
+    submissionInFlightRef.current = true
 
     setTxStatus('pending')
     setErrorMsg(null)
@@ -169,6 +172,8 @@ export default function SuiDepositModal({
       setTxStatus('error')
       setErrorMsg(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
       if (!useSimulationFallback) setUseSimulationFallback(true)
+    } finally {
+      submissionInFlightRef.current = false
     }
   }
 

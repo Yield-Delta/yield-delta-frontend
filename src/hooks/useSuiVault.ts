@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useDAppKit, useCurrentAccount, useCurrentClient } from '@mysten/dapp-kit-react'
-import { Transaction, coinWithBalance } from '@mysten/sui/transactions'
+import { Transaction } from '@mysten/sui/transactions'
 import { useQueryClient } from '@tanstack/react-query'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
 import { SUI_VAULT_TVL_QUERY_KEY } from '@/hooks/useSuiVaultTVL'
@@ -81,7 +81,11 @@ export function useSuiVault() {
 
       const tx = new Transaction()
       tx.setSender(account.address)
-      const depositCoin = coinWithBalance({ balance: amountMist })
+      // Split the deposit directly from the gas coin. This produces standard
+      // PTB commands that every Sui wallet understands. `coinWithBalance`
+      // serializes as a newer intent and some wallet versions close their
+      // approval window instead of resolving it.
+      const [depositCoin] = tx.splitCoins(tx.gas, [tx.pure.u64(amountMist)])
 
       // deposit(vault: &mut VaultT, coin_in: Coin<SUI>, ctx: &mut TxContext): u64
       // Returned u64 (shares) has `drop` ability — safe to ignore in the PTB
