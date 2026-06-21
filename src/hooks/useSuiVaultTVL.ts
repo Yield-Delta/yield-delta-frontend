@@ -3,6 +3,7 @@
 import { useCurrentClient } from '@mysten/dapp-kit-react'
 import { useQuery } from '@tanstack/react-query'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
+import { parseSuiVaultBalance } from '@/lib/sui/vaultBalance'
 
 const VAULT_IDS = [
   SUI_VAULT_PROGRAMS.deltaNeutralVault,
@@ -11,12 +12,14 @@ const VAULT_IDS = [
   SUI_VAULT_PROGRAMS.suiUsdeMetaVault,
 ]
 
+export const SUI_VAULT_TVL_QUERY_KEY = ['suiVaultTVL', VAULT_IDS] as const
+
 // Returns TVL in SUI (not MIST) keyed by vault object ID
 export function useSuiVaultTVL() {
   const client = useCurrentClient()
 
   const { data, isLoading } = useQuery({
-    queryKey: ['suiVaultTVL', VAULT_IDS],
+    queryKey: SUI_VAULT_TVL_QUERY_KEY,
     queryFn: async () => {
       const result = await client.core.getObjects({
         objectIds: VAULT_IDS,
@@ -28,15 +31,7 @@ export function useSuiVaultTVL() {
         // Filter out error responses
         if (!(obj instanceof Error) && 'objectId' in obj) {
           const fields = obj.json as Record<string, unknown> | null | undefined
-          // Balance<SUI> is serialised as { value: "NNNN" } or a plain string
-          const raw = fields?.balance as { value?: string } | string | undefined
-          const mist =
-            typeof raw === 'string'
-              ? BigInt(raw)
-              : typeof raw?.value === 'string'
-                ? BigInt(raw.value)
-                : 0n
-          tvlMap[obj.objectId] = Number(mist) / 1_000_000_000
+          tvlMap[obj.objectId] = parseSuiVaultBalance(fields)
         }
       }
       return tvlMap

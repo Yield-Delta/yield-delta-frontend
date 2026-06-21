@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { useDAppKit, useCurrentAccount, useCurrentClient } from '@mysten/dapp-kit-react'
 import { Transaction, coinWithBalance } from '@mysten/sui/transactions'
+import { useQueryClient } from '@tanstack/react-query'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
+import { SUI_VAULT_TVL_QUERY_KEY } from '@/hooks/useSuiVaultTVL'
 
 // Maps each vault shared-object ID → its Move module name
 const VAULT_MODULE: Record<string, string> = {
@@ -25,6 +27,7 @@ export function useSuiVault() {
   const dAppKit = useDAppKit()
   const account = useCurrentAccount()
   const client = useCurrentClient()
+  const queryClient = useQueryClient()
   const [isDepositing, setIsDepositing] = useState(false)
 
   const isDeployed = SUI_VAULT_PROGRAMS.packageId !== ZERO_PKG
@@ -81,6 +84,14 @@ export function useSuiVault() {
 
       const digest = result.Transaction.digest
       await client.waitForTransaction({ digest })
+
+      // The shared vault object and the sender balance have both changed.
+      // Invalidate them after finality so the UI reflects the deposit now,
+      // instead of waiting for the 60-second polling interval.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: SUI_VAULT_TVL_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: ['suiBalance'] }),
+      ])
       return { digest }
     } finally {
       setIsDepositing(false)
@@ -133,6 +144,10 @@ export function useSuiVault() {
 
     const digest = result.Transaction.digest
     await client.waitForTransaction({ digest })
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: SUI_VAULT_TVL_QUERY_KEY }),
+      queryClient.invalidateQueries({ queryKey: ['suiBalance'] }),
+    ])
     return { digest }
   }
 
