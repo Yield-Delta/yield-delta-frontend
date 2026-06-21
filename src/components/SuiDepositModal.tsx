@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSuiWallet } from '@/hooks/useSuiWallet'
 import { useSuiVault } from '@/hooks/useSuiVault'
 import { SUI_VAULT_PROGRAMS } from '@/lib/sui/vaultPrograms'
+import { isWalletCancellation } from '@/lib/sui/walletErrors'
 import styles from './SolanaDepositModal.module.css'
 
 export interface SuiVaultData {
@@ -75,6 +76,7 @@ export default function SuiDepositModal({
   const [depositAmount, setDepositAmount] = useState('')
   const [txStatus, setTxStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [wasCancelled, setWasCancelled] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [txDigest, setTxDigest] = useState<string | null>(null)
@@ -123,6 +125,7 @@ export default function SuiDepositModal({
       openedAtRef.current = Date.now()
       setTxStatus('idle')
       setErrorMsg(null)
+      setWasCancelled(false)
       setShowSuccess(false)
       setTxDigest(null)
       setUseSimulationFallback(false)
@@ -136,6 +139,7 @@ export default function SuiDepositModal({
 
     setTxStatus('pending')
     setErrorMsg(null)
+    setWasCancelled(false)
 
     try {
       const result = useSimulationFallback
@@ -155,6 +159,13 @@ export default function SuiDepositModal({
       setShowSuccess(true)
       onSuccess(result.digest)
     } catch (err) {
+      if (isWalletCancellation(err)) {
+        setTxStatus('idle')
+        setWasCancelled(true)
+        setUseSimulationFallback(false)
+        return
+      }
+
       setTxStatus('error')
       setErrorMsg(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
       if (!useSimulationFallback) setUseSimulationFallback(true)
@@ -407,6 +418,14 @@ export default function SuiDepositModal({
                       description={errorMsg}
                     />
                   )}
+                  {wasCancelled && (
+                    <Status
+                      tone="info"
+                      icon={<Wallet className="h-5 w-5" />}
+                      title="Wallet confirmation cancelled"
+                      description="No transaction was submitted and no funds moved. You can try again when ready."
+                    />
+                  )}
                   {showSuccess && txDigest && (
                     <Status
                       tone="success"
@@ -488,7 +507,7 @@ function Detail({ icon, label, value }: { icon: React.ReactNode; label: string; 
 function Status({
   tone, icon, title, description,
 }: {
-  tone: 'error' | 'success'
+  tone: 'error' | 'success' | 'info'
   icon: React.ReactNode
   title: string
   description: string
@@ -496,7 +515,11 @@ function Status({
   return (
     <div
       className={`${styles.statusCard} ${
-        tone === 'success' ? styles.statusSuccess : styles.statusError
+        tone === 'success'
+          ? styles.statusSuccess
+          : tone === 'info'
+            ? styles.statusInfo
+            : styles.statusError
       }`}
     >
       <div className="shrink-0">{icon}</div>
