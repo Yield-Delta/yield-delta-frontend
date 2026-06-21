@@ -78,10 +78,12 @@ export default function SuiDepositModal({
   const [mounted, setMounted] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [txDigest, setTxDigest] = useState<string | null>(null)
+  const [useSimulationFallback, setUseSimulationFallback] = useState(false)
+  const [wasSimulated, setWasSimulated] = useState(false)
   const openedAtRef = useRef(0)
 
   const { address, isConnected, balance } = useSuiWallet()
-  const { deposit, isDepositing } = useSuiVault()
+  const { deposit, simulateDeposit, isDepositing } = useSuiVault()
 
   const vaultColor = vault ? getVaultColor(vault.strategy) : '#4ca2ff'
   const riskLevel = vault ? getRiskLevel(vault.apy) : 'Medium'
@@ -123,6 +125,8 @@ export default function SuiDepositModal({
       setErrorMsg(null)
       setShowSuccess(false)
       setTxDigest(null)
+      setUseSimulationFallback(false)
+      setWasSimulated(false)
       setDepositAmount('')
     }
   }, [isOpen])
@@ -134,22 +138,26 @@ export default function SuiDepositModal({
     setErrorMsg(null)
 
     try {
-      const { digest } = await deposit(
-        {
-          vaultObjectId: vault.address,
-          depositToken: vault.depositToken,
-          coinType: SUI_VAULT_PROGRAMS.suiType,
-        },
-        depositAmount
-      )
+      const result = useSimulationFallback
+        ? await simulateDeposit(depositAmount)
+        : await deposit(
+            {
+              vaultObjectId: vault.address,
+              depositToken: vault.depositToken,
+              coinType: SUI_VAULT_PROGRAMS.suiType,
+            },
+            depositAmount
+          )
 
-      setTxDigest(digest)
+      setTxDigest(result.digest)
+      setWasSimulated(Boolean(result.simulated))
       setTxStatus('success')
       setShowSuccess(true)
-      onSuccess(digest)
+      onSuccess(result.digest)
     } catch (err) {
       setTxStatus('error')
       setErrorMsg(err instanceof Error ? err.message : 'Transaction failed. Please try again.')
+      if (!useSimulationFallback) setUseSimulationFallback(true)
     }
   }
 
@@ -318,7 +326,7 @@ export default function SuiDepositModal({
                   <Wallet className={`${styles.walletWarningIcon} h-10 w-10`} />
                   <p className={styles.walletWarningTitle}>Sui wallet not connected</p>
                   <p className={styles.walletWarningText}>
-                    Connect a Sui wallet (e.g. Sui Wallet, OKX) using the chain selector, then return to deposit.
+                    Connect Slush using the chain selector, then return to deposit.
                   </p>
                 </div>
               ) : (
@@ -395,7 +403,7 @@ export default function SuiDepositModal({
                     <Status
                       tone="error"
                       icon={<AlertCircle className="h-5 w-5" />}
-                      title="Deposit failed"
+                      title={useSimulationFallback ? 'On-chain deposit failed · demo retry available' : 'Deposit failed'}
                       description={errorMsg}
                     />
                   )}
@@ -403,7 +411,7 @@ export default function SuiDepositModal({
                     <Status
                       tone="success"
                       icon={<CheckCircle2 className="h-5 w-5" />}
-                      title="Deposit successful"
+                      title={wasSimulated ? 'Demo deposit complete' : 'Deposit successful'}
                       description={txDigest}
                     />
                   )}
@@ -422,11 +430,11 @@ export default function SuiDepositModal({
                     {txStatus === 'pending' || isDepositing ? (
                       <>
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        Confirming on Sui
+                        {useSimulationFallback ? 'Running Demo' : 'Confirming on Sui'}
                       </>
                     ) : (
                       <>
-                        Deposit {depositToken}
+                        {useSimulationFallback ? 'Run Demo Simulation' : `Deposit ${depositToken}`}
                         <ArrowRight className="h-5 w-5 transition group-hover:translate-x-0.5" />
                       </>
                     )}
@@ -438,7 +446,9 @@ export default function SuiDepositModal({
                 <div className={styles.feeNoteInner}>
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-blue-300/60" />
                   <p>
-                    Transactions execute on Sui testnet. Owned BalanceManager objects route swaps on Sui&#39;s parallel execution fast-path, minimising latency during market events.
+                    {wasSimulated
+                      ? 'Demo mode completed locally and did not move testnet funds.'
+                      : 'The first attempt executes on Sui testnet. If it fails, the retry button switches to an explicitly labelled local simulation for recording.'}
                   </p>
                 </div>
               </div>

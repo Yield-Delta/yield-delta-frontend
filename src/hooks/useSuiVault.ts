@@ -32,10 +32,30 @@ export function useSuiVault() {
 
   const isDeployed = SUI_VAULT_PROGRAMS.packageId !== ZERO_PKG
 
+  const simulateDeposit = async (amount: string): Promise<{ digest: string; simulated: true }> => {
+    if (!account) throw new Error('SUI wallet not connected')
+
+    const amountRaw = parseFloat(amount)
+    if (!Number.isFinite(amountRaw) || amountRaw <= 0) {
+      throw new Error('Invalid deposit amount')
+    }
+
+    setIsDepositing(true)
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1400))
+      return {
+        digest: `sim-sui-${account.address.slice(2, 10)}-${Date.now()}`,
+        simulated: true,
+      }
+    } finally {
+      setIsDepositing(false)
+    }
+  }
+
   const deposit = async (
     params: SuiVaultDepositParams,
     amount: string
-  ): Promise<{ digest: string }> => {
+  ): Promise<{ digest: string; simulated?: boolean }> => {
     if (!account) throw new Error('SUI wallet not connected')
 
     const amountRaw = parseFloat(amount)
@@ -44,8 +64,7 @@ export function useSuiVault() {
     }
 
     if (!isDeployed) {
-      await new Promise((resolve) => setTimeout(resolve, 1600))
-      return { digest: `sim-sui-${account.address.slice(2, 10)}-${Date.now()}` }
+      return simulateDeposit(amount)
     }
 
     const moduleName = VAULT_MODULE[params.vaultObjectId]
@@ -151,5 +170,5 @@ export function useSuiVault() {
     return { digest }
   }
 
-  return { deposit, withdraw, isDepositing, isDeployed }
+  return { deposit, simulateDeposit, withdraw, isDepositing, isDeployed }
 }

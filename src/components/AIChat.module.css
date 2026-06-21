@@ -1,0 +1,315 @@
+.shell {
+  position: relative !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 520px !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(circle at 16% 0%, rgba(0, 245, 212, 0.11), transparent 34%),
+    radial-gradient(circle at 92% 10%, rgba(255, 32, 110, 0.08), transparent 28%),
+    linear-gradient(180deg, rgba(15, 19, 31, 0.98), rgba(5, 8, 15, 0.99)) !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  color: #f8fbff !important;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+}
+
+.shell,
+.shell * {
+  box-sizing: border-box !important;
+}
+
+.header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.025) !important;
+  padding: 16px 18px !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.identity {
+  display: flex !important;
+  min-width: 0 !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.avatarMark {
+  position: relative !important;
+  display: grid !important;
+  width: 42px !important;
+  height: 42px !important;
+  flex: 0 0 auto !important;
+  place-items: center !important;
+  border: 1px solid rgba(0, 245, 212, 0.22) !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(0, 245, 212, 0.14), rgba(95, 131, 255, 0.1)) !important;
+  color: #68f1dd !important;
+}
+
+.avatarMark svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.statusDot {
+  position: absolute !important;
+  right: -2px !important;
+  bottom: -2px !important;
+  display: grid !important;
+  width: 13px !important;
+  height: 13px !important;
+  place-items: center !important;
+  border: 2px solid #090d16 !important;
+  border-radius: 999px !important;
+  background: #57d28f !important;
+}
+
+.statusDot > div {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.agentTitle {
+  margin: 0 !important;
+  color: #fff !important;
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.1 !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: none !important;
+}
+
+.agentStatus {
+  margin: 5px 0 0 !important;
+  color: rgba(255, 255, 255, 0.48) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.08em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+}
+
+.vaultBadge {
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(104, 241, 221, 0.16) !important;
+  border-radius: 999px !important;
+  background: rgba(104, 241, 221, 0.07) !important;
+  padding: 6px 10px !important;
+  color: rgba(104, 241, 221, 0.78) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+}
+
+.messages {
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  padding: 18px !important;
+  background: transparent !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(104, 241, 221, 0.28) transparent !important;
+}
+
+.messageRow {
+  display: flex !important;
+  margin-bottom: 18px !important;
+}
+
+.messageUser {
+  justify-content: flex-end !important;
+}
+
+.messageAi {
+  justify-content: flex-start !important;
+}
+
+.messageBody {
+  width: min(88%, 620px) !important;
+  max-width: min(88%, 620px) !important;
+}
+
+.messageInner {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 9px !important;
+}
+
+.messageUser .messageInner {
+  flex-direction: row-reverse !important;
+}
+
+.messageAvatar {
+  display: grid !important;
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 auto !important;
+  place-items: center !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 11px !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #68f1dd !important;
+  box-shadow: none !important;
+}
+
+.messageBubble {
+  min-width: 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  border-radius: 16px 16px 16px 5px !important;
+  background: rgba(255, 255, 255, 0.045) !important;
+  padding: 12px 14px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035) !important;
+  backdrop-filter: none !important;
+}
+
+.messageUser .messageBubble {
+  border-color: rgba(95, 131, 255, 0.22) !important;
+  border-radius: 16px 16px 5px 16px !important;
+  background: linear-gradient(135deg, rgba(95, 131, 255, 0.16), rgba(95, 131, 255, 0.08)) !important;
+}
+
+.messageText {
+  margin: 0 !important;
+  padding: 0 !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+  font-size: 14px !important;
+  font-weight: 450 !important;
+  letter-spacing: 0 !important;
+  line-height: 1.6 !important;
+  text-shadow: none !important;
+  white-space: pre-wrap !important;
+}
+
+.suggestions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+  margin-top: 10px !important;
+  padding-left: 41px !important;
+}
+
+.suggestion {
+  border: 1px solid rgba(104, 241, 221, 0.14) !important;
+  border-radius: 999px !important;
+  background: rgba(104, 241, 221, 0.055) !important;
+  padding: 7px 10px !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+}
+
+.composer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  padding: 14px !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.composerRow {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 46px !important;
+  gap: 9px !important;
+}
+
+.input {
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 46px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 14px !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  padding: 0 14px !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.input:focus {
+  border-color: rgba(104, 241, 221, 0.32) !important;
+  background: rgba(255, 255, 255, 0.075) !important;
+  box-shadow: 0 0 0 3px rgba(104, 241, 221, 0.06) !important;
+}
+
+.sendButton {
+  display: grid !important;
+  width: 46px !important;
+  height: 46px !important;
+  place-items: center !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, #68f1dd, #5f83ff) !important;
+  color: #071016 !important;
+  box-shadow: 0 12px 30px rgba(104, 241, 221, 0.16) !important;
+  cursor: pointer !important;
+}
+
+.sendButton:disabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+.helper {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  align-items: center !important;
+  margin: 9px 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 4px !important;
+  color: rgba(255, 255, 255, 0.34) !important;
+  font-family: var(--font-mono), ui-monospace, monospace !important;
+  font-size: 9px !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+  .shell {
+    min-height: min(640px, 78dvh) !important;
+    border-radius: 20px !important;
+  }
+
+  .header,
+  .messages {
+    padding: 14px !important;
+  }
+
+  .vaultBadge {
+    display: none !important;
+  }
+
+  .messageBody {
+    width: 94% !important;
+    max-width: 94% !important;
+  }
+
+  .suggestions {
+    padding-left: 0 !important;
+  }
+
+  .composer {
+    padding: 12px !important;
+    padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .input {
+    font-size: 16px !important;
+  }
+}

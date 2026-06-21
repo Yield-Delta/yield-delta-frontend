@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWallets, useDAppKit, useWalletConnection } from '@mysten/dapp-kit-react'
-import { Wallet, X, Loader2, CheckCircle2 } from 'lucide-react'
+import { Wallet, X, Loader2, AlertCircle, ExternalLink } from 'lucide-react'
 
 interface SuiWalletModalProps {
   isOpen: boolean
@@ -14,11 +14,19 @@ interface SuiWalletModalProps {
 export function SuiWalletModal({ isOpen, onClose }: SuiWalletModalProps) {
   const [mounted, setMounted] = useState(false)
   const [connecting, setConnecting] = useState<string | null>(null)
+  const [connectionError, setConnectionError] = useState<string | null>(null)
   const wallets = useWallets()
   const dAppKit = useDAppKit()
   const { status } = useWalletConnection()
 
   useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (isOpen) {
+      setConnectionError(null)
+      setConnecting(null)
+    }
+  }, [isOpen])
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
@@ -35,14 +43,29 @@ export function SuiWalletModal({ isOpen, onClose }: SuiWalletModalProps) {
 
   const handleConnect = async (wallet: ReturnType<typeof useWallets>[number]) => {
     setConnecting(wallet.name)
+    setConnectionError(null)
     try {
       await dAppKit.connectWallet({ wallet })
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to connect to this wallet.'
+      setConnectionError(
+        message.toLowerCase().includes('popup')
+          ? 'Safari blocked the Slush connection window. Allow pop-ups for this site and try again.'
+          : message
+      )
       setConnecting(null)
     }
   }
 
   if (!mounted) return null
+
+  const isIPad = navigator.userAgent.includes('iPad') ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const sortedWallets = [...wallets].sort((a, b) => {
+    const aIsSlush = a.name.toLowerCase().includes('slush')
+    const bIsSlush = b.name.toLowerCase().includes('slush')
+    return Number(bIsSlush) - Number(aIsSlush)
+  })
 
   const content = (
     <AnimatePresence>
@@ -128,16 +151,17 @@ export function SuiWalletModal({ isOpen, onClose }: SuiWalletModalProps) {
                 }}>
                   <Wallet size={28} style={{ color: 'rgba(255,255,255,0.2)', margin: '0 auto 10px' }} />
                   <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
-                    No Sui wallets detected
+                    Slush is not available yet
                   </p>
                   <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.28)', fontSize: '12px' }}>
-                    Install Sui Wallet, OKX, or Suiet browser extension
+                    Reload the page and reopen this panel. Slush should appear automatically on Safari and desktop.
                   </p>
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {wallets.map((wallet) => {
+                  {sortedWallets.map((wallet) => {
                     const isConnecting = connecting === wallet.name
+                    const isSlush = wallet.name.toLowerCase().includes('slush')
                     return (
                       <button
                         key={wallet.name}
@@ -186,18 +210,52 @@ export function SuiWalletModal({ isOpen, onClose }: SuiWalletModalProps) {
                         )}
                         <span style={{ flex: 1, color: 'rgba(255,255,255,0.88)', fontSize: '14px', fontWeight: 600 }}>
                           {wallet.name}
+                          {isSlush && (
+                            <span style={{
+                              display: 'block', marginTop: '2px', color: 'rgba(255,255,255,0.36)',
+                              fontSize: '10px', fontWeight: 500,
+                            }}>
+                              Official Sui web wallet
+                            </span>
+                          )}
                         </span>
                         {isConnecting ? (
                           <Loader2 size={16} style={{ color: '#4ca2ff', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
                         ) : (
-                          <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)', flexShrink: 0 }}>
-                            Connect →
+                          <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                            fontSize: '11px', color: 'rgba(255,255,255,0.42)', flexShrink: 0,
+                          }}>
+                            {isSlush ? 'Open' : 'Connect'} <ExternalLink size={11} />
                           </span>
                         )}
                       </button>
                     )
                   })}
                 </div>
+              )}
+
+              {connectionError && (
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '8px',
+                  marginTop: '12px', padding: '10px 12px', borderRadius: '12px',
+                  border: '1px solid rgba(248,113,113,0.22)',
+                  background: 'rgba(239,68,68,0.08)', color: '#fca5a5',
+                  fontSize: '12px', lineHeight: 1.45,
+                }} role="alert">
+                  <AlertCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <span>{connectionError}</span>
+                </div>
+              )}
+
+              {isIPad && (
+                <p style={{
+                  margin: '12px 0 0', padding: '10px 12px', borderRadius: '12px',
+                  background: 'rgba(76,162,255,0.07)', color: 'rgba(255,255,255,0.5)',
+                  fontSize: '11px', lineHeight: 1.5,
+                }}>
+                  Slush opens in a secure Safari window. If nothing appears, enable pop-ups for this site and tap Slush again.
+                </p>
               )}
 
               <p style={{

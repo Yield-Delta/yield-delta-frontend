@@ -33,6 +33,7 @@ export function ChainSelector({
   const [isOpen, setIsOpen] = useState(false)
   const [triggerHovered, setTriggerHovered] = useState(false)
   const [alignLeft, setAlignLeft] = useState(false)
+  const [mobileMenuTop, setMobileMenuTop] = useState<number | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const activeMetadata = activeChain ? getChainMetadata(activeChain) : null
@@ -48,13 +49,25 @@ export function ChainSelector({
     return () => document.removeEventListener('mousedown', handler)
   }, [isOpen])
 
-  // Decide dropdown alignment when opening so it stays inside the viewport
+  // Keep desktop dropdowns anchored to the trigger and mobile dropdowns inside the viewport.
   useEffect(() => {
-    if (isOpen && containerRef.current) {
+    if (!isOpen || !containerRef.current) return
+
+    const updateMenuPosition = () => {
+      if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
       const PANEL_WIDTH = 272
-      // If there isn't enough room to the left (right-anchored panel), align left instead
       setAlignLeft(rect.right - PANEL_WIDTH < 8)
+      setMobileMenuTop(window.innerWidth <= 640 ? rect.bottom + 8 : null)
+    }
+
+    updateMenuPosition()
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
     }
   }, [isOpen])
 
@@ -204,12 +217,20 @@ export function ChainSelector({
             exit={{ opacity: 0, y: -5, scale: 0.975 }}
             transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.65 }}
             style={{
-              position: 'absolute',
-              top: 'calc(100% + 7px)',
-              ...(alignLeft ? { left: 0 } : { right: 0 }),
+              position: mobileMenuTop !== null ? 'fixed' : 'absolute',
+              top: mobileMenuTop !== null ? `${mobileMenuTop}px` : 'calc(100% + 7px)',
+              ...(mobileMenuTop !== null
+                ? { left: '12px', right: '12px' }
+                : alignLeft
+                  ? { left: 0 }
+                  : { right: 0 }),
               zIndex: 9999,
-              width: '272px',
-              maxWidth: 'calc(100vw - 16px)',
+              width: mobileMenuTop !== null ? 'auto' : '272px',
+              maxWidth: mobileMenuTop !== null ? 'none' : 'calc(100vw - 16px)',
+              maxHeight: mobileMenuTop !== null
+                ? `calc(100dvh - ${mobileMenuTop + 12}px)`
+                : 'min(72dvh, 560px)',
+              overflowY: 'auto',
               background: 'linear-gradient(158deg, #07080f 0%, #0b0d1c 100%)',
               borderRadius: '16px',
               overflow: 'hidden',

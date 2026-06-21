@@ -26,7 +26,13 @@ export function SuiWalletSync() {
     ) {
       disconnectSuiWallet()
     }
-  }, [status, account?.address])
+  }, [
+    status,
+    account?.address,
+    connectSuiWallet,
+    disconnectSuiWallet,
+    sui.status,
+  ])
 
   return null
 }

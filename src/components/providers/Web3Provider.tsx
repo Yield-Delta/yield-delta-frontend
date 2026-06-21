@@ -92,28 +92,27 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   // Only conditionally render RainbowKit and SEI providers after mounting
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={config}>
-        {!mounted ? (
-          // Return a skeleton while mounting to prevent layout shift
-          <div className="min-h-screen">
-            {children}
-          </div>
-        ) : (
-          <RainbowKitProvider
-            initialChain={1328}
-            showRecentTransactions={false}
-            // Prevent account switching issues
-            modalSize="compact"
-          >
-            <SeiGlobalWalletProvider>
-              <DAppKitProvider dAppKit={suiDAppKit}>
-                <SuiWalletSync />
+      <DAppKitProvider dAppKit={suiDAppKit}>
+        <SuiWalletSync />
+        <WagmiProvider config={config}>
+          {!mounted ? (
+            // Keep every wallet context available during SSR/prerender.
+            <div className="min-h-screen">
+              {children}
+            </div>
+          ) : (
+            <RainbowKitProvider
+              initialChain={1328}
+              showRecentTransactions={false}
+              modalSize="compact"
+            >
+              <SeiGlobalWalletProvider>
                 {children}
-              </DAppKitProvider>
-            </SeiGlobalWalletProvider>
-          </RainbowKitProvider>
-        )}
-      </WagmiProvider>
+              </SeiGlobalWalletProvider>
+            </RainbowKitProvider>
+          )}
+        </WagmiProvider>
+      </DAppKitProvider>
     </QueryClientProvider>
   )
 }

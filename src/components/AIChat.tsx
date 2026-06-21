@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Bot, User, Loader2 } from 'lucide-react'
+import styles from './AIChat.module.css'
 
 // Enhanced CSS for animations, interactions, and accessibility
 const chatScrollbarStyles = `
@@ -239,15 +240,6 @@ const chatScrollbarStyles = `
     font-size: 11px !important;
     border: none !important;
     outline: none !important;
-  }
-  
-  /* Prevent unwanted borders on all AI chat elements */
-  .ai-chat-override *,
-  .ai-chat-override *:before,
-  .ai-chat-override *:after {
-    border: none !important;
-    outline: none !important;
-    box-sizing: border-box !important;
   }
   
   /* Ensure proper text wrapping */
@@ -582,7 +574,7 @@ We offer automated vault strategies that handle everything for you - no manual t
       <style dangerouslySetInnerHTML={{ __html: chatScrollbarStyles }} />
       
       <div 
-        className={`ai-chat-override flex flex-col rounded-xl ${className}`}
+        className={`${styles.shell} ai-chat-override ${className}`}
         style={{
           background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.92) 0%, rgba(16, 24, 32, 0.95) 30%, rgba(8, 16, 24, 0.96) 70%, rgba(0, 0, 0, 0.92) 100%)',
           backdropFilter: 'blur(24px) saturate(180%)',
@@ -597,26 +589,26 @@ We offer automated vault strategies that handle everything for you - no manual t
       >
       {/* Header */}
       <div 
-        className="flex items-center justify-between p-5"
+        className={styles.header}
         style={{
           borderBottom: '1px solid rgba(0, 245, 212, 0.25)',
           background: 'linear-gradient(135deg, rgba(0, 245, 212, 0.12) 0%, rgba(155, 93, 229, 0.08) 50%, rgba(0, 245, 212, 0.06) 100%)',
           backdropFilter: 'blur(12px)'
         }}
       >
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center">
+        <div className={styles.identity}>
+          <div className={styles.avatarMark}>
             <Bot 
               className={`w-6 h-6 transition-all duration-300 ${agentStatus === 'online' ? 'ai-avatar' : ''}`}
               style={{ color: '#00f5d4' }}
             />
-            <div className="absolute -bottom-1 -right-1 transition-all duration-300">
+            <div className={styles.statusDot}>
               {getStatusIcon()}
             </div>
           </div>
           <div className="flex flex-col justify-center">
             <h3 
-              className="font-bold tracking-tight leading-none"
+              className={styles.agentTitle}
               style={{ 
                 color: '#ffffff',
                 fontSize: '17px',
@@ -632,7 +624,7 @@ We offer automated vault strategies that handle everything for you - no manual t
               {agentName} Assistant
             </h3>
             <p 
-              className="text-xs font-medium"
+              className={styles.agentStatus}
               style={{ 
                 color: 'rgba(255, 255, 255, 0.8)',
                 fontSize: '12px',
@@ -647,7 +639,7 @@ We offer automated vault strategies that handle everything for you - no manual t
         </div>
         {vaultAddress && (
           <div 
-            className="text-xs font-mono px-3 py-1 rounded-full"
+            className={styles.vaultBadge}
             style={{ 
               color: '#00f5d4',
               fontSize: '11px',
@@ -666,7 +658,7 @@ We offer automated vault strategies that handle everything for you - no manual t
       {/* Messages */}
       <div 
         ref={chatContainerRef}
-        className="ai-chat-messages flex-1 overflow-y-auto max-h-96 p-5 space-y-8"
+        className={`${styles.messages} ai-chat-messages`}
         style={{
           background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(16, 24, 32, 0.3) 30%, rgba(8, 16, 24, 0.35) 70%, rgba(0, 0, 0, 0.15) 100%)',
           scrollbarWidth: 'thin',
@@ -680,14 +672,14 @@ We offer automated vault strategies that handle everything for you - no manual t
         {messages.map((message, index) => (
           <div 
             key={message.id} 
-            className={`chat-message flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`${styles.messageRow} chat-message ${message.sender === 'user' ? styles.messageUser : styles.messageAi}`}
             style={{ animationDelay: `${index * 0.1}s` }}
             role="article"
             aria-label={`${message.sender === 'user' ? 'User' : 'AI Assistant'} message`}
           >
-            <div className={`max-w-[80%] ${message.sender === 'user' ? 'order-2' : 'order-1'}`}>
-              <div className={`flex items-start gap-2 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={styles.messageBody}>
+              <div className={styles.messageInner}>
+                <div className={`${styles.messageAvatar} ${
                   message.sender === 'user' 
                     ? 'text-blue-400' 
                     : message.metadata?.error 
@@ -714,7 +706,7 @@ We offer automated vault strategies that handle everything for you - no manual t
                   {message.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                 </div>
                 <div 
-                  className="message-bubble px-4 py-3"
+                  className={`${styles.messageBubble} message-bubble`}
                   style={{
                   background: message.sender === 'user' 
                     ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.35) 0%, rgba(29, 78, 216, 0.45) 100%)'
@@ -742,7 +734,7 @@ We offer automated vault strategies that handle everything for you - no manual t
                   borderRadius: '16px'
                 }}>
                   <p 
-                    className="text-sm leading-relaxed"
+                    className={styles.messageText}
                     style={{ 
                       color: '#ffffff !important',
                       fontSize: '14px',
@@ -817,12 +809,12 @@ We offer automated vault strategies that handle everything for you - no manual t
               
               {/* Suggestions */}
               {message.suggestions && message.suggestions.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className={styles.suggestions}>
                   {message.suggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="text-xs px-3 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:-translate-y-0.5"
+                      className={styles.suggestion}
                       style={{
                         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%)',
                         border: '1px solid rgba(0, 245, 212, 0.3)',
@@ -907,14 +899,14 @@ We offer automated vault strategies that handle everything for you - no manual t
 
       {/* Input */}
       <div 
-        className="px-6 py-5"
+        className={styles.composer}
         style={{
           borderTop: '1px solid rgba(0, 245, 212, 0.25)',
           background: 'linear-gradient(135deg, rgba(0, 245, 212, 0.08) 0%, rgba(155, 93, 229, 0.06) 50%, rgba(0, 245, 212, 0.04) 100%)',
           backdropFilter: 'blur(12px)'
         }}
       >
-        <div className="flex gap-3">
+        <div className={styles.composerRow}>
           <input
             ref={inputRef}
             type="text"
@@ -934,7 +926,7 @@ We offer automated vault strategies that handle everything for you - no manual t
               e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.08)';
             }}
             placeholder="Ask about automated strategies, APY rates, vault performance..."
-            className={`ai-chat-input flex-1 rounded-lg px-4 py-3 transition-all duration-300 ${isInputFocused ? 'input-focused' : ''}`}
+            className={`${styles.input} ai-chat-input ${isInputFocused ? 'input-focused' : ''}`}
             style={{
               background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.06) 100%) !important',
               border: '1px solid rgba(255, 255, 255, 0.25) !important',
@@ -955,7 +947,7 @@ We offer automated vault strategies that handle everything for you - no manual t
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
-            className="send-button flex-shrink-0 w-12 h-12 flex items-center justify-center text-white disabled:cursor-not-allowed"
+            className={`${styles.sendButton} send-button`}
             style={{
               background: !inputMessage.trim() || isLoading 
                 ? 'linear-gradient(135deg, rgba(107, 114, 128, 0.5) 0%, rgba(75, 85, 99, 0.6) 100%)'
@@ -979,7 +971,7 @@ We offer automated vault strategies that handle everything for you - no manual t
         </div>
         <div 
           id="chat-input-help"
-          className="mt-3 text-xs ai-chat-status"
+          className={`${styles.helper} ai-chat-status`}
           style={{ 
             color: 'rgba(255, 255, 255, 0.6) !important',
             fontSize: '11px',

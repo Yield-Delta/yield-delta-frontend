@@ -8,9 +8,17 @@ const GRPC_URLS: Record<string, string> = {
   mainnet: 'https://fullnode.mainnet.sui.io:443',
 }
 
+const isBrowser = typeof window !== 'undefined'
+
 export const suiDAppKit = createDAppKit({
   networks: ['testnet', 'mainnet'],
   defaultNetwork: 'testnet',
+  slushWalletConfig: isBrowser
+    ? {
+        appName: 'Yield Delta',
+        origin: 'https://my.slush.app',
+      }
+    : null,
   createClient: (network) =>
     new SuiGrpcClient({ network, baseUrl: GRPC_URLS[network] }),
   autoConnect: true,
