@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import type { VaultState } from '../../../../types/api'
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Rebalance request schema
 const RebalanceRequestSchema = z.object({
@@ -25,6 +25,12 @@ const RebalanceRequestSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+
+    // Admin action: clear pending rebalances
+    if (body && body.action === 'clear_pending') {
+      const cleared = await clearPendingRebalances()
+      return NextResponse.json({ success: true, cleared }, { status: 200 })
+    }
     
     // Validate request
     const validatedData = RebalanceRequestSchema.parse(body)
@@ -313,7 +319,8 @@ async function executeRebalancing(request: RebalanceRequest, recommendation: Reb
   
   if (strategy === 'immediate') {
     // Execute immediate rebalancing
-    return {
+    const pending = {
+      id: `reb_${Math.random().toString(16).substring(2, 10)}`,
       transactionHash: `0x${Math.random().toString(16).substring(2, 66)}`,
       status: 'pending',
       vaultAddress,
@@ -333,6 +340,9 @@ async function executeRebalancing(request: RebalanceRequest, recommendation: Reb
         parallelExecution: true
       }
     }
+
+    await addPendingRebalance(pending)
+    return pending
   } else if (strategy === 'scheduled') {
     // Schedule rebalancing for optimal time
     return {
@@ -358,6 +368,86 @@ async function executeRebalancing(request: RebalanceRequest, recommendation: Reb
       nextCheck: new Date(Date.now() + 3600000).toISOString() // 1 hour
     }
   }
+}
+
+// --- Simple file-backed pending storage (node runtime required) ---
+import Database from 'better-sqlite3'
+import path from 'path'
+
+const DB_PATH = path.join(process.cwd(), 'data', 'pending-rebalances.db')
+
+function getDb() {
+  // ensure data directory exists
+  try { require('fs').mkdirSync(path.dirname(DB_PATH), { recursive: true }) } catch (e) {}
+  const db = new Database(DB_PATH)
+  db.pragma('journal_mode = WAL')
+  db.prepare(
+    `CREATE TABLE IF NOT EXISTS pending_rebalances (
+      id TEXT PRIMARY KEY,
+      transactionHash TEXT,
+      status TEXT,
+      vaultAddress TEXT,
+      rebalanceDetails TEXT,
+      estimatedCompletion TEXT,
+      seiOptimizations TEXT,
+      timestamp TEXT,
+      actualCompletion TEXT
+    )`
+  ).run()
+  return db
+}
+
+async function addPendingRebalance(item: any) {
+  const db = getDb()
+  const stmt = db.prepare(`INSERT INTO pending_rebalances (id, transactionHash, status, vaultAddress, rebalanceDetails, estimatedCompletion, seiOptimizations, timestamp) VALUES (@id,@transactionHash,@status,@vaultAddress,@rebalanceDetails,@estimatedCompletion,@seiOptimizations,@timestamp)`)
+  stmt.run({
+    id: item.id,
+    transactionHash: item.transactionHash,
+    status: item.status,
+    vaultAddress: item.vaultAddress,
+    rebalanceDetails: JSON.stringify(item.rebalanceDetails || {}),
+    estimatedCompletion: item.estimatedCompletion,
+    seiOptimizations: JSON.stringify(item.seiOptimizations || {}),
+    timestamp: item.rebalanceDetails?.timestamp || new Date().toISOString()
+  })
+  db.close()
+}
+
+async function loadPendingRebalances(): Promise<any[]> {
+  const db = getDb()
+  const rows = db.prepare('SELECT * FROM pending_rebalances').all()
+  db.close()
+  return rows.map(r => ({
+    id: r.id,
+    transactionHash: r.transactionHash,
+    status: r.status,
+    vaultAddress: r.vaultAddress,
+    rebalanceDetails: JSON.parse(r.rebalanceDetails || '{}'),
+    estimatedCompletion: r.estimatedCompletion,
+    seiOptimizations: JSON.parse(r.seiOptimizations || '{}'),
+    timestamp: r.timestamp,
+    actualCompletion: r.actualCompletion
+  }))
+}
+
+async function clearPendingRebalances() {
+  const db = getDb()
+  const rows = db.prepare('SELECT * FROM pending_rebalances').all()
+  const now = new Date().toISOString()
+  const cleared = rows.map(r => ({
+    id: r.id,
+    transactionHash: r.transactionHash,
+    status: 'completed',
+    vaultAddress: r.vaultAddress,
+    rebalanceDetails: JSON.parse(r.rebalanceDetails || '{}'),
+    estimatedCompletion: r.estimatedCompletion,
+    seiOptimizations: JSON.parse(r.seiOptimizations || '{}'),
+    timestamp: r.timestamp,
+    actualCompletion: now
+  }))
+  db.prepare('DELETE FROM pending_rebalances').run()
+  db.close()
+  return cleared
 }
 
 function getOptimalRebalanceWindow(): string {
