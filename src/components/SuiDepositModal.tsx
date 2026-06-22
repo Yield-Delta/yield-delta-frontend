@@ -39,6 +39,7 @@ interface SuiDepositModalProps {
 
 const SUI_PRICE_USD = 3.5
 const QUICK_AMOUNTS = [0.25, 0.5, 0.75, 1]
+const DEMO_SIMULATION_ONLY = true
 
 const formatCurrency = (amount: number) => {
   if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M`
@@ -80,7 +81,7 @@ export default function SuiDepositModal({
   const [mounted, setMounted] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
   const [txDigest, setTxDigest] = useState<string | null>(null)
-  const [useSimulationFallback, setUseSimulationFallback] = useState(false)
+  const [useSimulationFallback, setUseSimulationFallback] = useState(DEMO_SIMULATION_ONLY)
   const [wasSimulated, setWasSimulated] = useState(false)
   const openedAtRef = useRef(0)
   const submissionInFlightRef = useRef(false)
@@ -98,9 +99,9 @@ export default function SuiDepositModal({
   const maxAmount = Math.max(0, numericBalance - 0.01)
   const isValidAmount = Number.isFinite(numericAmount) && numericAmount > 0
   const exceedsBalance = isConnected && isValidAmount && numericAmount > maxAmount
-  const canDeposit =
+  const canSubmit =
     isValidAmount &&
-    !exceedsBalance &&
+    (useSimulationFallback || !exceedsBalance) &&
     txStatus !== 'pending' &&
     !isDepositing &&
     isConnected
@@ -129,14 +130,14 @@ export default function SuiDepositModal({
       setWasCancelled(false)
       setShowSuccess(false)
       setTxDigest(null)
-      setUseSimulationFallback(false)
+      setUseSimulationFallback(DEMO_SIMULATION_ONLY)
       setWasSimulated(false)
       setDepositAmount('')
     }
   }, [isOpen])
 
   const handleDeposit = async () => {
-    if (!canDeposit || !address || !vault || submissionInFlightRef.current) return
+    if (!canSubmit || !address || !vault || submissionInFlightRef.current) return
 
     submissionInFlightRef.current = true
 
@@ -165,7 +166,7 @@ export default function SuiDepositModal({
       if (isWalletCancellation(err)) {
         setTxStatus('idle')
         setWasCancelled(true)
-        setUseSimulationFallback(false)
+        setUseSimulationFallback(DEMO_SIMULATION_ONLY)
         return
       }
 
@@ -407,7 +408,7 @@ export default function SuiDepositModal({
                     />
                   </div>
 
-                  {exceedsBalance && (
+                  {exceedsBalance && !useSimulationFallback && (
                     <Status
                       tone="error"
                       icon={<AlertCircle className="h-5 w-5" />}
@@ -442,13 +443,13 @@ export default function SuiDepositModal({
 
                   <button
                     onClick={handleDeposit}
-                    disabled={!canDeposit}
+                    disabled={!canSubmit}
                     className={styles.primaryButton}
                     style={{
-                      background: canDeposit
+                      background: canSubmit
                         ? `linear-gradient(135deg, ${vaultColor}, #a78bfa)`
                         : 'rgba(255,255,255,0.09)',
-                      boxShadow: canDeposit ? `0 18px 44px ${vaultColor}28` : 'none',
+                      boxShadow: canSubmit ? `0 18px 44px ${vaultColor}28` : 'none',
                     }}
                   >
                     {txStatus === 'pending' || isDepositing ? (
@@ -472,7 +473,9 @@ export default function SuiDepositModal({
                   <p>
                     {wasSimulated
                       ? 'Demo mode completed locally and did not move testnet funds.'
-                      : 'The first attempt executes on Sui testnet. If it fails, the retry button switches to an explicitly labelled local simulation for recording.'}
+                      : DEMO_SIMULATION_ONLY
+                        ? 'Demo mode is enabled for recording. It simulates the deposit locally and never requests a wallet signature or moves funds.'
+                        : 'The first attempt executes on Sui testnet. If it fails, the retry button switches to an explicitly labelled local simulation for recording.'}
                   </p>
                 </div>
               </div>
